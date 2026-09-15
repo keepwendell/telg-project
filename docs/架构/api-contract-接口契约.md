@@ -36,7 +36,7 @@
 
 ### 响应（Generation Artifact）
 
-`meta + background + dialogue[] + vocabulary[] + listening_questions[] + core_sentence_patterns[]`，结构与 [architecture.md](./architecture.md) §3 一致。mock 与真实模式均返回同一 schema。
+`meta + background + dialogue[] + vocabulary[] + listening_questions[] + core_sentence_patterns[]`，结构与 [architecture-总体架构](./architecture-总体架构.md) §3 一致。mock 与真实模式均返回同一 schema。
 
 ## 2. 播放列表（Playlists）
 

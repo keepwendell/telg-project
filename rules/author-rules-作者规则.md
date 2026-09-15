@@ -19,8 +19,8 @@
 ```
 telg-project/
 ├── README.md            # 总览 + 启动/部署警告
-├── docs/                # 产品与架构知识（product-brief / requirements / architecture / api-contract / design-system）
-├── rules/               # 本目录：代码作者持久工作规则
+├── docs/                # 知识库（中文文档，按 产品/架构/设计/运维 分子目录）
+├── rules/               # 本目录：代码作者持久工作规则（author-rules-作者规则.md）
 ├── frontend/
 │   └── index.html       # 前端单文件（原生 JS，无构建），唯一的 UI 交付物
 ├── backend/

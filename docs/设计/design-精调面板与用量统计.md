@@ -1,6 +1,6 @@
 # TELG 设计思路：Refine 面板重构 + LLM Token 用量统计
 
-> 版本：2026-09-16 · 状态：设计（待评审）· 关联文档：[architecture](architecture.md) / [api-contract](api-contract.md) / [requirements](requirements.md)
+> 版本：2026-09-16 · 状态：draft（待评审）· 关联文档：[总体架构](../架构/architecture-总体架构.md) / [接口契约](../架构/api-contract-接口契约.md) / [需求规格](../产品/requirements-需求规格.md)
 
 ---
 

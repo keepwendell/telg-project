@@ -6,7 +6,7 @@
 
 ## 快速开始
 
-> 📖 **完整运行指南（Windows 适配：环境要求 / 分步命令 / 验证清单 / 常见问题）见 [`docs/running-guide.md`](docs/running-guide.md)**。以下为速览。
+> 📖 **完整运行指南（Windows 适配：环境要求 / 分步命令 / 验证清单 / 常见问题）见 [`docs/运维/running-guide-运行指南.md`](docs/运维/running-guide-运行指南.md)**。以下为速览。
 
 ### Windows 本地调试（真实后端，推荐）
 
@@ -48,12 +48,16 @@ python main.py               # http://127.0.0.1:8000（后端同源托管前端�
 ```
 telg-project/
 ├── README.md                 # 本文档
-├── docs/                     # 产品与设计定义
-│   ├── product-brief.md      # 产品定位与差异化（Technical Grounding）
-│   ├── requirements.md       # 需求规格与难度体系 L1-5
-│   ├── architecture.md       # 总体架构 / Generation Artifact / 时间轴方案
-│   ├── api-contract.md       # API 契约与 mock/真实切换
-│   └── design-system.md      # 视觉与交互规范
+├── docs/                     # 知识库（中文文档，索引见 docs/README.md）
+│   ├── engineering-org-工程组织规范.md   # 目录组织与命名规则
+│   ├── 产品/                 # 产品定义 / 需求规格
+│   ├── 架构/                 # 总体架构 / 接口契约
+│   ├── 设计/                 # 视觉设计规范 / 专题设计
+│   └── 运维/                 # 运行指南（Windows 适配）
+├── changelog/                # 对话要点日志（YYMMDD-会话主题，只记不提交）
+├── reports/                  # 问题/报告（按问题名建文件夹，分析-对策-修复验证）
+├── rules/
+│   └── author-rules-作者规则.md      # 代码作者持久工作规则
 ├── frontend/
 │   └── index.html            # 前端单文件（原生 JS，无构建）
 ├── backend/
@@ -64,13 +68,14 @@ telg-project/
 ├── tests/
 │   ├── e2e/                  # Playwright 端到端回归（mock 模式）
 │   │   ├── test_flow_e2e.py  # 35 项全链路回归
+│   │   ├── test_tts_roles_e2e.py  # 10 项 TTS 角色专项
 │   │   └── test_edge_e2e.py  # 11 项边缘场景
 │   └── unit/                 # 后端单测（规划中，见 README）
-├── reports/
-│   └── issue-report-2026-09-15.md  # 测试结论与问题清单（P0-P3）
 └── scripts/
     └── package.sh            # 打包发布 zip
 ```
+
+> 命名规则与目录演进决策见 [docs/engineering-org-工程组织规范.md](docs/engineering-org-工程组织规范.md)。
 
 ## 运行测试
 
@@ -90,4 +95,4 @@ python tests/e2e/test_edge_e2e.py   # 11 项边缘场景
 | 真实 TTS 合成 | ❌ 占位（synthesize 仅置 audioReady，不产音频与时间轴） |
 | 异步进度 | ❌ 前端 sleep 模拟，待 job 轮询 |
 
-详细状态与已知问题见 [docs/architecture.md](docs/architecture.md) 与 [reports/issue-report-2026-09-15.md](reports/issue-report-2026-09-15.md)。
+详细状态与已知问题见 [docs/架构/architecture-总体架构.md](docs/架构/architecture-总体架构.md) 与 [reports/交互体验问题评估/评估与改善建议.md](reports/交互体验问题评估/评估与改善建议.md)。
