@@ -948,6 +948,9 @@ def normalize_voice(v: str) -> str:
 
 
 def probe_ms(path: Path) -> int:
+    """Exact duration of a WAV (sample-accurate). Only WAV is probed now —
+    each sentence is normalized to WAV before measuring, so no mp3 estimation
+    drift can reach the timeline."""
     p = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration",
          "-of", "default=nw=1:nk=1", str(path)],
@@ -959,28 +962,15 @@ def probe_ms(path: Path) -> int:
         raise RuntimeError("ffprobe failed on %s" % path.name)  # noqa: TRY003
 
 
-def probe_audio_fmt(path: Path) -> tuple[int, int]:
-    """Return (sample_rate, channels) of an audio file for matching silence."""
-    p = subprocess.run(
-        ["ffprobe", "-v", "error", "-select_streams", "a:0",
-         "-show_entries", "stream=sample_rate,channels", "-of", "csv=p=0", str(path)],
-        capture_output=True, text=True, timeout=30,
-    )
-    parts = p.stdout.strip().split(",")
-    try:
-        return int(parts[0]), int(parts[1])
-    except (IndexError, ValueError):
-        return 24000, 1
-
-
-def ensure_gap(out_dir: Path, sr: int, ch: int, gap_ms: int = 300) -> Path:
-    """Reusable mp3 silence file matching the sentence audio format."""
-    gp = out_dir / ("_gap_%d_%d_%d.mp3" % (sr, ch, gap_ms))
+def ensure_gap(out_dir: Path, gap_ms: int = 300) -> Path:
+    """Reusable silence WAV. mp3 would round 300ms up to a whole frame (~336ms),
+    silently lengthening the physical file; WAV is sample-exact."""
+    gp = out_dir / ("_gap_%dms.wav" % gap_ms)
     if not gp.exists():
         subprocess.run(
             ["ffmpeg", "-y", "-f", "lavfi",
-             "-i", "anullsrc=r=%d:cl=%s" % (sr, "stereo" if ch == 2 else "mono"),
-             "-t", "%.3f" % (gap_ms / 1000.0), "-c:a", "libmp3lame", "-q:a", "9",
+             "-i", "anullsrc=r=24000:cl=mono",
+             "-t", "%.3f" % (gap_ms / 1000.0), "-c:a", "pcm_s16le",
              str(gp)],
             capture_output=True, text=True, timeout=30, check=True,
         )
@@ -988,25 +978,25 @@ def ensure_gap(out_dir: Path, sr: int, ch: int, gap_ms: int = 300) -> Path:
 
 
 def merge_mp3(out_dir: Path, mid: str, n: int, out: Path, gap: Path | None = None) -> None:
-    """Concatenate per-sentence mp3s, inserting `gap` silence between sentences so the
-    timeline (which accounts for the gap) matches the actual audio position."""
-    lst = out_dir / (mid + "-concat.txt")
-    with lst.open("w", encoding="utf-8") as fh:
-        for i in range(n):
-            seg = out_dir / ("%s-seg-%d.mp3" % (mid, i))
-            if not seg.exists():
-                raise RuntimeError("missing segment %s" % seg.name)
-            fh.write("file '%s'\n" % seg.name.replace("'", "'\\''"))
-            if gap is not None and i < n - 1:
-                fh.write("file '%s'\n" % gap.name.replace("'", "'\\''"))
-    try:
-        subprocess.run(
-            ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
-             "-c", "copy", str(out)],
-            capture_output=True, text=True, timeout=120, check=True,
-        )
-    finally:
-        lst.unlink(missing_ok=True)
+    """Concatenate per-sentence mp3s (with optional inter-sentence silence) by
+    decoding and re-encoding in one pass. Stream-copy concatenation would preserve
+    each segment's mp3 encoder padding, making the physical duration drift from the
+    probe-based timeline; re-encoding eliminates that drift."""
+    files = []
+    for i in range(n):
+        seg = out_dir / ("%s-seg-%d.wav" % (mid, i))
+        if not seg.exists():
+            raise RuntimeError("missing segment %s" % seg.name)
+        files.append(seg)
+        if gap is not None and i < n - 1:
+            files.append(gap)
+    cmd = ["ffmpeg", "-y"]
+    for f in files:
+        cmd += ["-i", str(f)]
+    fc = "".join("[%d:a]" % i for i in range(len(files))) +          "concat=n=%d:v=0:a=1[a]" % len(files)
+    cmd += ["-filter_complex", fc, "-map", "[a]",
+            "-ar", "24000", "-ac", "1", "-c:a", "libmp3lame", "-q:a", "4", str(out)]
+    subprocess.run(cmd, capture_output=True, text=True, timeout=300, check=True)
 
 
 @app.post("/api/v1/materials/{mid}/synthesize")
@@ -1048,19 +1038,26 @@ async def synthesize(mid: str, body: SynthIn | None = None):
         for i, seg in enumerate(segs):
             text = (seg["text_en"] or "").strip() or "…"
             voice = vs[i % len(vs)]
-            seg_path = STORAGE_DIR / ("%s-seg-%d.mp3" % (mid, i))
+            mp3_path = STORAGE_DIR / ("%s-seg-%d.mp3" % (mid, i))
             com = edge_tts.Communicate(text, voice=voice, rate=rate_arg)
-            await com.save(str(seg_path))
-            dur = probe_ms(seg_path)
+            await com.save(str(mp3_path))
+            # normalize to 24k mono WAV so duration is sample-exact and the
+            # merge pass sees one consistent decoded format
+            wav_path = STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i))
+            subprocess.run(
+                ["ffmpeg", "-y", "-i", str(mp3_path), "-ar", "24000", "-ac", "1",
+                 "-c:a", "pcm_s16le", str(wav_path)],
+                capture_output=True, text=True, timeout=60, check=True,
+            )
+            mp3_path.unlink(missing_ok=True)
+            dur = probe_ms(wav_path)
             times.append((seg["seq"], start, start + dur))
             start += dur + gap_ms
-        first_seg = STORAGE_DIR / ("%s-seg-0.mp3" % mid)
-        sr, ch = probe_audio_fmt(first_seg) if first_seg.exists() else (24000, 1)
-        gap = ensure_gap(STORAGE_DIR, sr, ch, gap_ms)
+        gap = ensure_gap(STORAGE_DIR, gap_ms)
         out_path = STORAGE_DIR / (mid + ".mp3")
         merge_mp3(STORAGE_DIR, mid, len(segs), out_path, gap)
         for i in range(len(segs)):
-            (STORAGE_DIR / ("%s-seg-%d.mp3" % (mid, i))).unlink(missing_ok=True)
+            (STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i))).unlink(missing_ok=True)
     except Exception as e:  # noqa: BLE001
         conn.close()
         raise HTTPException(502, "TTS synthesis failed: %s" % e)

@@ -200,7 +200,7 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .trow{padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;position:relative;transition:background .15s var(--ease)}
 .trow:last-child{border-bottom:none}
 .trow:hover{background:var(--surface-low)}
-.trow.active{background:var(--surface);box-shadow:inset 2px 0 0 var(--primary)}
+.trow.active{background:var(--surface-highest);box-shadow:inset 3px 0 0 var(--primary)}
 .trow-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
 .trow-id{display:flex;align-items:center;gap:8px;min-width:0}
 .speaker-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -214,7 +214,7 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .trow-actions button:hover{background:var(--surface-high);color:var(--on-surface)}
 .trow-actions button.active{color:var(--primary)}
 .trow-actions button.active::after{content:"";position:absolute;left:20%;right:20%;bottom:1px;height:1.5px;background:var(--primary)}
-.pb-loop-label{font-size:11px;font-weight:500;padding:0 2px}
+.pb-loop-btn.on{border-color:var(--primary);color:var(--primary)}
 .trow-actions .rate-btn{width:auto;padding:0 5px;font-family:var(--font-mono);font-size:10px}
 .trow-en{font-size:13.5px;line-height:20px;margin-top:2px}
 .trow-zh{font-size:12px;line-height:17px;color:var(--on-variant);margin-top:3px;transition:opacity .2s var(--ease)}
@@ -750,13 +750,17 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <p class="material-meta" id="m-meta">Automotive · Vehicle Dynamics Engineer · Technical Discussion</p>
       </div>
       <div class="material-actions">
-        <div class="seg" style="grid-template-columns:repeat(3,1fr);flex-shrink:0">
+        <div class="seg" style="grid-template-columns:repeat(2,1fr);flex-shrink:0">
           <button class="seg-item active" data-mode="normal"><span data-i18n="mode.normal">Normal</span></button>
           <button class="seg-item" data-mode="blind"><span data-i18n="mode.blind">Blind</span></button>
         </div>
         <button class="btn btn-sm" id="btn-font" title="Adjust transcript font size">
           <svg class="icon icon-sm"><use href="#i-type"/></svg>
           <span class="mono t-10" id="font-label">13px</span>
+        </button>
+        <button class="btn btn-sm pb-loop-btn" id="btn-pb-loop" title="Single-sentence loop">
+          <svg class="icon icon-sm"><use href="#i-repeat"/></svg>
+          <span class="t-10 nowrap">单句循环</span>
         </button>
         <button class="btn btn-sm" id="btn-voice" title="Adjust corpus text or TTS voice">
           <svg class="icon icon-sm"><use href="#i-tune"/></svg>
@@ -852,7 +856,6 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   </div>
   <div class="pb-center">
     <div class="pb-controls">
-      <button id="btn-pb-loop" title="Single-sentence loop" class="pb-active-cap"><span class="pb-loop-label">单句循环</span></button>
       <button id="btn-pb-prev" title="Previous sentence [J]"><svg class="icon"><use href="#i-skip-back"/></svg></button>
       <button id="btn-pb-back10" class="pb-seek" title="Rewind 10s"><svg class="icon"><use href="#i-back10"/></svg><span class="pb-seek-num" id="pb-back-num">10</span></button>
       <button class="pb-play" id="btn-pb-play" title="Play/Pause [Space]"><svg class="icon" id="pb-play-ic"><use href="#i-play"/></svg><svg class="icon" id="pb-pause-ic" style="display:none"><use href="#i-pause"/></svg></button>
