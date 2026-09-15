@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """重构验证：音色角色独立行 + 试听融合 + 布局对齐 + 视觉反馈"""
+import os
 from playwright.sync_api import sync_playwright
 R=[]
 def log(n,ok,d=''):
     R.append((n,ok)); print(('PASS' if ok else 'FAIL'),'|',n,('| '+d if d else ''),flush=True)
 with sync_playwright() as p:
-    b=p.chromium.launch(executable_path='/opt/vm/preinstall/ms-playwright/chromium-1169/chrome-linux/chrome',args=['--no-sandbox'])
+    CHROME = '/opt/vm/preinstall/ms-playwright/chromium-1169/chrome-linux/chrome'
+    b = p.chromium.launch(**({'executable_path': CHROME, 'args': ['--no-sandbox']} if os.path.exists(CHROME) else {'args': ['--no-sandbox']}))
     pg=b.new_page(viewport={'width':1440,'height':900})
     errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
     pg.add_init_script("try{localStorage.setItem('telg-test-data','tire')}catch(e){}")

@@ -6,11 +6,26 @@
 
 ## 快速开始
 
+> 📖 **完整运行指南（Windows 适配：环境要求 / 分步命令 / 验证清单 / 常见问题）见 [`docs/running-guide.md`](docs/running-guide.md)**。以下为速览。
+
+### Windows 本地调试（真实后端，推荐）
+
+```powershell
+# 前置：Python 3.10+（安装时勾选 Add to PATH）+ ffmpeg（winget install Gyan.FFmpeg）
+cd D:\dev\telg-project\backend
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python main.py                # 保持终端开启
+# 浏览器打开 http://127.0.0.1:8000
+```
+
 ### 方式一：纯前端（Mock 模式，无需后端）
 
 ```bash
 open frontend/index.html     # macOS
 xdg-open frontend/index.html # Linux
+start frontend\index.html    # Windows
 ```
 
 前端默认连接真实后端（LLM/TTS 真实调用）；仅在「设置 → 开发者模式 → 测试数据」手动启用固定数据集时，才走本地模板数据，可离线走通 生成 → 语料 → 合成 → 发布 → 播放 → 管理 全流程。
