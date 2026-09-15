@@ -2188,7 +2188,7 @@ const I18N = {
     'settings.general.sub': 'Software-wide defaults — language, appearance, playback.',
     'settings.usage.sub': 'LLM token consumption — successful calls only.',
     'settings.usage.loading': 'Loading…',
-    'settings.usage.mock': 'Test-data mode — no usage records.',
+    'settings.usage.mock': 'Test-data mode — sample records shown.',
     'settings.usage.unavailable': 'Usage unavailable — backend not reachable.',
     'settings.usage.total': 'Total',
     'settings.usage.today': 'Today',
@@ -2329,7 +2329,7 @@ const I18N = {
     'settings.general.sub': '软件全局默认 — 语言、外观、播放。',
     'settings.usage.sub': 'LLM Token 消耗 — 仅统计成功调用。',
     'settings.usage.loading': '加载中…',
-    'settings.usage.mock': '测试数据模式 — 不产生用量记录。',
+    'settings.usage.mock': '测试数据模式 — 展示示例记录。',
     'settings.usage.unavailable': '用量不可用 — 后端未连接。',
     'settings.usage.total': '总计',
     'settings.usage.today': '今日',
@@ -3585,18 +3585,12 @@ function closeGenPanel() { $('gen-panel').classList.add('hidden'); }
 async function renderUsage() {
   const box = $('usage-body');
   if (!box) return;
-  const L = I18N[state.lang];
-  if (mockMode()) {
-    box.innerHTML = '<div class="t-11 dim" data-i18n="settings.usage.mock">Test-data mode — no usage records.</div>';
-    applyLang(); return;
-  }
-  box.innerHTML = '<div class="t-11 dim" data-i18n="settings.usage.loading">Loading…</div>';
-  try {
-    const d = await API.usage();
-    const fmt = n => (n || 0).toLocaleString();
-    const kb = n => ((n || 0) * 3 / 1024).toFixed(1) + ' KB';
-    const actName = { generate: 'Corpus', regenerate: 'Regenerate', 'test-llm': 'Test' };
+  const fmt = n => (n || 0).toLocaleString();
+  const kb = n => ((n || 0) * 3 / 1024).toFixed(1) + ' KB';
+  const actName = { generate: 'Corpus', regenerate: 'Regenerate', 'test-llm': 'Test' };
+  const render = (d, isMock) => {
     let html = '';
+    if (isMock) html += '<div class="t-10 dim" style="margin-bottom:8px" data-i18n="settings.usage.mock">Test-data mode — sample records shown.</div>';
     html += '<div class="usage-grid">' +
       '<div class="usage-cell"><span class="t-10 uc faint" data-i18n="settings.usage.total">Total</span>' +
       '<span class="t-15 mono">' + fmt(d.total.total_tokens) + '</span>' +
@@ -3622,6 +3616,24 @@ async function renderUsage() {
     }
     box.innerHTML = html;
     applyLang();
+  };
+  if (mockMode()) {
+    render({
+      total: { calls: 32, prompt_tokens: 84211, completion_tokens: 120390, total_tokens: 204601 },
+      today: { calls: 4, prompt_tokens: 8420, completion_tokens: 12039, total_tokens: 20459 },
+      breakdown: { generate: 24, regenerate: 3, 'test-llm': 5 },
+      by_day: [
+        { date: '2026-09-14', calls: 9, total_tokens: 50211 },
+        { date: '2026-09-15', calls: 19, total_tokens: 133931 },
+        { date: '2026-09-16', calls: 4, total_tokens: 20459 }
+      ]
+    }, true);
+    return;
+  }
+  box.innerHTML = '<div class="t-11 dim" data-i18n="settings.usage.loading">Loading…</div>';
+  try {
+    const d = await API.usage();
+    render(d, false);
   } catch (e) {
     box.innerHTML = '<div class="t-11 dim" data-i18n="settings.usage.unavailable">Usage unavailable — backend not reachable.</div>';
     applyLang();
