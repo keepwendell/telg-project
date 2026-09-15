@@ -1862,102 +1862,90 @@ function validateLLMCfg(cfg) {
   return null;
 }
 
+/* Robust fetch wrapper: turns network errors and non-JSON (HTML) responses
+   into actionable messages instead of "Unexpected token '<'". */
+async function apiFetch(path, opts, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs || 60000);
+  let res;
+  try {
+    res = await fetch(CONFIG.apiBase + path, Object.assign({ signal: ctrl.signal }, opts || {}));
+  } catch (e) {
+    clearTimeout(timer);
+    throw new Error('Cannot reach backend at ' + CONFIG.apiBase + ' — start FastAPI (uvicorn backend.main:app --reload) and open http://localhost:8000');
+  }
+  clearTimeout(timer);
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
+  if (!ct.includes('application/json')) {
+    let body = '';
+    try { body = (await res.text()).slice(0, 100).replace(/\s+/g, ' '); } catch (_) {}
+    throw new Error('Backend returned HTML instead of JSON (' + res.status + ') — /api/v1 is not served here. Start FastAPI and open http://localhost:8000 (not a static file server)' + (body ? ' · got: ' + body.slice(0, 60) : ''));
+  }
+  const data = await res.json();
+  if (!res.ok) {
+    const msg = data && data.detail ? data.detail : ('HTTP ' + res.status);
+    throw new Error(msg);
+  }
+  return data;
+}
+async function apiFetchSoft(path, opts) {
+  try { return await apiFetch(path, opts); }
+  catch (e) { return { ok: false, error: e.message }; }
+}
+
 const API = {
   async generate(params) {
     if (mockMode()) return mockGenerate(params);
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 60000);
-    try {
-      const res = await fetch(CONFIG.apiBase + '/generate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params), signal: ctrl.signal
-      });
-      if (!res.ok) {
-        let msg = 'generate failed: ' + res.status;
-        try { const e = await res.json(); if (e.detail) msg = e.detail; } catch (_) {}
-        throw new Error(msg);
-      }
-      return res.json();
-    } finally { clearTimeout(timer); }
+    return apiFetch('/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) });
   },
   async regenerateMaterial(id, params) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 60000);
-    try {
-      const res = await fetch(CONFIG.apiBase + '/materials/' + id + '/regenerate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params), signal: ctrl.signal
-      });
-      if (!res.ok) {
-        let msg = 'regenerate failed: ' + res.status;
-        try { const e = await res.json(); if (e.detail) msg = e.detail; } catch (_) {}
-        throw new Error(msg);
-      }
-      return res.json();
-    } finally { clearTimeout(timer); }
+    return apiFetch('/materials/' + id + '/regenerate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) });
   },
   async listMaterials() {
     if (mockMode()) return MOCK_MATERIALS.map(m => ({ id: m.id, title: m.meta.title, domain: m.meta.domain, role: m.meta.role, difficulty: m.meta.difficulty, duration_ms: m.meta.total_duration_ms, tag: m.meta.tag }));
-    const res = await fetch(CONFIG.apiBase + '/materials');
-    return res.json();
+    return apiFetch('/materials');
   },
   async getMaterial(id) {
     if (mockMode()) return MOCK_MATERIALS.find(m => m.id === id) || MOCK_MATERIALS[0];
-    const res = await fetch(CONFIG.apiBase + '/materials/' + id);
-    return res.json();
+    return apiFetch('/materials/' + id);
   },
   async synthesize(id) {
     if (mockMode()) return { audio_url: '/mock/audio/' + id + '.wav', total_duration_ms: 0 };
-    const res = await fetch(CONFIG.apiBase + '/materials/' + id + '/synthesize', { method: 'POST' });
-    return res.json();
+    return apiFetch('/materials/' + id + '/synthesize', { method: 'POST' }, 300000);
   },
   async health() {
-    const res = await fetch(CONFIG.apiBase + '/health');
-    return res.json();
+    return apiFetch('/health', {}, 8000);
   },
   async patchMaterial(id, patch) {
-    const res = await fetch(CONFIG.apiBase + '/materials/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
-    if (!res.ok) throw new Error('patch failed: ' + res.status);
-    return res.json();
+    return apiFetch('/materials/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
   },
   async deleteMaterial(id) {
-    const res = await fetch(CONFIG.apiBase + '/materials/' + id, { method: 'DELETE' });
-    if (!res.ok) throw new Error('delete failed: ' + res.status);
-    return res.json();
+    return apiFetch('/materials/' + id, { method: 'DELETE' });
   },
   async listPlaylists() {
-    const res = await fetch(CONFIG.apiBase + '/playlists');
-    return res.json();
+    return apiFetch('/playlists');
   },
   async createPlaylist(name) {
-    const res = await fetch(CONFIG.apiBase + '/playlists', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
-    return res.json();
+    return apiFetch('/playlists', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
   },
   async renamePlaylist(id, name) {
-    const res = await fetch(CONFIG.apiBase + '/playlists/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
-    return res.json();
+    return apiFetch('/playlists/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
   },
   async deletePlaylist(id) {
-    const res = await fetch(CONFIG.apiBase + '/playlists/' + id, { method: 'DELETE' });
-    return res.json();
+    return apiFetch('/playlists/' + id, { method: 'DELETE' });
   },
   async addToPlaylist(pid, mid) {
-    const res = await fetch(CONFIG.apiBase + '/playlists/' + pid + '/materials', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ material_id: mid }) });
-    return res.json();
+    return apiFetch('/playlists/' + pid + '/materials', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ material_id: mid }) });
   },
   async removeFromPlaylist(pid, mid) {
-    const res = await fetch(CONFIG.apiBase + '/playlists/' + pid + '/materials/' + mid, { method: 'DELETE' });
-    return res.json();
+    return apiFetch('/playlists/' + pid + '/materials/' + mid, { method: 'DELETE' });
   },
   async testLLM(cfg) {
     /* Connection test always hits the live backend — it diagnoses real
        reachability, so it is NOT gated by Test Data / mock mode. */
     const err = validateLLMCfg(cfg);
     if (err) return { ok: false, error: err };
-    try {
-      const res = await fetch(CONFIG.apiBase + '/config/test-llm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
-      return res.json();
-    } catch (e) {
-      return { ok: false, error: 'Cannot reach backend at ' + CONFIG.apiBase + ' — start FastAPI (uvicorn backend.main:app --reload) or check the network' };
-    }
+    return apiFetchSoft('/config/test-llm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
   },
   async testTTS(cfg) {
     if (mockMode()) {
@@ -1965,18 +1953,15 @@ const API = {
       if (!cfg || !String(cfg.voice || '').trim()) return { ok: false, error: 'voice is empty' };
       return { ok: true, audio_url: '', mock: true };
     }
-    const res = await fetch(CONFIG.apiBase + '/config/test-tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
-    return res.json();
+    return apiFetchSoft('/config/test-tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
   },
   async testGenerate(cfg) {
     if (mockMode()) { await new Promise(r => setTimeout(r, 800)); return { ok: true, latency_ms: 42, segs: 6, words: 290, total_ms: 120000, title: 'Tire Burst Stability Control' }; }
-    const res = await fetch(CONFIG.apiBase + '/config/test-generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
-    return res.json();
+    return apiFetchSoft('/config/test-generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
   },
   async unlockDev(key) {
     if (mockMode()) { await new Promise(r => setTimeout(r, 200)); return { ok: key === 'telg-dev' }; }
-    const res = await fetch(CONFIG.apiBase + '/config/unlock-dev', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) });
-    return res.json();
+    return apiFetchSoft('/config/unlock-dev', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) });
   }
 };
 

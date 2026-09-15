@@ -15,6 +15,9 @@ xdg-open frontend/index.html # Linux
 
 前端默认连接真实后端（LLM/TTS 真实调用）；仅在「设置 → 开发者模式 → 测试数据」手动启用固定数据集时，才走本地模板数据，可离线走通 生成 → 语料 → 合成 → 发布 → 播放 → 管理 全流程。
 
+> ⚠️ **必须通过后端访问前端**：`python main.py` 后打开 `http://127.0.0.1:8000`（后端同源托管前端 + `/api/v1`）。
+> 不要用 `file://` 双击 index.html，也不要用 `python -m http.server` 等静态服务器单独托管前端——否则 `/api/v1/*` 会打到静态服务器并返回 HTML 404，连接测试会报 “Backend returned HTML instead of JSON”。
+
 ### 方式二：真实后端（FastAPI + SQLite）
 
 ```bash
