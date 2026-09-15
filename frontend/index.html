@@ -3024,6 +3024,12 @@ function syncLoopUI() {
 function toggleLoop() {
   state.loop = !state.loop;
   syncLoopUI();
+  if (state.loop) {
+    /* entering loop: jump to the start of the current sentence so the loop
+       is actually heard from the beginning of the sentence */
+    const idx = currentSegIndex();
+    if (idx >= 0) seekSentence(idx, state.playing);
+  }
   showToast(state.loop ? 'Sentence loop on' : 'Sentence loop off');
 }
 function toggleInspector() {
@@ -3403,6 +3409,11 @@ function synthesizeAudio() {
       state.synthesizing = false;
       renderMaterial();
       state.time = 0;
+      /* force the <audio> element to drop its cached source: the file at the
+         same URL was just replaced by re-synthesis, otherwise play() would
+         reuse the stale buffer and the highlight/timeline would drift */
+      const pb = document.getElementById('pb-audio');
+      if (pb) { pb.dataset.src = ''; pb.removeAttribute('src'); pb.load(); }
       play();
       syncHighlight();
       showToast('Audio ready — playing from sentence 1');
@@ -3498,10 +3509,11 @@ function loadMaterial(id) {
 }
 function currentSegIndex() {
   const art = currentArtifact();
+  let idx = -1;
   for (let i = 0; i < art.dialogue.length; i++) {
-    if (state.time >= art.dialogue[i].start_ms && state.time < art.dialogue[i].end_ms) return i;
+    if (state.time >= art.dialogue[i].start_ms) idx = i;
   }
-  return -1;
+  return idx;
 }
 function tick() {
   /* Real-audio mode: position comes from the <audio> element via timeupdate;
@@ -3561,7 +3573,7 @@ function play() {
     const audio = $('pb-audio');
     const url = art.meta.audio_url;
     if (!url) { state.playing = false; setPlayIcon(false); showToast('No audio file for this material'); return; }
-    if (audio.dataset.src !== url) { audio.src = url; audio.dataset.src = url; }
+    if (audio.dataset.src !== url) { audio.dataset.src = url; audio.src = url; audio.load(); }
     audio.playbackRate = CONFIG.speeds[state.speedIdx];
     audio.currentTime = state.time / 1000;
     audio.play().then(() => {}).catch(() => { state.playing = false; setPlayIcon(false); });
