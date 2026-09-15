@@ -959,7 +959,37 @@ def probe_ms(path: Path) -> int:
         raise RuntimeError("ffprobe failed on %s" % path.name)  # noqa: TRY003
 
 
-def merge_mp3(out_dir: Path, mid: str, n: int, out: Path) -> None:
+def probe_audio_fmt(path: Path) -> tuple[int, int]:
+    """Return (sample_rate, channels) of an audio file for matching silence."""
+    p = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "a:0",
+         "-show_entries", "stream=sample_rate,channels", "-of", "csv=p=0", str(path)],
+        capture_output=True, text=True, timeout=30,
+    )
+    parts = p.stdout.strip().split(",")
+    try:
+        return int(parts[0]), int(parts[1])
+    except (IndexError, ValueError):
+        return 24000, 1
+
+
+def ensure_gap(out_dir: Path, sr: int, ch: int, gap_ms: int = 300) -> Path:
+    """Reusable mp3 silence file matching the sentence audio format."""
+    gp = out_dir / ("_gap_%d_%d_%d.mp3" % (sr, ch, gap_ms))
+    if not gp.exists():
+        subprocess.run(
+            ["ffmpeg", "-y", "-f", "lavfi",
+             "-i", "anullsrc=r=%d:cl=%s" % (sr, "stereo" if ch == 2 else "mono"),
+             "-t", "%.3f" % (gap_ms / 1000.0), "-c:a", "libmp3lame", "-q:a", "9",
+             str(gp)],
+            capture_output=True, text=True, timeout=30, check=True,
+        )
+    return gp
+
+
+def merge_mp3(out_dir: Path, mid: str, n: int, out: Path, gap: Path | None = None) -> None:
+    """Concatenate per-sentence mp3s, inserting `gap` silence between sentences so the
+    timeline (which accounts for the gap) matches the actual audio position."""
     lst = out_dir / (mid + "-concat.txt")
     with lst.open("w", encoding="utf-8") as fh:
         for i in range(n):
@@ -967,6 +997,8 @@ def merge_mp3(out_dir: Path, mid: str, n: int, out: Path) -> None:
             if not seg.exists():
                 raise RuntimeError("missing segment %s" % seg.name)
             fh.write("file '%s'\n" % seg.name.replace("'", "'\\''"))
+            if gap is not None and i < n - 1:
+                fh.write("file '%s'\n" % gap.name.replace("'", "'\\''"))
     try:
         subprocess.run(
             ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
@@ -1022,8 +1054,11 @@ async def synthesize(mid: str, body: SynthIn | None = None):
             dur = probe_ms(seg_path)
             times.append((seg["seq"], start, start + dur))
             start += dur + gap_ms
+        first_seg = STORAGE_DIR / ("%s-seg-0.mp3" % mid)
+        sr, ch = probe_audio_fmt(first_seg) if first_seg.exists() else (24000, 1)
+        gap = ensure_gap(STORAGE_DIR, sr, ch, gap_ms)
         out_path = STORAGE_DIR / (mid + ".mp3")
-        merge_mp3(STORAGE_DIR, mid, len(segs), out_path)
+        merge_mp3(STORAGE_DIR, mid, len(segs), out_path, gap)
         for i in range(len(segs)):
             (STORAGE_DIR / ("%s-seg-%d.mp3" % (mid, i))).unlink(missing_ok=True)
     except Exception as e:  # noqa: BLE001

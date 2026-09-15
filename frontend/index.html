@@ -212,6 +212,9 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .trow:hover .trow-actions,.trow.active .trow-actions{opacity:1}
 .trow-actions button{display:inline-flex;align-items:center;justify-content:center;width:24px;height:22px;border-radius:4px;color:var(--outline)}
 .trow-actions button:hover{background:var(--surface-high);color:var(--on-surface)}
+.trow-actions button.active{color:var(--primary)}
+.trow-actions button.active::after{content:"";position:absolute;left:20%;right:20%;bottom:1px;height:1.5px;background:var(--primary)}
+.pb-loop-label{font-size:11px;font-weight:500;padding:0 2px}
 .trow-actions .rate-btn{width:auto;padding:0 5px;font-family:var(--font-mono);font-size:10px}
 .trow-en{font-size:13.5px;line-height:20px;margin-top:2px}
 .trow-zh{font-size:12px;line-height:17px;color:var(--on-variant);margin-top:3px;transition:opacity .2s var(--ease)}
@@ -750,15 +753,10 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <div class="seg" style="grid-template-columns:repeat(3,1fr);flex-shrink:0">
           <button class="seg-item active" data-mode="normal"><span data-i18n="mode.normal">Normal</span></button>
           <button class="seg-item" data-mode="blind"><span data-i18n="mode.blind">Blind</span></button>
-          <button class="seg-item" data-mode="repeat"><span data-i18n="mode.repeat">Repeat</span></button>
         </div>
         <button class="btn btn-sm" id="btn-font" title="Adjust transcript font size">
           <svg class="icon icon-sm"><use href="#i-type"/></svg>
           <span class="mono t-10" id="font-label">13px</span>
-        </button>
-        <button class="btn btn-sm" id="btn-loop" title="Toggle sentence loop mode">
-          <svg class="icon icon-sm"><use href="#i-repeat"/></svg>
-          <span class="nowrap" data-i18n="mode.loop">Loop</span>
         </button>
         <button class="btn btn-sm" id="btn-voice" title="Adjust corpus text or TTS voice">
           <svg class="icon icon-sm"><use href="#i-tune"/></svg>
@@ -854,7 +852,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   </div>
   <div class="pb-center">
     <div class="pb-controls">
-      <button id="btn-pb-loop" title="Sentence loop" class="pb-active-cap"><svg class="icon"><use href="#i-repeat"/></svg></button>
+      <button id="btn-pb-loop" title="Single-sentence loop" class="pb-active-cap"><span class="pb-loop-label">单句循环</span></button>
       <button id="btn-pb-prev" title="Previous sentence [J]"><svg class="icon"><use href="#i-skip-back"/></svg></button>
       <button id="btn-pb-back10" class="pb-seek" title="Rewind 10s"><svg class="icon"><use href="#i-back10"/></svg><span class="pb-seek-num" id="pb-back-num">10</span></button>
       <button class="pb-play" id="btn-pb-play" title="Play/Pause [Space]"><svg class="icon" id="pb-play-ic"><use href="#i-play"/></svg><svg class="icon" id="pb-pause-ic" style="display:none"><use href="#i-pause"/></svg></button>
@@ -2919,8 +2917,7 @@ function transcriptHTML(art) {
         '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0">' +
           '<span class="trow-time">' + fmt(s.start_ms) + ' – ' + fmt(s.end_ms) + '</span>' +
           '<span class="trow-actions">' +
-            '<button data-act="replay" title="Replay sentence"><svg class="icon icon-sm"><use href="#i-replay"/></svg></button>' +
-            '<button class="rate-btn" data-act="slow" title="Slow replay 0.8x">0.8x</button>' +
+            '<button data-act="sloop" title="Loop this sentence"><svg class="icon icon-sm"><use href="#i-repeat"/></svg></button>' +
             '<button data-act="bookmark" title="Bookmark phrase"><svg class="icon icon-sm"><use href="#i-bookmark"/></svg></button>' +
           '</span>' +
         '</div>' +
@@ -3008,8 +3005,6 @@ function applyListenMode() {
 function setListenMode(mode) {
   state.listenMode = mode;
   applyListenMode();
-  if (mode === 'repeat') { if (!state.loop) toggleLoop(); }
-  else if (mode !== 'repeat' && state.loop) toggleLoop();
 }
 function cycleFont() {
   state.fontIdx = (state.fontIdx + 1) % CONFIG.fontSizes.length;
@@ -3019,9 +3014,13 @@ function cycleFont() {
     el.style.fontSize = fs; el.style.lineHeight = (parseInt(fs) + 9) + 'px';
   });
 }
+function syncLoopUI() {
+  const b = document.getElementById('btn-pb-loop');
+  if (b) b.classList.toggle('on', state.loop);
+}
 function toggleLoop() {
   state.loop = !state.loop;
-  [$('btn-loop'), $('btn-pb-loop')].forEach(b => b.classList.toggle('on', state.loop));
+  syncLoopUI();
   showToast(state.loop ? 'Sentence loop on' : 'Sentence loop off');
 }
 function toggleInspector() {
@@ -3602,8 +3601,19 @@ function prevSentence() {
 function syncHighlight() {
   const art = currentArtifact(), idx = currentSegIndex();
   document.querySelectorAll('#transcript-list .trow').forEach((row, i) => {
-    row.classList.toggle('active', state.playing && i === idx);
-    row.querySelector('[data-flag]').style.display = (state.playing && i === idx) ? '' : 'none';
+    /* keep the focused sentence highlighted even when paused; only the status changes */
+    row.classList.toggle('active', i === idx);
+    const flag = row.querySelector('[data-flag]');
+    if (flag) {
+      if (i === idx) {
+        flag.style.display = '';
+        flag.innerHTML = state.playing ? '<span class="dot"></span>Playing' : '<span class="dot"></span>Paused';
+      } else {
+        flag.style.display = 'none';
+      }
+    }
+    const sloopBtn = row.querySelector('[data-act="sloop"]');
+    if (sloopBtn) sloopBtn.classList.toggle('active', state.loop && i === idx);
   });
   const active = document.querySelector('#transcript-list .trow.active');
   if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -4215,7 +4225,6 @@ function onClick(e) {
   const modeBtn = e.target.closest('.material-actions .seg-item[data-mode]');
   if (modeBtn) { setListenMode(modeBtn.dataset.mode); return; }
   if (e.target.closest('#btn-font')) { cycleFont(); return; }
-  if (e.target.closest('#btn-loop')) { toggleLoop(); return; }
   if (e.target.closest('#btn-md-export')) { exportMD(currentArtifact()); return; }
   const phDone = e.target.closest('.gen-phase.done');
   if (phDone) {
@@ -4298,8 +4307,14 @@ function onClick(e) {
   const act = e.target.closest('[data-act]');
   if (act) {
     const row = act.closest('.trow'), idx = +row.dataset.idx;
-    if (act.dataset.act === 'slow') { state.speedIdx = CONFIG.speeds.indexOf(0.8); renderPlayerBar(); }
-    else if (act.dataset.act === 'bookmark') { showToast('Phrase bookmarked (demo)'); return; }
+    if (act.dataset.act === 'sloop') {
+      /* enable single-sentence loop and jump to that sentence */
+      state.loop = true;
+      syncLoopUI();
+      seekSentence(idx, true);
+      return;
+    }
+    if (act.dataset.act === 'bookmark') { showToast('Phrase bookmarked (demo)'); return; }
     seekSentence(idx, true);
     return;
   }
