@@ -3208,6 +3208,7 @@ function updateRefineToneLabel() {
 }
 let adjustPanel = 'text';
 function openAdjustModal(tab) {
+  if (state.playing) pause();          /* opening an edit modal suspends playback */
   adjustPanel = tab === 'voice' ? 'voice' : 'text';
   const lock = state.current;
   if (lock && lock.meta.saved === true) setPhases(3);   /* unlock — show edit progress */
@@ -3640,6 +3641,20 @@ function toggleSpeedMenu() {
   if (!hidden) setSpeedMenu();
 }
 function closeSpeedMenu() { $('speed-menu').classList.add('hidden'); }
+(function initVolDrag() {
+  const track = document.getElementById('vol-track');
+  if (!track) return;
+  let dragging = false;
+  const setVol = (clientX) => {
+    const r = track.getBoundingClientRect();
+    state.volume = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+    document.getElementById('vol-fill').style.width = (state.volume * 100) + '%';
+    if (!mockMode()) { try { document.getElementById('pb-audio').volume = state.volume; } catch (e) {} }
+  };
+  track.addEventListener('pointerdown', (e) => { dragging = true; e.preventDefault(); setVol(e.clientX); });
+  window.addEventListener('pointermove', (e) => { if (dragging) setVol(e.clientX); });
+  window.addEventListener('pointerup', () => { dragging = false; });
+})();
 function setSpeed(sp) {
   const i = CONFIG.speeds.indexOf(sp);
   if (i >= 0) {
@@ -4271,6 +4286,7 @@ function onClick(e) {
     const r = vt.getBoundingClientRect();
     state.volume = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
     $('vol-fill').style.width = (state.volume * 100) + '%';
+    if (!mockMode()) { try { $('pb-audio').volume = state.volume; } catch (e) {} }
     return;
   }
   const sk = e.target.closest('#pb-seek');

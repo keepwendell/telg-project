@@ -621,6 +621,11 @@ LLM_SYSTEM_PROMPT = """你是资深技术英语听力素材生成器，面向汽
 - 目标总词数：约 {words} 词（按对话轮数合理分配，宁精勿灌水）
 - 特殊要求：{injections}
 
+## 对话结构（根据 Scenario 决定说话人数与角色，必须严格遵守）
+- 单人技术讲解/汇报场景（Scenario 为 Single Technical Deep-Dive、Technical Presentation 等）：dialogue 只包含 1 个 speaker，role 为该场景角色（如 Vehicle Dynamics Engineer），全程一人连贯讲解，可带少量自问自答，但不要出现第二个人名或 Interviewer/Candidate 角色。
+- 技术面试场景（Scenario 为 Staff Systems Technical Interview、Interview 等）：dialogue 恰好 2 个 speaker，role 分别为 Interviewer 与 Candidate，一问一答。
+- 其余场景（讨论、评审、RCA 等）：dialogue 恰好 2 个 speaker，role 为对应工程师角色（如 Vehicle Dynamics Engineer、Controls Lead）。
+
 请直接输出 JSON。"""
 
 
