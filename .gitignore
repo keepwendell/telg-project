@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# 运行期数据
+backend/telg.db
+backend/storage/*
+!backend/storage/.gitkeep
+
+# 浏览器截图自检产物
+_shots/
+
+# 系统临时输出
+.tmp-tool-results/
+
+# 打包产物
+*.zip
