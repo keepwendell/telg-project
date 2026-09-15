@@ -417,6 +417,7 @@ class TestTTSIn(BaseModel):
     voice: str = ""
     speech_rate: float = 1.0
     style: str = ""
+    text: str = ""
 
 
 class SynthIn(BaseModel):
@@ -1281,7 +1282,7 @@ async def test_tts(c: TestTTSIn):
         return {"ok": False, "error": "edge-tts not installed — run: pip install edge-tts"}
     voice = (c.voice or "").split("+")[0].strip() or "en-US-GuyNeural"
     rate = max(0.5, min(2.0, c.speech_rate or 1.0))
-    text = "This is a TELG voice test. Technical English listening, ready when you are."
+    text = (c.text or "").strip() or "Technical English, grounded in real engineering. 以真实技术知识为背景，以英语为训练载体。"
     STORAGE_DIR.mkdir(parents=True, exist_ok=True)
     out = STORAGE_DIR / ("test_%d.mp3" % int(time.time() * 1000))
     try:
