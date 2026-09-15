@@ -1186,5 +1186,42 @@ if FRONTEND_DIR.exists():
 
 
 if __name__ == "__main__":
+    import sys
+
+    # --- Startup self-check: print actionable hints instead of a bare crash ---
+    missing = []
+    for mod, pip in (("fastapi", "fastapi"), ("uvicorn", "uvicorn"),
+                     ("openai", "openai"), ("edge_tts", "edge-tts")):
+        try:
+            __import__(mod)
+        except ImportError:
+            missing.append(pip)
+    if missing:
+        print("=" * 60)
+        print("[TELG] Missing dependencies: " + ", ".join(missing))
+        print("       Install them first (inside the virtual env):")
+        print("       pip install " + " ".join(missing))
+        print("       If you already ran pip install, the virtual env is")
+        print("       probably not activated — activate it, then retry.")
+        print("=" * 60)
+        sys.exit(1)
+    import shutil
+    if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
+        print("=" * 60)
+        print("[TELG] WARNING: ffmpeg/ffprobe not found on PATH.")
+        print("       TTS synthesis (audio merge & duration probe) will fail.")
+        print("       Windows:  winget install Gyan.FFmpeg   (then reopen terminal)")
+        print("       Linux:    sudo apt install ffmpeg")
+        print("       macOS:    brew install ffmpeg")
+        print("=" * 60)
+
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    try:
+        uvicorn.run(app, host="127.0.0.1", port=8000)
+    except OSError as e:
+        print("=" * 60)
+        print("[TELG] Failed to bind port 8000: %s" % e)
+        print("       Port may be in use. Check: netstat -ano | findstr :8000")
+        print("       Kill the occupying PID, or change 'port=8000' above.")
+        print("=" * 60)
+        sys.exit(1)
