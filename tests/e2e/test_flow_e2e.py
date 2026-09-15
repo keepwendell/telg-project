@@ -74,7 +74,7 @@ with sync_playwright() as p:
     pg.evaluate("document.getElementById('btn-engine-config').click(); true"); pg.wait_for_timeout(300)
     log('H1 设置弹窗打开', not pg.evaluate("document.getElementById('engine-modal').classList.contains('hidden')"))
     tabs = pg.evaluate("document.querySelectorAll('#engine-modal .s-nav-item').length")
-    log('H2 设置 Tab 数=6', tabs==6, f'tabs={tabs}')
+    log('H2 设置 Tab 数=7', tabs==7, f'tabs={tabs}')
     pg.evaluate("document.querySelector('#cfg-theme-seg .seg-item[data-theme-opt=\\'light\\']').click(); true"); pg.wait_for_timeout(200)
     pg.evaluate("document.querySelector('#btn-modal-save').click(); true"); pg.wait_for_timeout(300)
     t1 = pg.evaluate("document.documentElement.dataset.theme")

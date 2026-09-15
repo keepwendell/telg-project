@@ -140,6 +140,17 @@ CREATE TABLE IF NOT EXISTS generation_jobs (
   created_at INTEGER,
   updated_at INTEGER
 );
+CREATE TABLE IF NOT EXISTS llm_usage (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  provider TEXT NOT NULL,
+  model TEXT NOT NULL,
+  action TEXT NOT NULL,                        -- generate | regenerate | test-llm
+  prompt_tokens INTEGER NOT NULL DEFAULT 0,
+  completion_tokens INTEGER NOT NULL DEFAULT 0,
+  total_tokens INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_llm_usage_created ON llm_usage(created_at);
 """
 
 
@@ -701,7 +712,7 @@ class LLMGenerationError(RuntimeError):
     pass
 
 
-def call_llm_with_retry(p: GenerateIn) -> dict:
+def call_llm_with_retry(p: GenerateIn, action: str = "generate") -> dict:
     cfg = p.llm_config or {}
     base = (cfg.get("base_url") or os.environ.get("TELG_LLM_BASE") or "https://api.deepseek.com/v1").strip().rstrip("/")
     key = (cfg.get("api_key") or os.environ.get("DEEPSEEK_API_KEY") or "").strip()
@@ -726,6 +737,7 @@ def call_llm_with_retry(p: GenerateIn) -> dict:
               .replace("{words}", str(target_words))
               .replace("{injections}", (p.advanced.get("injections") or "无") if isinstance(p.advanced, dict) else "无"))
     errors = []
+    last_usage = None
     for attempt in range(3):
         user = build_user_prompt(p)
         if errors:
@@ -740,14 +752,36 @@ def call_llm_with_retry(p: GenerateIn) -> dict:
                     {"role": "user", "content": user},
                 ],
             )
+            last_usage = getattr(resp, "usage", None)
             raw = (resp.choices[0].message.content or "").strip()
             data = json.loads(raw)
             art = LLMArtifact.model_validate(data)
             validate_extra(art, p)
+            _record_usage(cfg, action, last_usage)
             return art.model_dump(by_alias=True)
         except Exception as e:  # noqa: BLE001
             errors.append("%s" % e)
     raise LLMGenerationError("LLM generation failed after 3 attempts: " + " | ".join(errors[-2:]))
+
+
+def _record_usage(cfg: dict, action: str, usage) -> None:
+    """Persist LLM token usage (successful calls only). Never breaks generation."""
+    try:
+        total = int(getattr(usage, "total_tokens", 0) or 0)
+        if not total:
+            return
+        con = db()
+        con.execute(
+            "INSERT INTO llm_usage(provider, model, action, prompt_tokens, completion_tokens, total_tokens)"
+            " VALUES(?,?,?,?,?,?)",
+            ((cfg.get("provider") or "openai-compatible"), (cfg.get("model") or ""), action,
+             int(getattr(usage, "prompt_tokens", 0) or 0),
+             int(getattr(usage, "completion_tokens", 0) or 0),
+             total),
+        )
+        con.commit()
+    except Exception:  # noqa: BLE001 — usage logging must never break generation
+        pass
 
 
 def estimate_timeline(dialogue: list[dict], total_ms: int) -> None:
@@ -775,12 +809,12 @@ def health():
         raise HTTPException(503, "database unavailable")
 
 
-def build_artifact(p: GenerateIn) -> dict:
+def build_artifact(p: GenerateIn, action: str = "generate") -> dict:
     # Build a Generation Artifact from the real LLM (no DB writes).
     if p.test_mode or os.environ.get("TELG_MOCK_LLM") == "1":
         return mock_generate(p)
     try:
-        payload = call_llm_with_retry(p)
+        payload = call_llm_with_retry(p, action)
     except LLMGenerationError as e:
         raise HTTPException(502, detail=str(e))  # noqa: B904
     sec = parse_sec(p.length) or 120
@@ -862,7 +896,7 @@ def regenerate(mid: str, p: GenerateIn):
         conn.close()
         raise HTTPException(404, "material not found")
     conn.close()
-    art = build_artifact(p)
+    art = build_artifact(p, "regenerate")
     art["id"] = mid
     conn = db()
     for t in ("dialogue_segments", "vocabulary", "listening_questions", "core_sentence_patterns"):
@@ -1081,6 +1115,21 @@ def test_llm(c: TestLLMIn):
     try:
         with urllib.request.urlopen(req, timeout=15) as r:
             body = json.loads(r.read().decode("utf-8"))
+        # Record usage from the connectivity probe (max_tokens=8, negligible).
+        try:
+            u = body.get("usage") or {}
+            total = int(u.get("total_tokens") or 0)
+            if total:
+                con = db()
+                con.execute(
+                    "INSERT INTO llm_usage(provider, model, action, prompt_tokens, completion_tokens, total_tokens)"
+                    " VALUES(?,?,?,?,?,?)",
+                    ((c.provider or "openai-compatible"), (c.model or "deepseek-chat"), "test-llm",
+                     int(u.get("prompt_tokens") or 0), int(u.get("completion_tokens") or 0), total),
+                )
+                con.commit()
+        except Exception:  # noqa: BLE001
+            pass
         return {
             "ok": True,
             "latency_ms": int((time.time() - t0) * 1000),
@@ -1158,6 +1207,33 @@ def unlock_dev(c: dict):
     if provided != expected:
         return {"ok": False, "error": "invalid key"}
     return {"ok": True}
+
+
+@app.get("/api/v1/usage")
+def usage_stats():
+    """LLM token usage aggregation: total / today / per-day / per-action."""
+    conn = db()
+    def row_sum(where: str, params: tuple = ()):
+        r = conn.execute(
+            "SELECT COUNT(*) AS calls,"
+            " COALESCE(SUM(prompt_tokens),0), COALESCE(SUM(completion_tokens),0), COALESCE(SUM(total_tokens),0)"
+            " FROM llm_usage WHERE " + where, params).fetchone()
+        return {"calls": r[0], "prompt_tokens": r[1], "completion_tokens": r[2], "total_tokens": r[3]}
+
+    total = row_sum("1=1")
+    today = row_sum("date(created_at) = date('now','localtime')")
+    days = [
+        {"date": r[0], "prompt_tokens": r[1], "completion_tokens": r[2], "total_tokens": r[3], "calls": r[4]}
+        for r in conn.execute(
+            "SELECT date(created_at), COALESCE(SUM(prompt_tokens),0), COALESCE(SUM(completion_tokens),0),"
+            " COALESCE(SUM(total_tokens),0), COUNT(*) FROM llm_usage"
+            " GROUP BY date(created_at) ORDER BY date(created_at) DESC LIMIT 14"
+        ).fetchall()
+    ]
+    breakdown = {r[0]: r[1] for r in conn.execute(
+        "SELECT action, COUNT(*) FROM llm_usage GROUP BY action").fetchall()}
+    conn.close()
+    return {"ok": True, "total": total, "today": today, "by_day": days, "breakdown": breakdown, "mock": False}
 
 
 @app.post("/api/v1/config/test-tts")

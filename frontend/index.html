@@ -429,6 +429,16 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .modal-body{padding:18px;display:flex;flex-direction:column;gap:16px}
 .modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
 .form-row{display:flex;flex-direction:column;gap:6px}
+.refine-ctx{border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:var(--surface-low);margin-bottom:2px}
+.refine-ctx .form-row{flex-direction:row;align-items:baseline;gap:8px;padding:2px 0}
+.refine-ctx .form-row>span:first-child{min-width:86px}
+.radio-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--on-variant);cursor:pointer;transition:color .12s var(--ease)}
+.radio-row:hover{color:var(--on-surface)}
+.radio-row input{accent-color:var(--primary);margin:0}
+.usage-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.usage-cell{display:flex;flex-direction:column;gap:3px;padding:12px 14px;background:var(--surface-low);border:1px solid var(--line);border-radius:7px}
+.usage-days{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.usage-day{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;background:var(--surface-low);border:1px solid var(--line);border-radius:6px;font-size:11px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .test-grid{grid-template-columns:auto 1fr auto}
 .test-result{font-family:var(--font-mono);font-size:10px;color:var(--outline);align-self:center;min-height:14px}
@@ -624,6 +634,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   <symbol id="i-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.04A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.04A2.5 2.5 0 0 0 14.5 2Z"/></symbol>
   <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21.5"/></symbol>
   <symbol id="i-type" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="20"/><line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="13"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.4"/><line x1="12" y1="1.8" x2="12" y2="3.6"/><line x1="12" y1="20.4" x2="12" y2="22.2"/><line x1="4.2" y1="4.2" x2="5.4" y2="5.4"/><line x1="18.6" y1="18.6" x2="19.8" y2="19.8"/><line x1="1.8" y1="12" x2="3.6" y2="12"/><line x1="20.4" y1="12" x2="22.2" y2="12"/><line x1="4.2" y1="19.8" x2="5.4" y2="18.6"/><line x1="18.6" y1="5.4" x2="19.8" y2="4.2"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></symbol>
@@ -1130,9 +1141,11 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <div class="t-12 bold" data-i18n="adjust.textSub">Corpus Text</div>
           <div class="t-11 dim" data-i18n="adjust.textHint">Adjust parameters or add directives, then regenerate the corpus.</div>
         </div>
-        <div class="form-row">
-          <span class="t-10 uc faint" data-i18n="refine.topic">Topic</span>
-          <textarea class="input" id="refine-topic" rows="2" data-i18n-ph="refine.topicPh" placeholder="e.g. Tire burst stability control"></textarea>
+        <div class="refine-ctx">
+          <div class="form-row"><span class="t-10 uc faint" data-i18n="refine.topic">Topic</span><span class="t-12" id="refine-topic">—</span></div>
+          <div class="form-row"><span class="t-10 uc faint" data-i18n="refine.domain">Domain</span><span class="t-12" id="refine-domain">—</span></div>
+          <div class="form-row"><span class="t-10 uc faint" data-i18n="refine.role">Role</span><span class="t-12" id="refine-role">—</span></div>
+          <div class="form-row"><span class="t-10 uc faint" data-i18n="refine.scenario">Scenario</span><span class="t-12" id="refine-scenario">—</span></div>
         </div>
         <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
           <div style="display:flex;align-items:center;justify-content:space-between">
@@ -1162,6 +1175,32 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         </div>
         <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
           <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="t-10 uc faint" data-i18n="refine.depth">Technical Depth</span>
+            <span class="t-10 dim" id="refine-depth-label">Depth 3 of 5</span>
+          </div>
+          <div class="seg" id="refine-depth" style="grid-template-columns:repeat(5,1fr)">
+            <button class="seg-item" data-depth="1">D1</button>
+            <button class="seg-item" data-depth="2">D2</button>
+            <button class="seg-item active" data-depth="3">D3</button>
+            <button class="seg-item" data-depth="4">D4</button>
+            <button class="seg-item" data-depth="5">D5</button>
+          </div>
+        </div>
+        <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="t-10 uc faint" data-i18n="refine.breadth">Breadth · Topic Coverage</span>
+            <span class="t-10 dim" id="refine-breadth-label">Breadth 3 of 5</span>
+          </div>
+          <div class="seg" id="refine-breadth" style="grid-template-columns:repeat(5,1fr)">
+            <button class="seg-item" data-breadth="1">B1</button>
+            <button class="seg-item" data-breadth="2">B2</button>
+            <button class="seg-item active" data-breadth="3">B3</button>
+            <button class="seg-item" data-breadth="4">B4</button>
+            <button class="seg-item" data-breadth="5">B5</button>
+          </div>
+        </div>
+        <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
             <span class="t-10 uc faint" data-i18n="refine.tone">Tone &amp; Mood</span>
             <span class="t-10 dim" id="refine-tone-label">Neutral professional</span>
           </div>
@@ -1178,6 +1217,13 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <span class="t-10 uc faint" data-i18n="refine.inject">Improvement Directives</span>
           <textarea class="input" id="refine-inject" rows="3" data-i18n-ph="refine.injectPh" placeholder="e.g. Add concrete numbers and measurements, make it more conversational…"></textarea>
           <p class="t-10 dim" data-i18n="refine.injectHint">Optional — these will be injected into the generation prompt.</p>
+        </div>
+        <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
+          <span class="t-10 uc faint" data-i18n="refine.dir">Generation Direction</span>
+          <label class="radio-row"><input type="radio" name="refine-dir" value="rephrase" checked><span data-i18n="refine.dirRephrase">Rewrite — keep the same scope</span></label>
+          <label class="radio-row"><input type="radio" name="refine-dir" value="expand"><span data-i18n="refine.dirExpand">Expand — add more technical depth</span></label>
+          <label class="radio-row"><input type="radio" name="refine-dir" value="narrow"><span data-i18n="refine.dirNarrow">Narrow — focus on a single aspect</span></label>
+          <label class="radio-row"><input type="radio" name="refine-dir" value="re-angle"><span data-i18n="refine.dirAngle">Re-angle — different engineering perspective</span></label>
         </div>
       </div>
       <div class="m-panel hidden" id="ap-voice">
@@ -1294,6 +1340,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <button class="s-nav-item" data-mtab="tts"><svg class="icon icon-sm"><use href="#i-waveform"/></svg><span data-i18n="settings.tab.tts">TTS</span></button>
         <button class="s-nav-item" data-mtab="shortcuts"><svg class="icon icon-sm"><use href="#i-type"/></svg><span data-i18n="settings.tab.shortcuts">Shortcuts</span></button>
         <button class="s-nav-item" data-mtab="developer"><svg class="icon icon-sm"><use href="#i-terminal"/></svg><span data-i18n="settings.tab.developer">Developer</span></button>
+        <button class="s-nav-item" data-mtab="usage"><svg class="icon icon-sm"><use href="#i-chart"/></svg><span data-i18n="settings.tab.usage">Usage</span></button>
         <button class="s-nav-item" data-mtab="about"><svg class="icon icon-sm"><use href="#i-book"/></svg><span data-i18n="settings.tab.about">About</span></button>
       </nav>
       <div class="modal-body">
@@ -1617,6 +1664,15 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         </div>
       </div>
       <!-- ABOUT -->
+      <div class="m-panel" id="mp-usage">
+        <div class="m-section-head">
+          <div class="t-12 bold" data-i18n="settings.tab.usage">Usage</div>
+          <div class="t-11 dim" data-i18n="settings.usage.sub">LLM token consumption — successful calls only.</div>
+        </div>
+        <div id="usage-body">
+          <div class="t-11 dim" data-i18n="settings.usage.loading">Loading…</div>
+        </div>
+      </div>
       <div class="m-panel" id="mp-about">
         <div class="m-section-head">
           <div class="t-12 bold" data-i18n="settings.tab.about">About</div>
@@ -1938,6 +1994,10 @@ const API = {
   async health() {
     return apiFetch('/health', {}, 8000);
   },
+  async usage() {
+    if (mockMode()) throw new Error('mock');
+    return apiFetch('/usage');
+  },
   async patchMaterial(id, patch) {
     return apiFetch('/materials/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
   },
@@ -2095,7 +2155,7 @@ const I18N = {
     'pb.details': 'Details',
     'settings.title': 'Settings',
     
-    'settings.tab.general': 'General', 'settings.tab.llm': 'LLM', 'settings.tab.tts': 'TTS', 'settings.tab.shortcuts': 'Shortcuts', 'settings.tab.developer': 'Developer', 'settings.tab.about': 'About',
+    'settings.tab.general': 'General', 'settings.tab.llm': 'LLM', 'settings.tab.tts': 'TTS', 'settings.tab.shortcuts': 'Shortcuts', 'settings.tab.usage': 'Usage', 'settings.tab.developer': 'Developer', 'settings.tab.about': 'About',
     'settings.developer.sub': 'LLM request / response inspection and fixed test data for TTS & player reuse.',
     'settings.developer.llmDiag': 'LLM Diagnostics', 'settings.developer.ttsDiag': 'TTS Diagnostics',
     'settings.shortcuts.sub': 'Global keyboard shortcuts — work wherever the app is focused.',
@@ -2110,6 +2170,15 @@ const I18N = {
     'settings.playback.label': 'Playback Defaults',
     'settings.zh.on': 'On', 'settings.zh.off': 'Off',
     'settings.general.sub': 'Software-wide defaults — language, appearance, playback.',
+    'settings.usage.sub': 'LLM token consumption — successful calls only.',
+    'settings.usage.loading': 'Loading…',
+    'settings.usage.mock': 'Test-data mode — no usage records.',
+    'settings.usage.unavailable': 'Usage unavailable — backend not reachable.',
+    'settings.usage.total': 'Total',
+    'settings.usage.today': 'Today',
+    'settings.usage.promptComp': 'Prompt / Completion',
+    'settings.usage.byAction': 'By action',
+    'settings.usage.byDay': 'By day',
     'settings.llm.sub': 'OpenAI-compatible generation backend used by the /generate pipeline.',
     'settings.tts.sub': 'Sentence-by-sentence synthesis; segments are stitched into a single timeline with start_ms / end_ms.',
     'settings.llm.provider': 'LLM Provider', 'settings.llm.creds': 'Base URL & API Key',
@@ -2163,9 +2232,15 @@ const I18N = {
     'tts.statusExist': 'Audio exists — re-converting will replace it.',
     'tr.regenerate': 'Regenerate', 'tr.refine': 'Refine…',
     'refine.title': 'Refine Generation', 'refine.sub': 'Adjust parameters or add directives, then regenerate the corpus.',
-    'refine.topic': 'Topic', 'refine.topicPh': 'e.g. Tire burst stability control', 'refine.difficulty': 'Difficulty', 'refine.length': 'Length',
+    'refine.topic': 'Topic', 'refine.domain': 'Domain', 'refine.role': 'Role', 'refine.scenario': 'Scenario',
+    'refine.difficulty': 'Difficulty', 'refine.length': 'Length', 'refine.depth': 'Technical Depth', 'refine.breadth': 'Breadth · Topic Coverage',
     'refine.inject': 'Improvement Directives', 'refine.injectPh': 'e.g. Add concrete numbers and measurements, make it more conversational…',
     'refine.injectHint': 'Optional — these will be injected into the generation prompt.',
+    'refine.dir': 'Generation Direction',
+    'refine.dirRephrase': 'Rewrite — keep the same scope',
+    'refine.dirExpand': 'Expand — add more technical depth',
+    'refine.dirNarrow': 'Narrow — focus on a single aspect',
+    'refine.dirAngle': 'Re-angle — different engineering perspective',
     'refine.apply': 'Refine & Regenerate',
     'save.title': 'Save', 'save.saved': 'Saved', 'save.done': 'Saved to My Materials — ',
     'lib.rename': 'Rename', 'lib.delete': 'Delete', 'lib.draft': 'Draft',
@@ -2209,7 +2284,7 @@ const I18N = {
     'pb.details': '详情',
     'settings.title': '设置',
     
-    'settings.tab.general': '通用', 'settings.tab.llm': 'LLM', 'settings.tab.tts': 'TTS', 'settings.tab.shortcuts': '快捷键', 'settings.tab.developer': '开发者', 'settings.tab.about': '关于',
+    'settings.tab.general': '通用', 'settings.tab.llm': 'LLM', 'settings.tab.tts': 'TTS', 'settings.tab.shortcuts': '快捷键', 'settings.tab.usage': '用量', 'settings.tab.developer': '开发者', 'settings.tab.about': '关于',
     'settings.developer.sub': 'LLM 请求/响应展示，以及供 TTS 与播放器复用的固化测试数据。',
     'settings.developer.llmDiag': 'LLM 诊断',
     'settings.developer.reqResp': 'LLM 请求与响应',
@@ -2231,6 +2306,15 @@ const I18N = {
     'settings.playback.label': '播放默认值',
     'settings.zh.on': '开', 'settings.zh.off': '关',
     'settings.general.sub': '软件全局默认 — 语言、外观、播放。',
+    'settings.usage.sub': 'LLM Token 消耗 — 仅统计成功调用。',
+    'settings.usage.loading': '加载中…',
+    'settings.usage.mock': '测试数据模式 — 不产生用量记录。',
+    'settings.usage.unavailable': '用量不可用 — 后端未连接。',
+    'settings.usage.total': '总计',
+    'settings.usage.today': '今日',
+    'settings.usage.promptComp': 'Prompt / Completion',
+    'settings.usage.byAction': '按动作',
+    'settings.usage.byDay': '按日',
     'settings.llm.sub': 'OpenAI 兼容的生成后端，由 /generate 管线使用。',
     'settings.tts.sub': '逐句合成，按 start_ms / end_ms 拼接为单一时间轴。',
     'settings.llm.provider': 'LLM 提供商', 'settings.llm.creds': 'Base URL 与 API Key',
@@ -2285,9 +2369,15 @@ const I18N = {
     'tts.statusExist': '已有音频 — 重新转换将替换现有音频。',
     'tr.regenerate': '重新生成', 'tr.refine': '改进…',
     'refine.title': '改进生成', 'refine.sub': '调整参数或添加指令，然后重新生成语料。',
-    'refine.topic': '主题', 'refine.topicPh': '例如：爆胎稳定性控制', 'refine.difficulty': '难度', 'refine.length': '时长',
+    'refine.topic': '主题', 'refine.domain': '领域', 'refine.role': '角色', 'refine.scenario': '场景',
+    'refine.difficulty': '难度', 'refine.length': '时长', 'refine.depth': '技术深度', 'refine.breadth': '广度 · 话题覆盖',
     'refine.inject': '改进指令', 'refine.injectPh': '例如：加入具体数值与测量数据、让对话更自然…',
     'refine.injectHint': '可选 — 将注入生成提示。',
+    'refine.dir': '生成方向',
+    'refine.dirRephrase': '重写 — 保持范围不变',
+    'refine.dirExpand': '扩写 — 增加更多技术细节',
+    'refine.dirNarrow': '收敛 — 聚焦单一问题',
+    'refine.dirAngle': '换角度 — 不同的工程视角',
     'refine.apply': '改进并重新生成',
     'save.title': '保存', 'save.saved': '已保存', 'save.done': '已保存到我的素材 — ',
     'lib.rename': '重命名', 'lib.delete': '删除', 'lib.draft': '草稿',
@@ -3035,6 +3125,9 @@ function runGenerate(params, replaceId) {
 }
 function paramsFromArt(art) {
   const m = art.meta;
+  const segActive = id => { const el = document.getElementById(id); return el ? el.querySelector('.seg-item.active') : null; };
+  const depthEl = segActive('refine-depth'), breadthEl = segActive('refine-breadth');
+  const dirEl = document.querySelector('input[name="refine-dir"]:checked');
   return {
     topic: m.topic,
     domain: m.domain, domainLabel: m.domain,
@@ -3044,7 +3137,15 @@ function paramsFromArt(art) {
     llm: 'DeepSeek-V3', tts: 'edge-tts', voice: m.voice || 'en-US-GuyNeural + en-US-JennyNeural',
     llm_config: buildLLMConfig(),
     test_mode: buildTestMode(),
-    advanced: { depth: 3, vocabDensity: 28, style: 'technical', injections: '', tone: m.tone || 'neutral', breadth: m.breadth || 3, directions: [] }
+    advanced: {
+      depth: depthEl ? +depthEl.dataset.depth : (m.depth || 3),
+      vocabDensity: m.vocabDensity ?? 28,
+      style: m.style ?? 'technical',
+      injections: $('refine-inject') ? $('refine-inject').value.trim() : (m.injections || ''),
+      tone: $('refine-tone') ? $('refine-tone').value : (m.tone || 'neutral'),
+      breadth: breadthEl ? +breadthEl.dataset.breadth : (m.breadth || 3),
+      directions: dirEl && dirEl.value !== 'rephrase' ? [dirEl.value] : []
+    }
   };
 }
 function updateRefineLabels() {
@@ -3052,6 +3153,10 @@ function updateRefineLabels() {
   $('refine-diff-label').textContent = 'Level ' + lv + ' of 5';
   const ln = document.querySelector('#refine-len .seg-item.active').dataset.length;
   $('refine-len-label').textContent = ln + 's · ' + CONFIG.lenHints[ln];
+  const dp = +document.querySelector('#refine-depth .seg-item.active').dataset.depth;
+  $('refine-depth-label').textContent = 'Depth ' + dp + ' of 5';
+  const br = +document.querySelector('#refine-breadth .seg-item.active').dataset.breadth;
+  $('refine-breadth-label').textContent = 'Breadth ' + br + ' of 5';
 }
 function updateRefineToneLabel() {
   const sel = $('refine-tone');
@@ -3083,24 +3188,33 @@ function closeRefineModal() { closeAdjustModal(); }
 function closeTTSModal() { closeAdjustModal(); }
 function openRefineModal() {
   const art = currentArtifact();
-  $('refine-topic').value = art.meta.topic || '';
-  $('refine-inject').value = '';
+  $('refine-topic').textContent = art.meta.topic || '—';
+  $('refine-domain').textContent = art.meta.domainLabel || art.meta.domain || '—';
+  $('refine-role').textContent = art.meta.role || '—';
+  $('refine-scenario').textContent = art.meta.scenario || '—';
+  $('refine-inject').value = art.meta.injections || '';
   $('refine-tone').value = art.meta.tone || 'neutral';
   updateRefineToneLabel();
   const lv = parseInt(String(art.meta.difficulty).replace(/\D/g, ''), 10) || 3;
   setSeg($('refine-diff'), document.querySelector('#refine-diff [data-level="' + lv + '"]'));
   setSeg($('refine-len'), document.querySelector('#refine-len [data-length="' + (parseSec(art.meta.length) || 120) + '"]'));
+  setSeg($('refine-depth'), document.querySelector('#refine-depth [data-depth="' + (art.meta.depth || 3) + '"]'));
+  setSeg($('refine-breadth'), document.querySelector('#refine-breadth [data-breadth="' + (art.meta.breadth || 3) + '"]'));
+  document.querySelectorAll('input[name="refine-dir"]').forEach(r => { r.checked = (r.value === 'rephrase'); });
   updateRefineLabels();
   openAdjustModal('text');
 }
 function refineGenerate() {
   const art = currentArtifact();
   const params = paramsFromArt(art);
-  params.topic = $('refine-topic').value.trim() || art.meta.topic;
   params.difficulty = +document.querySelector('#refine-diff .seg-item.active').dataset.level;
   params.length = document.querySelector('#refine-len .seg-item.active').dataset.length;
+  params.advanced.depth = +document.querySelector('#refine-depth .seg-item.active').dataset.depth;
+  params.advanced.breadth = +document.querySelector('#refine-breadth .seg-item.active').dataset.breadth;
   params.advanced.injections = $('refine-inject').value.trim();
   params.advanced.tone = $('refine-tone').value;
+  const dirEl = document.querySelector('input[name="refine-dir"]:checked');
+  params.advanced.directions = dirEl && dirEl.value !== 'rephrase' ? [dirEl.value] : [];
   runGenerate(params, art.id);
 }
 const LLM_PRESETS = {
@@ -3450,6 +3564,52 @@ function openGenPanel() {
   input.select();
 }
 function closeGenPanel() { $('gen-panel').classList.add('hidden'); }
+async function renderUsage() {
+  const box = $('usage-body');
+  if (!box) return;
+  const L = I18N[state.lang];
+  if (mockMode()) {
+    box.innerHTML = '<div class="t-11 dim" data-i18n="settings.usage.mock">Test-data mode — no usage records.</div>';
+    applyLang(); return;
+  }
+  box.innerHTML = '<div class="t-11 dim" data-i18n="settings.usage.loading">Loading…</div>';
+  try {
+    const d = await API.usage();
+    const fmt = n => (n || 0).toLocaleString();
+    const kb = n => ((n || 0) * 3 / 1024).toFixed(1) + ' KB';
+    const actName = { generate: 'Corpus', regenerate: 'Regenerate', 'test-llm': 'Test' };
+    let html = '';
+    html += '<div class="usage-grid">' +
+      '<div class="usage-cell"><span class="t-10 uc faint" data-i18n="settings.usage.total">Total</span>' +
+      '<span class="t-15 mono">' + fmt(d.total.total_tokens) + '</span>' +
+      '<span class="t-10 dim">' + d.total.calls + ' calls</span></div>' +
+      '<div class="usage-cell"><span class="t-10 uc faint" data-i18n="settings.usage.today">Today</span>' +
+      '<span class="t-15 mono">' + fmt(d.today.total_tokens) + '</span>' +
+      '<span class="t-10 dim">' + d.today.calls + ' calls</span></div>' +
+      '</div>';
+    html += '<div class="s-row"><div class="s-info"><div class="s-name" data-i18n="settings.usage.promptComp">Prompt / Completion</div>' +
+      '<div class="s-desc mono">' + fmt(d.total.prompt_tokens) + ' / ' + fmt(d.total.completion_tokens) +
+      ' <span class="dim">(today ' + fmt(d.today.prompt_tokens) + ' / ' + fmt(d.today.completion_tokens) + ')</span></div></div></div>';
+    const acts = Object.keys(d.breakdown || {});
+    if (acts.length) {
+      html += '<div class="s-row"><div class="s-info"><div class="s-name" data-i18n="settings.usage.byAction">By action</div>' +
+        '<div class="s-desc">' + acts.map(k => (actName[k] || k) + ' ' + d.breakdown[k]).join(' · ') + '</div></div></div>';
+    }
+    if (d.by_day && d.by_day.length) {
+      html += '<div class="s-sec-title" data-i18n="settings.usage.byDay">By day</div>';
+      html += '<div class="usage-days">' + d.by_day.map(x =>
+        '<div class="usage-day"><span class="mono">' + x.date + '</span>' +
+        '<span class="dim">' + x.calls + ' calls</span>' +
+        '<span class="mono">' + fmt(x.total_tokens) + ' · ' + kb(x.total_tokens) + '</span></div>').join('') + '</div>';
+    }
+    box.innerHTML = html;
+    applyLang();
+  } catch (e) {
+    box.innerHTML = '<div class="t-11 dim" data-i18n="settings.usage.unavailable">Usage unavailable — backend not reachable.</div>';
+    applyLang();
+  }
+}
+
 function switchMTab(tab, smooth) {
   document.querySelectorAll('#engine-modal .s-nav-item').forEach(b => b.classList.toggle('active', b.dataset.mtab === tab));
   const sec = $('mp-' + tab);
@@ -3463,7 +3623,7 @@ function switchMTab(tab, smooth) {
 function watchMTab() {
   const modal = document.querySelector('#engine-modal .modal-body');
   if (!modal) return;
-  const secs = ['general', 'llm', 'tts', 'shortcuts', 'developer', 'about'].map(t => $('mp-' + t)).filter(Boolean);
+  const secs = ['general', 'llm', 'tts', 'shortcuts', 'developer', 'usage', 'about'].map(t => $('mp-' + t)).filter(Boolean);
   modal.addEventListener('scroll', () => {
     const top = modal.getBoundingClientRect().top + modal.clientHeight * 0.5;
     let cur = 'general';
@@ -3475,6 +3635,7 @@ function openModal() {
   const overlay = $('engine-modal');
   overlay.classList.remove('hidden');
   overlay.querySelector('.modal-body').scrollTop = 0;
+  renderUsage();
   $('cfg-lang').value = state.lang;
   const seg = document.querySelector('#cfg-theme-seg [data-theme-opt="' + state.theme + '"]');
   if (seg) setSeg($('cfg-theme-seg'), seg);
@@ -3734,6 +3895,10 @@ function onClick(e) {
   if (rDiffItem) { setSeg($('refine-diff'), rDiffItem); updateRefineLabels(); return; }
   const rLenItem = e.target.closest('#refine-len .seg-item');
   if (rLenItem) { setSeg($('refine-len'), rLenItem); updateRefineLabels(); return; }
+  const rDepthItem = e.target.closest('#refine-depth .seg-item');
+  if (rDepthItem) { setSeg($('refine-depth'), rDepthItem); updateRefineLabels(); return; }
+  const rBreadthItem = e.target.closest('#refine-breadth .seg-item');
+  if (rBreadthItem) { setSeg($('refine-breadth'), rBreadthItem); updateRefineLabels(); return; }
   const modeBtn = e.target.closest('.material-actions .seg-item[data-mode]');
   if (modeBtn) { setListenMode(modeBtn.dataset.mode); return; }
   if (e.target.closest('#btn-font')) { cycleFont(); return; }
