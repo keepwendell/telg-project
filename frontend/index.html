@@ -393,6 +393,9 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .pb-center{display:flex;flex-direction:column;align-items:center;gap:5px;width:52%;max-width:640px}
 .pb-controls{display:flex;align-items:center;gap:2px}
 .pb-controls button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:28px;border-radius:6px;color:var(--on-variant)}
+.pb-controls button.pb-seek{position:relative}
+.pb-seek .icon{width:15px;height:15px;margin-top:-4px}
+.pb-seek-num{position:absolute;left:50%;transform:translateX(-50%);bottom:1px;font-family:var(--font-mono);font-size:7.5px;font-weight:600;line-height:1;color:inherit;letter-spacing:0}
 .pb-controls button:hover{color:var(--on-surface);background:var(--surface-low)}
 .pb-play{width:34px!important;height:34px!important;border-radius:50%!important;background:var(--on-surface)!important;color:var(--bg-lowest)!important;margin:0 4px}
 .pb-play:hover{opacity:.88;background:var(--on-surface)!important}
@@ -588,8 +591,8 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   <symbol id="i-skip-forward" viewBox="0 0 24 24"><polygon points="4.8 19.6 14.4 12 4.8 4.4 4.8 19.6" fill="currentColor" stroke="none"/><rect x="16.8" y="4.4" width="2.4" height="15.2" rx="1" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-repeat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 2 21 6 17 10"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 22 3 18 7 14"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></symbol>
   <symbol id="i-replay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></symbol>
-  <symbol id="i-back10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/><text x="12" y="16" text-anchor="middle" font-size="6.6" fill="currentColor" font-family="JetBrains Mono,monospace">10</text></symbol>
-  <symbol id="i-fwd10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/><text x="12" y="16" text-anchor="middle" font-size="6.6" fill="currentColor" font-family="JetBrains Mono,monospace">10</text></symbol>
+  <symbol id="i-back10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></symbol>
+  <symbol id="i-fwd10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="20.5" y1="20.5" x2="16.2" y2="16.2"/></symbol>
   <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
@@ -840,9 +843,9 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
     <div class="pb-controls">
       <button id="btn-pb-loop" title="Sentence loop" class="pb-active-cap"><svg class="icon"><use href="#i-repeat"/></svg></button>
       <button id="btn-pb-prev" title="Previous sentence [J]"><svg class="icon"><use href="#i-skip-back"/></svg></button>
-      <button id="btn-pb-back10" title="Rewind 10s"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/><text x="12" y="16" text-anchor="middle" font-size="6.6" font-family="monospace">10</text></svg></button>
+      <button id="btn-pb-back10" class="pb-seek" title="Rewind 10s"><svg class="icon"><use href="#i-back10"/></svg><span class="pb-seek-num" id="pb-back-num">10</span></button>
       <button class="pb-play" id="btn-pb-play" title="Play/Pause [Space]"><svg class="icon" id="pb-play-ic"><use href="#i-play"/></svg><svg class="icon" id="pb-pause-ic" style="display:none"><use href="#i-pause"/></svg></button>
-      <button id="btn-pb-fwd10" title="Forward 10s"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/><text x="12" y="16" text-anchor="middle" font-size="6.6" font-family="monospace">10</text></svg></button>
+      <button id="btn-pb-fwd10" class="pb-seek" title="Forward 10s"><svg class="icon"><use href="#i-fwd10"/></svg><span class="pb-seek-num" id="pb-fwd-num">10</span></button>
       <button id="btn-pb-next" title="Next sentence [K]"><svg class="icon"><use href="#i-skip-forward"/></svg></button>
       <button id="btn-pb-bookmark" title="Bookmark phrase"><svg class="icon"><use href="#i-bookmark"/></svg></button>
     </div>
@@ -1335,6 +1338,23 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
                 <option value="1" selected>1.0x</option>
                 <option value="1.25">1.25x</option>
                 <option value="1.5">1.5x</option>
+              </select>
+              <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="s-row">
+          <div class="s-info">
+            <div class="s-name" data-i18n="settings.playback.seek">Seek Step</div>
+            <div class="s-desc" data-i18n="settings.playback.seekhint">Rewind / forward step for the player buttons.</div>
+          </div>
+          <div class="s-ctrl">
+            <div class="select-wrap">
+              <select class="select" id="cfg-seek-step">
+                <option value="5">5s</option>
+                <option value="10" selected>10s</option>
+                <option value="15">15s</option>
+                <option value="30">30s</option>
               </select>
               <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
             </div>
@@ -2019,6 +2039,7 @@ const state = {
   playing: false,
   time: 0,
   speedIdx: 1,              /* 1.0x */
+  seekStep: 10,             /* player rewind/forward seconds */
   volume: 0.75,
   loop: false,
   listenMode: 'normal',
@@ -2105,7 +2126,7 @@ const I18N = {
     'settings.dev.label': 'Developer Mode', 'settings.dev.sub': 'Master switch — debug tools below are only available while ON. Release builds require a key.', 'settings.dev.toggle': 'Dev Tools',
     'settings.general.secInterface': 'Interface', 'settings.general.secPlayback': 'Playback',
     'settings.appearance.hint': 'Dark / Light — saved on Apply.',
-    'settings.playback.speed': 'Default Speed', 'settings.playback.speedhint': 'Playback speed for newly opened materials.',
+    'settings.playback.speed': 'Default Speed', 'settings.playback.speedhint': 'Playback speed for newly opened materials.', 'settings.playback.seek': 'Seek Step', 'settings.playback.seekhint': 'Rewind / forward step for the player buttons.',
     'settings.playback.zh': 'Chinese Subtitles', 'settings.playback.zhhint': 'Whether the Chinese line is shown by default.',
     'settings.llm.secEndpoint': 'Endpoint & Credentials', 'settings.llm.secParams': 'Generation Parameters', 'settings.llm.secDiag': 'Diagnostics',
     'settings.llm.testhint': 'Verifies base_url / api_key / model reachability.',
@@ -2227,7 +2248,7 @@ const I18N = {
     'settings.dev.label': '开发模式', 'settings.dev.sub': '总开关——仅开启时下方调试工具可用。正式发布版需密钥才能开启。', 'settings.dev.toggle': '调试工具',
     'settings.general.secInterface': '界面', 'settings.general.secPlayback': '播放',
     'settings.appearance.hint': '深色 / 浅色，应用后生效。',
-    'settings.playback.speed': '默认倍速', 'settings.playback.speedhint': '新素材的默认播放倍速。',
+    'settings.playback.speed': '默认倍速', 'settings.playback.speedhint': '新素材的默认播放倍速。', 'settings.playback.seek': '快进退步长', 'settings.playback.seekhint': '播放器前进/后退按键的步长秒数。',
     'settings.playback.zh': '中文字幕', 'settings.playback.zhhint': '默认是否显示中文字幕。',
     'settings.llm.secEndpoint': '接口与凭据', 'settings.llm.secParams': '生成参数', 'settings.llm.secDiag': '诊断',
     'settings.llm.testhint': '校验 base_url / api_key / model 连通性。',
@@ -2311,8 +2332,18 @@ function loadSettings() {
     if (s.theme === 'dark' || s.theme === 'light') state.theme = s.theme;
     const si = CONFIG.speeds.indexOf(parseFloat(s.defSpeed));
     if (si >= 0) state.speedIdx = si;
+    const ss = parseInt(s.seekStep, 10);
+    if ([5, 10, 15, 30].includes(ss)) state.seekStep = ss;
     state.zhVisible = s.zhDefault !== 'off';
   } catch (e) {}
+}
+function updateSeekStep() {
+  const s = state.seekStep;
+  const b = $('pb-back-num'), f = $('pb-fwd-num');
+  if (b) b.textContent = s;
+  if (f) f.textContent = s;
+  const bb = $('btn-pb-back10'); if (bb) bb.title = 'Rewind ' + s + 's';
+  const ff = $('btn-pb-fwd10'); if (ff) ff.title = 'Forward ' + s + 's';
 }
 function applyTranscriptLang() {
   document.querySelectorAll('#transcript-list .trow-zh').forEach(el => el.style.display = state.zhVisible ? '' : 'none');
@@ -3423,6 +3454,7 @@ function openModal() {
   const seg = document.querySelector('#cfg-theme-seg [data-theme-opt="' + state.theme + '"]');
   if (seg) setSeg($('cfg-theme-seg'), seg);
   $('cfg-def-speed').value = String(CONFIG.speeds[state.speedIdx]);
+  const ssk = $('cfg-seek-step'); if (ssk) ssk.value = String(state.seekStep);
   const zhSeg = document.querySelector('#cfg-zh-seg [data-zh-opt="' + (state.zhVisible ? 'on' : 'off') + '"]');
   if (zhSeg) setSeg($('cfg-zh-seg'), zhSeg);
   try {
@@ -3573,6 +3605,7 @@ function saveModal() {
     lang: $('cfg-lang').value,
     theme: document.querySelector('#cfg-theme-seg .seg-item.active').dataset.themeOpt,
     defSpeed: $('cfg-def-speed').value,
+    seekStep: $('cfg-seek-step').value,
     zhDefault: (document.querySelector('#cfg-zh-seg .seg-item.active') || {}).dataset.zhOpt || 'on',
     llm: { provider: $('cfg-llm-provider').value, model: $('cfg-llm-model').value, baseUrl: $('cfg-llm-base').value, apiKey: $('cfg-llm-key').value, temperature: $('cfg-llm-temp').value, debug: $('cfg-llm-debug').checked },
     tts: { provider: $('cfg-tts-provider').value, voices: currentVoiceRoles(), voice: currentVoiceRoles().map(x => x.voice).filter(Boolean).join(' + '), speechRate: $('cfg-tts-rate').value }
@@ -3584,7 +3617,10 @@ function saveModal() {
   state.theme = cfg.theme;
   const si = CONFIG.speeds.indexOf(parseFloat(cfg.defSpeed));
   if (si >= 0) state.speedIdx = si;
+  const ss = parseInt(cfg.seekStep, 10);
+  if ([5, 10, 15, 30].includes(ss)) state.seekStep = ss;
   state.zhVisible = cfg.zhDefault !== 'off';
+  updateSeekStep();
   applyLang();
   applyTheme();
   renderPlayerBar();
@@ -3734,8 +3770,8 @@ function onClick(e) {
   if (e.target.closest('#btn-pb-play')) { togglePlay(); return; }
   if (e.target.closest('#btn-pb-prev')) { prevSentence(); return; }
   if (e.target.closest('#btn-pb-next')) { nextSentence(); return; }
-  if (e.target.closest('#btn-pb-back10')) { seek(state.time - 10000, true); return; }
-  if (e.target.closest('#btn-pb-fwd10')) { seek(state.time + 10000, true); return; }
+  if (e.target.closest('#btn-pb-back10')) { seek(state.time - state.seekStep * 1000, true); return; }
+  if (e.target.closest('#btn-pb-fwd10')) { seek(state.time + state.seekStep * 1000, true); return; }
   if (e.target.closest('#btn-pb-loop')) { toggleLoop(); return; }
   if (e.target.closest('#btn-pb-bookmark')) { showToast('Phrase bookmarked (demo)'); return; }
   const spItem = e.target.closest('#speed-menu [data-speed]');
@@ -3848,6 +3884,7 @@ function init() {
   applyTheme();
   applyLang();
   updateEngineBadge();
+  updateSeekStep();
   renderMaterial();
   renderPlaylists();
   renderPlayerBar();
