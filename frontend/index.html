@@ -1948,14 +1948,16 @@ const API = {
     return res.json();
   },
   async testLLM(cfg) {
-    if (mockMode()) {
-      await new Promise(r => setTimeout(r, 600));
-      const err = validateLLMCfg(cfg);
-      if (err) return { ok: false, error: err };
-      return { ok: true, latency_ms: 96, model: cfg.model || 'deepseek-chat', mock: true };
+    /* Connection test always hits the live backend — it diagnoses real
+       reachability, so it is NOT gated by Test Data / mock mode. */
+    const err = validateLLMCfg(cfg);
+    if (err) return { ok: false, error: err };
+    try {
+      const res = await fetch(CONFIG.apiBase + '/config/test-llm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
+      return res.json();
+    } catch (e) {
+      return { ok: false, error: 'Cannot reach backend at ' + CONFIG.apiBase + ' — start FastAPI (uvicorn backend.main:app --reload) or check the network' };
     }
-    const res = await fetch(CONFIG.apiBase + '/config/test-llm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
-    return res.json();
   },
   async testTTS(cfg) {
     if (mockMode()) {
