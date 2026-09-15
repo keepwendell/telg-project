@@ -844,6 +844,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 
 <!-- ===================== GLOBAL PLAYER BAR ===================== -->
 <footer class="player-bar">
+  <audio id="pb-audio" preload="auto"></audio>
   <div class="pb-left">
     <div class="pb-art"><svg class="icon"><use href="#i-waveform"/></svg></div>
     <div style="min-width:0">
@@ -3500,6 +3501,9 @@ function currentSegIndex() {
   return -1;
 }
 function tick() {
+  /* Real-audio mode: position comes from the <audio> element via timeupdate;
+     this timer only serves the mock/simulated path. */
+  if (!mockMode()) { syncHighlight(); renderPlayerBar(); return; }
   const art = currentArtifact(), total = art.meta.total_duration_ms;
   const dt = 100 * CONFIG.speeds[state.speedIdx];
   if (state.loop) {
@@ -3519,18 +3523,55 @@ function setPlayIcon(playing) {
   $('pb-play-ic').style.display = playing ? 'none' : '';
   $('pb-pause-ic').style.display = playing ? '' : 'none';
 }
+(function initPbAudio() {
+  const audio = document.getElementById('pb-audio');
+  if (!audio) return;
+  audio.addEventListener('timeupdate', () => {
+    if (!state.playing || mockMode()) return;
+    const art = currentArtifact();
+    state.time = Math.min(audio.currentTime * 1000, art.meta.total_duration_ms || 0);
+    if (state.loop) {
+      const idx = currentSegIndex();
+      if (idx >= 0 && state.time >= (art.dialogue[idx] ? art.dialogue[idx].end_ms : 0)) {
+        audio.currentTime = (art.dialogue[idx].start_ms) / 1000;
+        return;
+      }
+    }
+    if (audio.ended || state.time >= (art.meta.total_duration_ms || 0)) { state.time = art.meta.total_duration_ms || 0; pause(); }
+    syncHighlight();
+    renderPlayerBar();
+  });
+  audio.addEventListener('ended', () => {
+    if (mockMode()) return;
+    const art = currentArtifact();
+    state.time = art.meta.total_duration_ms || 0;
+    pause();
+  });
+})();
 function play() {
   const art = currentArtifact();
   if (art.meta.audioReady === false) { showToast('Audio not synthesized yet — click Synthesize Audio'); return; }
   if (state.time >= art.meta.total_duration_ms) state.time = 0;
   state.playing = true;
   setPlayIcon(true);
+  if (!mockMode()) {
+    const audio = $('pb-audio');
+    const url = art.meta.audio_url;
+    if (!url) { state.playing = false; setPlayIcon(false); showToast('No audio file for this material'); return; }
+    if (audio.dataset.src !== url) { audio.src = url; audio.dataset.src = url; }
+    audio.playbackRate = CONFIG.speeds[state.speedIdx];
+    audio.currentTime = state.time / 1000;
+    audio.play().then(() => {}).catch(() => { state.playing = false; setPlayIcon(false); });
+    syncHighlight();
+    return;
+  }
   startTimer();
   syncHighlight();
 }
 function pause() {
   state.playing = false;
   setPlayIcon(false);
+  if (!mockMode()) { try { $('pb-audio').pause(); } catch (e) {} }
   stopTimer();
   syncHighlight();
 }
@@ -3538,6 +3579,7 @@ function togglePlay() { state.playing ? pause() : play(); }
 function seek(ms, autoplay) {
   const art = currentArtifact();
   state.time = Math.max(0, Math.min(ms, art.meta.total_duration_ms));
+  if (!mockMode()) { try { $('pb-audio').currentTime = state.time / 1000; } catch (e) {} }
   syncHighlight();
   renderPlayerBar();
   if (autoplay && !state.playing) play();
@@ -3600,7 +3642,10 @@ function toggleSpeedMenu() {
 function closeSpeedMenu() { $('speed-menu').classList.add('hidden'); }
 function setSpeed(sp) {
   const i = CONFIG.speeds.indexOf(sp);
-  if (i >= 0) { state.speedIdx = i; renderPlayerBar(); }
+  if (i >= 0) {
+    state.speedIdx = i; renderPlayerBar();
+    if (!mockMode()) { try { $('pb-audio').playbackRate = CONFIG.speeds[state.speedIdx]; } catch (e) {} }
+  }
   closeSpeedMenu();
 }
 
