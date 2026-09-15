@@ -79,6 +79,7 @@ telg-project/
 - 远程：`https://github.com/keepwendell/telg-project.git`，branch `main`。
 - 凭据：已持久化于 `~/.git-credentials`（chmod 600）+ `credential.helper store`，push 自动认证。
 - **推送时机**：仅用户明确要求「推送到 GitHub / 同步远程」时才执行 `git push origin main`；本地 commit 可按需执行。
+- **本地 commit 也需用户确认**：任何 commit（含本地）执行前必须先向用户说明本次要提交的改动范围与拟定 commit message，经用户确认后才 `git commit`；未确认不得主动提交。
 - **推送必须写清楚 commit**：每次推送远程时，向用户说明本次推送包含的 commit（hash + message 概要 + 具体改动内容），不得含糊带过。
 - commit message：`<type>: <summary>`（feat/fix/ui/docs/refactor），英文简洁。
 - **commit 中英双语 + 重点化标题 + 具体变更点（中文在前，英文在后）**：
@@ -96,3 +97,4 @@ telg-project/
 | 2026-09-15 | 第 7 节细化：标题体现变更关键重点（类型-标题），正文逐条列具体变更点 | 用户：「标题应体现变更的关键重点（变更类型-标题），commit正文写清楚本次的具体变更点」 |
 | 2026-09-15 | 第 7 节明确语序：中英双语一律中文在前、英文在后 | 用户：「好的 中文在前，英文在后」 |
 | 2026-09-15 | 本文件创建，沉淀此前已确认的全部约定 | 用户：「将工程目录新建一个目录，存放持久性的记忆规则」 |
+| 2026-09-16 | 第 7 节补充：本地 commit 也需用户确认后执行 | 用户：「本地commit太频繁了 也需要我确认后再提交」 |

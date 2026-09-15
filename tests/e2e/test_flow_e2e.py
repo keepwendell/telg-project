@@ -29,7 +29,7 @@ with sync_playwright() as p:
     log('B2 生成进度 3 步显示', steps==3, f'steps={steps}')
     pg.wait_for_timeout(2200)
     log('B3 语料就绪后预览出现', not pg.evaluate("document.getElementById('transcript-body').classList.contains('hidden')"))
-    log('B4 语料态无 Publish 按钮', pg.evaluate("document.getElementById('btn-publish').classList.contains('hidden')"))
+    log('B4 语料态仅编辑/合成两键', pg.evaluate("!document.getElementById('btn-refine').classList.contains('hidden') && !document.getElementById('btn-synth').classList.contains('hidden') && document.getElementById('btn-publish-banner').classList.contains('hidden')"))
     log('B5 toast 提示语料已生成', 'Corpus generated' in pg.evaluate("document.querySelector('.toast') ? document.querySelector('.toast').textContent : ''"))
     log('B6 素材进入库列表', pg.evaluate("document.querySelectorAll('.lib-item').length") >= 4)
     cur = pg.evaluate("(()=>{const m=document.querySelector('.lib-item.active'); return m?m.textContent:'N/A'})()")
@@ -37,15 +37,15 @@ with sync_playwright() as p:
 
     pg.evaluate("document.getElementById('btn-voice').click(); true"); pg.wait_for_timeout(400)
     log('C1 打开 Adjust 面板', not pg.evaluate("document.getElementById('adjust-modal').classList.contains('hidden')"))
-    pg.evaluate("document.querySelector('#adjust-modal .m-tab[data-atab=\\'voice\\']').click(); true"); pg.wait_for_timeout(400)
-    pg.evaluate("(()=>{const a=document.getElementById('cfg-voice-a'); if(a)a.value='en-US-ChristopherNeural'; const s=document.getElementById('cfg-voice-style'); if(s)s.value='serious'; document.getElementById('btn-adjust-apply').click();})()"); pg.wait_for_timeout(300)
+    pg.wait_for_timeout(100)  # openTTSModal opens the Voice panel directly
+    pg.evaluate("(()=>{const sel=document.querySelector('#adj-voice-roles .voice-role-row select'); if(sel)sel.value='en-US-ChristopherNeural'; const s=document.getElementById('adj-tts-style'); if(s)s.value='serious'; document.getElementById('btn-adjust-apply').click();})()"); pg.wait_for_timeout(300)
     log('C2 音色应用后进入 TTS 合成进度', not pg.evaluate("document.getElementById('gen-progress-box').classList.contains('hidden')"))
     pg.wait_for_timeout(2200)
     log('C3 合成完成 audioReady', pg.evaluate("(document.querySelector('.lib-item.active') ? currentArtifact().meta.audioReady : false) == true"))
-    log('C4 合成后出现 Publish', not pg.evaluate("document.getElementById('btn-publish').classList.contains('hidden')"))
+    log('C4 合成后出现编辑音频/发布两键', pg.evaluate("document.getElementById('btn-publish-banner') && !document.getElementById('btn-publish-banner').classList.contains('hidden') && document.getElementById('btn-edit-audio') && !document.getElementById('btn-edit-audio').classList.contains('hidden')"))
     log('C5 合成后自动播放中', pg.evaluate("state.playing") is True)
 
-    pg.evaluate("document.getElementById('btn-publish').click(); true"); pg.wait_for_timeout(300)
+    pg.evaluate("document.getElementById('btn-publish-banner').click(); true"); pg.wait_for_timeout(300)
     log('D1 发布弹窗出现', not pg.evaluate("document.getElementById('publish-modal').classList.contains('hidden')"))
     pg.evaluate("(()=>{const i=document.querySelector('#publish-modal input'); i.value='Brake-by-Wire Failover (Final)'; document.querySelector('#publish-modal .btn-primary').click();})()"); pg.wait_for_timeout(400)
     lib = pg.evaluate("Array.from(document.querySelectorAll('.lib-item .lib-item-name')).map(x=>x.textContent)")

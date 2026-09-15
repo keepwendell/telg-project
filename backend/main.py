@@ -1210,8 +1210,12 @@ def unlock_dev(c: dict):
 
 
 @app.get("/api/v1/usage")
-def usage_stats():
-    """LLM token usage aggregation: total / today / per-day / per-action."""
+def usage_stats(granularity: str = "week", offset_days: int = 0):
+    """LLM token usage aggregation: total / today / per-bucket / per-action.
+
+    granularity: day (natural day by hour) | week (Mon–Sun) | month (calendar month) | year (calendar year).
+    offset_days: 0 = current window; N>0 = window N days earlier (day-granular pan).
+    """
     conn = db()
     def row_sum(where: str, params: tuple = ()):
         r = conn.execute(
@@ -1222,18 +1226,51 @@ def usage_stats():
 
     total = row_sum("1=1")
     today = row_sum("date(created_at) = date('now','localtime')")
-    days = [
-        {"date": r[0], "prompt_tokens": r[1], "completion_tokens": r[2], "total_tokens": r[3], "calls": r[4]}
-        for r in conn.execute(
-            "SELECT date(created_at), COALESCE(SUM(prompt_tokens),0), COALESCE(SUM(completion_tokens),0),"
-            " COALESCE(SUM(total_tokens),0), COUNT(*) FROM llm_usage"
-            " GROUP BY date(created_at) ORDER BY date(created_at) DESC LIMIT 14"
-        ).fetchall()
+
+    g = granularity if granularity in ("day", "week", "month", "year") else "week"
+    od = max(0, int(offset_days))
+    anchor = f"date('now','localtime','-{od} days')"
+    if g == "day":
+        start = end = anchor
+        sql = (f"SELECT strftime('%H', created_at) AS k, COALESCE(SUM(total_tokens),0), COUNT(*)"
+               f" FROM llm_usage WHERE date(created_at) = {start} GROUP BY k")
+        label = lambda k: "%02d:00" % int(k)
+        win_label = lambda s, e: s
+    elif g == "week":
+        start = f"date({anchor},'weekday 1')"
+        end = f"date({start},'+6 days')"
+        sql = (f"SELECT date(created_at) AS k, COALESCE(SUM(total_tokens),0), COUNT(*)"
+               f" FROM llm_usage WHERE date(created_at) BETWEEN {start} AND {end} GROUP BY k")
+        label = lambda k: k
+        win_label = lambda s, e: "%s – %s" % (s[5:], e[5:])
+    elif g == "month":
+        start = f"date({anchor},'start of month')"
+        end = f"date({start},'+1 month','-1 day')"
+        sql = (f"SELECT date(created_at) AS k, COALESCE(SUM(total_tokens),0), COUNT(*)"
+               f" FROM llm_usage WHERE date(created_at) BETWEEN {start} AND {end} GROUP BY k")
+        label = lambda k: k
+        win_label = lambda s, e: s[:7]
+    else:  # year
+        start = f"date({anchor},'start of year')"
+        end = f"date({start},'+1 year','-1 day')"
+        sql = (f"SELECT strftime('%Y-%m', created_at) AS k, COALESCE(SUM(total_tokens),0), COUNT(*)"
+               f" FROM llm_usage WHERE date(created_at) BETWEEN {start} AND {end} GROUP BY k")
+        label = lambda k: k
+        win_label = lambda s, e: s[:4]
+    s0 = conn.execute("SELECT " + start).fetchone()[0]
+    e0 = conn.execute("SELECT " + end).fetchone()[0]
+    buckets = [
+        {"key": r[0], "label": label(r[0]), "total_tokens": r[1], "calls": r[2]}
+        for r in conn.execute(sql).fetchall()
     ]
+    buckets.sort(key=lambda b: b["key"])
     breakdown = {r[0]: r[1] for r in conn.execute(
         "SELECT action, COUNT(*) FROM llm_usage GROUP BY action").fetchall()}
     conn.close()
-    return {"ok": True, "total": total, "today": today, "by_day": days, "breakdown": breakdown, "mock": False}
+    return {"ok": True, "granularity": g, "offset_days": od,
+            "window": {"start": s0, "end": e0, "label": win_label(s0, e0)},
+            "total": total, "today": today, "buckets": buckets,
+            "breakdown": breakdown, "mock": False}
 
 
 @app.post("/api/v1/config/test-tts")

@@ -430,6 +430,13 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .radio-row:hover{color:var(--on-surface)}
 .radio-row input{accent-color:var(--primary);margin:0}
 .usage-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.usage-chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 8px}
+.usage-chart{width:100%;height:150px;border:1px solid var(--line);border-radius:7px;background:var(--surface-low);overflow:hidden}
+.usage-chart svg{display:block;width:100%;height:100%}
+.usage-bar{cursor:pointer;transition:fill .12s var(--ease)}
+.usage-bar:hover{stroke:var(--primary);stroke-width:1}
+.icon-btn{background:var(--surface-low);border:1px solid var(--line);border-radius:6px;color:var(--on-variant);cursor:pointer;transition:all .12s var(--ease)}
+.icon-btn:hover{color:var(--on-surface);border-color:var(--outline);background:var(--surface-highest)}
 .usage-cell{display:flex;flex-direction:column;gap:3px;padding:12px 14px;background:var(--surface-low);border:1px solid var(--line);border-radius:7px}
 .usage-days{display:flex;flex-direction:column;gap:4px;margin-top:8px}
 .usage-day{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;background:var(--surface-low);border:1px solid var(--line);border-radius:6px;font-size:11px}
@@ -778,10 +785,6 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <div class="gen-phase" data-phase="2" title="Re-run publish step"><span class="gen-phase-n">3</span><span class="gen-phase-label" data-i18n="ph.publish">Publish</span></div>
           <div class="gen-phases-track"><div class="gen-phases-fill" id="gen-phases-fill"></div></div>
           <span class="gen-phases-pct" id="gen-phases-pct">1/3</span>
-          <button class="btn btn-sm btn-primary gen-publish hidden" id="btn-publish">
-            <svg class="icon icon-sm"><use href="#i-save"/></svg>
-            <span data-i18n="gen.publish">Publish</span>
-          </button>
         </div>
         <div id="gen-progress-box" class="gen-center hidden">
           <div class="gen-progress">
@@ -795,12 +798,13 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <div class="synth-banner hidden" id="synth-banner">
             <div style="display:flex;align-items:center;gap:8px;min-width:0">
               <svg class="icon icon-sm accent"><use href="#i-waves"/></svg>
-              <span class="t-10 dim nowrap" data-i18n="tr.synth">Corpus generated — audio not synthesized yet.</span>
+              <span class="t-10 dim nowrap" id="synth-banner-label" data-i18n="tr.synth">Corpus generated — audio not synthesized yet.</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-              <button class="btn btn-sm" id="btn-regenerate" title="Regenerate with the same parameters"><svg class="icon icon-sm"><use href="#i-refresh"/></svg><span class="nowrap" data-i18n="tr.regenerate">Regenerate</span></button>
-              <button class="btn btn-sm" id="btn-refine" title="Adjust parameters or add directives"><svg class="icon icon-sm"><use href="#i-tune"/></svg><span class="nowrap" data-i18n="tr.refine">Refine…</span></button>
+              <button class="btn btn-sm" id="btn-refine" title="Adjust parameters, then regenerate the corpus"><svg class="icon icon-sm"><use href="#i-tune"/></svg><span class="nowrap" data-i18n="tr.refine">Edit Corpus…</span></button>
               <button class="btn btn-sm btn-primary" id="btn-synth" data-i18n="tts.setVoice">Set Voice &amp; Synthesize</button>
+              <button class="btn btn-sm hidden" id="btn-edit-audio" title="Re-configure TTS settings and re-synthesize"><svg class="icon icon-sm"><use href="#i-tune"/></svg><span class="nowrap" data-i18n="tr.editAudio">Edit Audio Settings</span></button>
+              <button class="btn btn-sm btn-primary hidden" id="btn-publish-banner"><svg class="icon icon-sm"><use href="#i-save"/></svg><span data-i18n="gen.publish">Publish</span></button>
             </div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px" class="t-10 uc faint">
@@ -1117,17 +1121,13 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 
 <!-- ===================== ADJUST MODAL (Text + Voice) ===================== -->
 <div class="modal-overlay hidden" id="adjust-modal">
-  <div class="modal modal-settings" style="width:min(560px,94vw)">
+  <div class="modal modal-settings" style="width:min(680px,94vw);height:auto;max-height:min(84vh,760px)">
     <div class="modal-head">
       <div>
-        <div class="t-15" data-i18n="adjust.title">Adjust Material</div>
-        <div class="t-11 dim" style="margin-top:2px" data-i18n="adjust.sub">Tune the corpus text or the TTS voice of the current material.</div>
+        <div class="t-15" id="adjust-title">Adjust Material</div>
+        <div class="t-11 dim" style="margin-top:2px" id="adjust-sub">Tune the corpus text or the TTS voice of the current material.</div>
       </div>
       <button class="btn-icon" id="btn-adjust-close" title="Close"><svg class="icon"><use href="#i-close"/></svg></button>
-    </div>
-    <div class="modal-tabs">
-      <button class="m-tab active" data-atab="text"><span data-i18n="adjust.tabText">Text</span></button>
-      <button class="m-tab" data-atab="voice"><span data-i18n="adjust.tabVoice">Voice</span></button>
     </div>
     <div class="modal-body">
       <div class="m-panel" id="ap-text">
@@ -1135,13 +1135,12 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <div class="t-12 bold" data-i18n="adjust.textSub">Corpus Text</div>
           <div class="t-11 dim" data-i18n="adjust.textHint">Adjust parameters, then regenerate the corpus.</div>
         </div>
-        <div class="s-sec-title" data-i18n="refine.secCore">Core</div>
-        <div class="s-row">
-          <div class="s-info">
-            <div class="s-name" data-i18n="refine.difficulty">Difficulty</div>
-            <div class="s-desc" data-i18n="refine.difficultyDesc">Language complexity &amp; terminology density.</div>
-          </div>
-          <div class="s-ctrl" style="flex-direction:column;align-items:stretch;gap:4px">
+        <div class="two-col">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <label class="flabel" style="margin:0" data-i18n="refine.difficulty">Difficulty</label>
+              <span class="t-10 accent mono" id="refine-diff-label">Level 3 of 5</span>
+            </div>
             <div class="seg" id="refine-diff" style="grid-template-columns:repeat(5,1fr)">
               <button class="seg-item" data-level="1">L1</button>
               <button class="seg-item" data-level="2">L2</button>
@@ -1149,15 +1148,13 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
               <button class="seg-item" data-level="4">L4</button>
               <button class="seg-item" data-level="5">L5</button>
             </div>
-            <span class="t-10 dim" id="refine-diff-label">Level 3 of 5</span>
+            <p class="t-10 dim" style="margin-top:8px" data-i18n="refine.difficultyDesc">Language complexity &amp; terminology density.</p>
           </div>
-        </div>
-        <div class="s-row">
-          <div class="s-info">
-            <div class="s-name" data-i18n="refine.length">Length</div>
-            <div class="s-desc" data-i18n="refine.lengthDesc">Target audio duration of the dialogue.</div>
-          </div>
-          <div class="s-ctrl" style="flex-direction:column;align-items:stretch;gap:4px">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <label class="flabel" style="margin:0" data-i18n="refine.length">Length</label>
+              <span class="t-10 faint mono" id="refine-len-label">120s</span>
+            </div>
             <div class="seg" id="refine-len" style="grid-template-columns:repeat(5,1fr)">
               <button class="seg-item" data-length="60">60s</button>
               <button class="seg-item" data-length="90">90s</button>
@@ -1165,16 +1162,15 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
               <button class="seg-item" data-length="180">180s</button>
               <button class="seg-item" data-length="240">240s</button>
             </div>
-            <span class="t-10 dim" id="refine-len-label">120s</span>
+            <p class="t-10 dim" style="margin-top:8px" data-i18n="refine.lengthDesc">Target audio duration of the dialogue.</p>
           </div>
         </div>
-        <div class="s-sec-title" data-i18n="refine.secScope">Depth &amp; Scope</div>
-        <div class="s-row">
-          <div class="s-info">
-            <div class="s-name" data-i18n="refine.depth">Technical Depth</div>
-            <div class="s-desc" data-i18n="refine.depthDesc">How deeply the underlying principle is explained.</div>
-          </div>
-          <div class="s-ctrl" style="flex-direction:column;align-items:stretch;gap:4px">
+        <div class="two-col">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <label class="flabel" style="margin:0" data-i18n="refine.depth">Technical Depth</label>
+              <span class="t-10 faint mono" id="refine-depth-label">Depth 3 of 5</span>
+            </div>
             <div class="seg" id="refine-depth" style="grid-template-columns:repeat(5,1fr)">
               <button class="seg-item" data-depth="1">D1</button>
               <button class="seg-item" data-depth="2">D2</button>
@@ -1182,15 +1178,13 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
               <button class="seg-item" data-depth="4">D4</button>
               <button class="seg-item" data-depth="5">D5</button>
             </div>
-            <span class="t-10 dim" id="refine-depth-label">Depth 3 of 5</span>
+            <p class="t-10 dim" style="margin-top:8px" data-i18n="refine.depthDesc">How deeply the underlying principle is explained.</p>
           </div>
-        </div>
-        <div class="s-row">
-          <div class="s-info">
-            <div class="s-name" data-i18n="refine.breadth">Breadth · Topic Coverage</div>
-            <div class="s-desc" data-i18n="refine.breadthDesc">How many related aspects the discussion touches.</div>
-          </div>
-          <div class="s-ctrl" style="flex-direction:column;align-items:stretch;gap:4px">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <label class="flabel" style="margin:0" data-i18n="refine.breadth">Breadth</label>
+              <span class="t-10 faint mono" id="refine-breadth-label">Breadth 3 of 5</span>
+            </div>
             <div class="seg" id="refine-breadth" style="grid-template-columns:repeat(5,1fr)">
               <button class="seg-item" data-breadth="1">B1</button>
               <button class="seg-item" data-breadth="2">B2</button>
@@ -1198,15 +1192,15 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
               <button class="seg-item" data-breadth="4">B4</button>
               <button class="seg-item" data-breadth="5">B5</button>
             </div>
-            <span class="t-10 dim" id="refine-breadth-label">Breadth 3 of 5</span>
+            <p class="t-10 dim" style="margin-top:8px" data-i18n="refine.breadthDesc">How many related aspects the discussion touches.</p>
           </div>
         </div>
-        <div class="s-row">
-          <div class="s-info">
-            <div class="s-name" data-i18n="refine.tone">Tone &amp; Mood</div>
-            <div class="s-desc" data-i18n="refine.toneDesc">Emotional color of the conversation.</div>
-          </div>
-          <div class="s-ctrl">
+        <div class="two-col">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <label class="flabel" style="margin:0" data-i18n="refine.tone">Tone &amp; Mood</label>
+              <span class="t-10 faint mono" id="refine-tone-label">Neutral professional</span>
+            </div>
             <div class="select-wrap">
               <select class="select" id="refine-tone">
                 <option value="neutral" data-i18n="tone.neutral">Neutral professional</option>
@@ -1219,27 +1213,20 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
               <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
             </div>
           </div>
-        </div>
-        <div class="s-sec-title" data-i18n="refine.secDirectives">Directives</div>
-        <div class="s-row s-row-stack">
-          <div class="s-info">
-            <div class="s-name" data-i18n="refine.inject">Improvement Directives</div>
-            <div class="s-desc" data-i18n="refine.injectHint">Optional — injected into the generation prompt.</div>
+          <div>
+            <label class="flabel" style="margin:0 0 8px" data-i18n="refine.dir">Direction</label>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <label class="radio-row"><input type="radio" name="refine-dir" value="rephrase" checked><span data-i18n="refine.dirRephrase">Rewrite — keep the same scope</span></label>
+              <label class="radio-row"><input type="radio" name="refine-dir" value="expand"><span data-i18n="refine.dirExpand">Expand — add more technical depth</span></label>
+              <label class="radio-row"><input type="radio" name="refine-dir" value="narrow"><span data-i18n="refine.dirNarrow">Narrow — focus on a single aspect</span></label>
+              <label class="radio-row"><input type="radio" name="refine-dir" value="re-angle"><span data-i18n="refine.dirAngle">Re-angle — different engineering perspective</span></label>
+            </div>
           </div>
+        </div>
+        <div>
+          <label class="flabel" style="margin:0 0 8px" data-i18n="refine.inject">Improvement Directives</label>
           <textarea class="input" id="refine-inject" rows="3" data-i18n-ph="refine.injectPh" placeholder="e.g. Add concrete numbers and measurements, make it more conversational…"></textarea>
-        </div>
-        <div class="s-sec-title" data-i18n="refine.secDir">Direction</div>
-        <div class="s-row s-row-stack">
-          <div class="s-info">
-            <div class="s-name" data-i18n="refine.dir">Generation Direction</div>
-            <div class="s-desc" data-i18n="refine.dirDesc">Which way to steer the rewrite.</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <label class="radio-row"><input type="radio" name="refine-dir" value="rephrase" checked><span data-i18n="refine.dirRephrase">Rewrite — keep the same scope</span></label>
-            <label class="radio-row"><input type="radio" name="refine-dir" value="expand"><span data-i18n="refine.dirExpand">Expand — add more technical depth</span></label>
-            <label class="radio-row"><input type="radio" name="refine-dir" value="narrow"><span data-i18n="refine.dirNarrow">Narrow — focus on a single aspect</span></label>
-            <label class="radio-row"><input type="radio" name="refine-dir" value="re-angle"><span data-i18n="refine.dirAngle">Re-angle — different engineering perspective</span></label>
-          </div>
+          <p class="t-10 dim" style="margin-top:6px" data-i18n="refine.injectHint">Optional — injected into the generation prompt.</p>
         </div>
       </div>
       <div class="m-panel hidden" id="ap-voice">
@@ -1247,58 +1234,62 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <div class="t-12 bold" id="tts-material-title">Tire Burst Stability Control</div>
           <div class="t-11 dim" data-i18n="tts.target">Target material — converted with the settings below.</div>
         </div>
-        <div class="form-row">
-          <span class="t-10 uc faint" data-i18n="tts.preset">Voice Pair Preset</span>
-          <div class="select-wrap">
-            <select class="select" id="cfg-voice-preset">
-              <option value="guy+jenny" selected>Guy + Jenny — neutral male · female</option>
-              <option value="christopher+aria">Christopher + Aria — deep male · bright female</option>
-              <option value="davis+nancy">Davis + Nancy — warm male · soft female</option>
-              <option value="eric+ana">Eric + Ana — young male · young female</option>
-              <option value="custom">Custom…</option>
-            </select>
-            <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+        <div class="two-col">
+          <div>
+            <label class="flabel" style="margin:0 0 8px" data-i18n="settings.tts.provider">Synthesis Engine</label>
+            <div class="select-wrap">
+              <select class="select" id="adj-tts-provider">
+                <option>edge-tts (Microsoft Neural)</option>
+                <option>Piper (Local offline)</option>
+                <option>CosyVoice (Local GPU)</option>
+              </select>
+              <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+            </div>
+            <p class="t-10 dim" style="margin-top:6px" data-i18n="settings.tts.providerhint">edge-tts: no key · Piper: offline · CosyVoice: GPU.</p>
+          </div>
+          <div>
+            <label class="flabel" style="margin:0 0 8px" data-i18n="settings.tts.rate">Speech Rate</label>
+            <div class="select-wrap">
+              <select class="select" id="adj-tts-rate">
+                <option value="0.9">0.9x (relaxed)</option>
+                <option value="1" selected>1.0x (natural)</option>
+                <option value="1.1">1.1x (brisk)</option>
+                <option value="1.2">1.2x (fast)</option>
+              </select>
+              <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+            </div>
+            <p class="t-10 dim" style="margin-top:6px" data-i18n="tts.rateDesc">Playback cadence of the synthesized audio.</p>
           </div>
         </div>
-        <div class="form-row">
-          <span class="t-10 uc faint" data-i18n="tts.speakerA">Speaker A — Engineer A</span>
-          <div class="select-wrap">
-            <select class="select" id="cfg-voice-a"></select>
-            <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+        <div class="two-col">
+          <div>
+            <label class="flabel" style="margin:0 0 8px" data-i18n="tts.styleLabel">Emotion / Style</label>
+            <div class="select-wrap">
+              <select class="select" id="adj-tts-style">
+                <option value="neutral" data-i18n="tts.style.neutral">Neutral</option>
+                <option value="cheerful" data-i18n="tts.style.cheerful">Cheerful</option>
+                <option value="empathetic" data-i18n="tts.style.empathetic">Empathetic</option>
+                <option value="serious" data-i18n="tts.style.serious">Serious</option>
+                <option value="urgent" data-i18n="tts.style.urgent">Urgent</option>
+                <option value="whispering" data-i18n="tts.style.whispering">Whispering</option>
+              </select>
+              <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+            </div>
+            <p class="t-10 dim" style="margin-top:6px" data-i18n="tts.styleDesc">Emotional color applied to the voices.</p>
+          </div>
+          <div>
+            <label class="flabel" style="margin:0 0 6px" data-i18n="settings.tts.voice">Voice Roles</label>
+            <div class="t-10 dim" data-i18n="settings.tts.voicehint">Type text, then play to audition.</div>
           </div>
         </div>
-        <div class="form-row">
-          <span class="t-10 uc faint" data-i18n="tts.speakerB">Speaker B — Engineer B</span>
-          <div class="select-wrap">
-            <select class="select" id="cfg-voice-b"></select>
-            <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+        <div>
+          <textarea class="input" id="adj-voice-text" rows="4" data-i18n-ph="settings.tts.testTextPh" placeholder="Enter text to audition with each role…">The cornering stiffness drops significantly after the tire burst, so we need to compensate for the resulting yaw moment.</textarea>
+          <div class="voice-roles" id="adj-voice-roles" style="margin-top:8px"></div>
+          <div class="tts-voice-foot" style="margin-top:8px">
+            <button class="btn-role-add" id="adj-role-add"><svg class="icon"><use href="#i-plus"/></svg><span data-i18n="settings.tts.addRole">Add role</span></button>
           </div>
-        </div>
-        <div class="form-row">
-          <span class="t-10 uc faint" data-i18n="settings.tts.rate">Speech Rate</span>
-          <div class="select-wrap">
-            <select class="select" id="cfg-voice-rate">
-              <option value="0.9">0.9x (relaxed)</option>
-              <option value="1" selected>1.0x (natural)</option>
-              <option value="1.1">1.1x (brisk)</option>
-              <option value="1.2">1.2x (fast)</option>
-            </select>
-            <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
-          </div>
-        </div>
-        <div class="form-row">
-          <span class="t-10 uc faint" data-i18n="tts.styleLabel">Emotion / Style</span>
-          <div class="select-wrap">
-            <select class="select" id="cfg-voice-style">
-              <option value="neutral" data-i18n="tts.style.neutral">Neutral</option>
-              <option value="cheerful" data-i18n="tts.style.cheerful">Cheerful</option>
-              <option value="empathetic" data-i18n="tts.style.empathetic">Empathetic</option>
-              <option value="serious" data-i18n="tts.style.serious">Serious</option>
-              <option value="urgent" data-i18n="tts.style.urgent">Urgent</option>
-              <option value="whispering" data-i18n="tts.style.whispering">Whispering</option>
-            </select>
-            <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
-          </div>
+          <div class="test-output" id="adj-tts-result"></div>
+          <audio id="adj-audio" class="hidden" preload="none"></audio>
         </div>
         <p class="t-10 dim" data-i18n="tts.note">edge-tts neural voices · applied at conversion time.</p>
         <p class="t-10 faint" id="tts-status"></p>
@@ -2010,9 +2001,9 @@ const API = {
   async health() {
     return apiFetch('/health', {}, 8000);
   },
-  async usage() {
+  async usage(gran, offsetDays) {
     if (mockMode()) throw new Error('mock');
-    return apiFetch('/usage');
+    return apiFetch('/usage?granularity=' + (gran || 'week') + '&offset_days=' + (offsetDays || 0));
   },
   async patchMaterial(id, patch) {
     return apiFetch('/materials/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
@@ -2187,14 +2178,17 @@ const I18N = {
     'settings.zh.on': 'On', 'settings.zh.off': 'Off',
     'settings.general.sub': 'Software-wide defaults — language, appearance, playback.',
     'settings.usage.sub': 'LLM token consumption — successful calls only.',
-    'settings.usage.loading': 'Loading…',
-    'settings.usage.mock': 'Test-data mode — sample records shown.',
     'settings.usage.unavailable': 'Usage unavailable — backend not reachable.',
     'settings.usage.total': 'Total',
     'settings.usage.today': 'Today',
     'settings.usage.promptComp': 'Prompt / Completion',
     'settings.usage.byAction': 'By action',
-    'settings.usage.byDay': 'By day',
+    'settings.usage.trend': 'Trend',
+    'settings.usage.now': 'Now',
+    'settings.usage.viewDay': 'Day',
+    'settings.usage.viewWeek': 'Week',
+    'settings.usage.viewMonth': 'Month',
+    'settings.usage.viewYear': 'Year',
     'settings.llm.sub': 'OpenAI-compatible generation backend used by the /generate pipeline.',
     'settings.tts.sub': 'Sentence-by-sentence synthesis; segments are stitched into a single timeline with start_ms / end_ms.',
     'settings.llm.provider': 'LLM Provider', 'settings.llm.creds': 'Base URL & API Key',
@@ -2235,8 +2229,14 @@ const I18N = {
     'settings.tts.ok': 'Voice OK',
     'settings.test.err': 'Failed',
     'tts.voice': 'Voice', 'tts.setVoice': 'Set Voice & Synthesize',
+    'tts.presetDesc': 'Quick-select a matching two-voice combination.',
+    'tts.speakerADesc': 'Voice used for the first speaker.',
+    'tts.speakerBDesc': 'Voice used for the second speaker.',
+    'tts.rateDesc': 'Playback cadence of the synthesized audio.',
+    'tts.styleDesc': 'Emotional color applied to the voices.',
     'adjust.open': 'Adjust', 'adjust.title': 'Adjust Material',
-    'adjust.sub': 'Tune the corpus text or the TTS voice of the current material.',
+    'adjust.titleCorpus': 'Edit Corpus', 'adjust.subCorpus': 'Adjust the corpus parameters, then regenerate.',
+    'adjust.titleVoice': 'Voice Settings', 'adjust.subVoice': 'Configure TTS voice, rate and style for this material.',
     'adjust.tabText': 'Text', 'adjust.tabVoice': 'Voice',
     'adjust.textSub': 'Corpus Text', 'adjust.textHint': 'Adjust parameters or add directives, then regenerate the corpus.',
     'tts.title': 'Voice & TTS Settings', 'tts.sub': 'Choose voices and convert the current material.',
@@ -2246,7 +2246,7 @@ const I18N = {
     'tts.convert': 'Apply & Convert', 'tts.reconvert': 'Re-synthesize',
     'tts.statusReady': 'Corpus ready — not synthesized yet.',
     'tts.statusExist': 'Audio exists — re-converting will replace it.',
-    'tr.regenerate': 'Regenerate', 'tr.refine': 'Refine…',
+    'tr.regenerate': 'Regenerate', 'tr.refine': 'Edit Corpus…', 'tr.editAudio': 'Edit Audio Settings', 'tr.audioReady': 'Audio ready — review and publish.',
     'refine.title': 'Refine Generation', 'refine.sub': 'Adjust parameters or add directives, then regenerate the corpus.',
     'refine.topic': 'Topic', 'refine.domain': 'Domain', 'refine.role': 'Role', 'refine.scenario': 'Scenario',
     'refine.difficulty': 'Difficulty', 'refine.difficultyDesc': 'Language complexity & terminology density.',
@@ -2328,14 +2328,17 @@ const I18N = {
     'settings.zh.on': '开', 'settings.zh.off': '关',
     'settings.general.sub': '软件全局默认 — 语言、外观、播放。',
     'settings.usage.sub': 'LLM Token 消耗 — 仅统计成功调用。',
-    'settings.usage.loading': '加载中…',
-    'settings.usage.mock': '测试数据模式 — 展示示例记录。',
     'settings.usage.unavailable': '用量不可用 — 后端未连接。',
     'settings.usage.total': '总计',
     'settings.usage.today': '今日',
     'settings.usage.promptComp': 'Prompt / Completion',
     'settings.usage.byAction': '按动作',
-    'settings.usage.byDay': '按日',
+    'settings.usage.trend': '趋势',
+    'settings.usage.now': '当前',
+    'settings.usage.viewDay': '日',
+    'settings.usage.viewWeek': '周',
+    'settings.usage.viewMonth': '月',
+    'settings.usage.viewYear': '年',
     'settings.llm.sub': 'OpenAI 兼容的生成后端，由 /generate 管线使用。',
     'settings.tts.sub': '逐句合成，按 start_ms / end_ms 拼接为单一时间轴。',
     'settings.llm.provider': 'LLM 提供商', 'settings.llm.creds': 'Base URL 与 API Key',
@@ -2377,8 +2380,14 @@ const I18N = {
     'settings.tts.ok': '音色可用',
     'settings.test.err': '失败',
     'tts.voice': '音色', 'tts.setVoice': '设置音色并合成',
+    'tts.presetDesc': '快速选择匹配的双人音色组合。',
+    'tts.speakerADesc': '第一位说话人使用的音色。',
+    'tts.speakerBDesc': '第二位说话人使用的音色。',
+    'tts.rateDesc': '合成音频的播放语速。',
+    'tts.styleDesc': '应用于音色的情感色彩。',
     'adjust.open': '调整', 'adjust.title': '调整素材',
-    'adjust.sub': '调整当前素材的语料文本或 TTS 音色。',
+    'adjust.titleCorpus': '编辑语料', 'adjust.subCorpus': '调整语料参数后重新生成。',
+    'adjust.titleVoice': '音频设置', 'adjust.subVoice': '为当前素材配置音色、语速与情感风格。',
     'adjust.tabText': '文本', 'adjust.tabVoice': '音色',
     'adjust.textSub': '语料文本', 'adjust.textHint': '调整参数或添加指令，然后重新生成语料。',
     'tts.title': '音色与 TTS 设置', 'tts.sub': '选择音色并转换当前素材。',
@@ -2388,7 +2397,7 @@ const I18N = {
     'tts.convert': '应用并转换', 'tts.reconvert': '重新合成',
     'tts.statusReady': '语料已就绪 — 尚未合成。',
     'tts.statusExist': '已有音频 — 重新转换将替换现有音频。',
-    'tr.regenerate': '重新生成', 'tr.refine': '改进…',
+    'tr.regenerate': '重新生成', 'tr.refine': '编辑语料…', 'tr.editAudio': '编辑音频设置', 'tr.audioReady': '音频已就绪 — 可试听或发布。',
     'refine.title': '改进生成', 'refine.sub': '调整参数或添加指令，然后重新生成语料。',
     'refine.topic': '主题', 'refine.domain': '领域', 'refine.role': '角色', 'refine.scenario': '场景',
     'refine.difficulty': '难度', 'refine.difficultyDesc': '语言复杂度与术语密度。',
@@ -2979,7 +2988,7 @@ function renderMaterial() {
   $('tab-vocab-count').textContent = '(' + art.vocabulary.length + ')';
   $('tab-quiz-count').textContent = '(' + art.listening_questions.length + ')';
   $('transcript-list').innerHTML = transcriptHTML(art);
-  $('synth-banner').classList.toggle('hidden', art.meta.audioReady !== false);
+  setSynthBanner();
   $('btn-synth').disabled = !!state.synthesizing;
   $('panel-grounding').innerHTML = groundingHTML(art);
   $('panel-vocab').innerHTML = '<div class="vocab-grid" style="grid-template-columns:1fr">' + vocabHTML(art) + '</div>';
@@ -3063,8 +3072,6 @@ function setPhases(done, active) {
   const frac = Math.min(3, done + (active >= 0 ? 1 : 0));
   $('gen-phases-fill').style.width = (frac * 100 / 3) + '%';
   $('gen-phases-pct').textContent = frac + '/3';
-  const pubArt = state.current;
-  $('btn-publish').classList.toggle('hidden', !(pubArt && pubArt.meta.audioReady === true && pubArt.meta.saved !== true));
   document.querySelectorAll('.gen-phase').forEach((ph, i) => {
     ph.classList.toggle('active', i === active);
     ph.classList.toggle('done', i < done);
@@ -3078,6 +3085,20 @@ function syncPhases() {
   if (a.saved === true) { $('gen-phases').classList.add('hidden'); return; }
   if (a.audioReady === true) setPhases(2);
   else setPhases(1);
+}
+function setSynthBanner() {
+  const art = currentArtifact();
+  const banner = $('synth-banner');
+  if (!art || !art.meta.generated) { banner.classList.add('hidden'); return; }
+  const label = $('synth-banner-label');
+  if (art.meta.saved === true) { banner.classList.add('hidden'); return; }
+  const corpusState = art.meta.audioReady === false;
+  banner.classList.remove('hidden');
+  label.textContent = I18N[state.lang][corpusState ? 'tr.synth' : 'tr.audioReady'];
+  $('btn-refine').classList.toggle('hidden', !corpusState);
+  $('btn-synth').classList.toggle('hidden', !corpusState);
+  $('btn-edit-audio').classList.toggle('hidden', corpusState);
+  $('btn-publish-banner').classList.toggle('hidden', corpusState);
 }
 function genPaint(steps, i) {
   steps.forEach((s, j) => {
@@ -3184,22 +3205,23 @@ function updateRefineToneLabel() {
   const lbl = $('refine-tone-label');
   if (lbl) lbl.textContent = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
 }
+let adjustPanel = 'text';
 function openAdjustModal(tab) {
+  adjustPanel = tab === 'voice' ? 'voice' : 'text';
   const lock = state.current;
   if (lock && lock.meta.saved === true) setPhases(3);   /* unlock — show edit progress */
   $('adjust-modal').classList.remove('hidden');
-  switchAdjustTab(tab || 'text');
-  setTimeout(() => { const f = tab === 'voice' ? $('cfg-voice-a') : $('refine-topic'); if (f) f.focus(); }, 60);
-}
-function switchAdjustTab(tab) {
-  document.querySelectorAll('#adjust-modal .m-tab').forEach(b => b.classList.toggle('active', b.dataset.atab === tab));
-  $('ap-text').classList.toggle('hidden', tab !== 'text');
-  $('ap-voice').classList.toggle('hidden', tab !== 'voice');
+  $('ap-text').classList.toggle('hidden', adjustPanel !== 'text');
+  $('ap-voice').classList.toggle('hidden', adjustPanel !== 'voice');
+  const L = I18N[state.lang];
+  $('adjust-title').textContent = L[adjustPanel === 'voice' ? 'adjust.titleVoice' : 'adjust.titleCorpus'];
+  $('adjust-sub').textContent = L[adjustPanel === 'voice' ? 'adjust.subVoice' : 'adjust.subCorpus'];
   const art = state.current;
   const ready = art && art.meta.audioReady === false;
-  $('btn-adjust-apply').textContent = I18N[state.lang][tab === 'voice' ? (ready ? 'tts.convert' : 'tts.reconvert') : 'refine.apply'];
+  $('btn-adjust-apply').textContent = L[adjustPanel === 'voice' ? (ready ? 'tts.convert' : 'tts.reconvert') : 'refine.apply'];
   const st = $('tts-status');
-  if (st) st.style.display = tab === 'voice' ? '' : 'none';
+  if (st) st.style.display = adjustPanel === 'voice' ? '' : 'none';
+  setTimeout(() => { const f = adjustPanel === 'voice' ? $('adj-tts-provider') : $('refine-tone'); if (f) f.focus(); }, 60);
 }
 function closeAdjustModal() {
   $('adjust-modal').classList.add('hidden');
@@ -3246,53 +3268,88 @@ const LLM_PRESETS = {
 const LLM_PRESET_LEGACY = {
   'DeepSeek (OpenAI-compatible)': 'deepseek', 'OpenAI': 'openai', 'Qwen': 'qwen', 'Ollama (Local)': 'ollama'
 };
-const VOICES = ['en-US-GuyNeural', 'en-US-JennyNeural', 'en-US-ChristopherNeural', 'en-US-AriaNeural', 'en-US-DavisNeural', 'en-US-NancyNeural', 'en-US-EricNeural', 'en-US-AnaNeural'];
-const VOICE_PRESETS = {
-  'guy+jenny': ['en-US-GuyNeural', 'en-US-JennyNeural'],
-  'christopher+aria': ['en-US-ChristopherNeural', 'en-US-AriaNeural'],
-  'davis+nancy': ['en-US-DavisNeural', 'en-US-NancyNeural'],
-  'eric+ana': ['en-US-EricNeural', 'en-US-AnaNeural']
-};
-function fillVoiceOptions() {
-  const mk = sel => {
-    sel.innerHTML = '';
-    VOICES.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
-  };
-  mk($('cfg-voice-a')); mk($('cfg-voice-b'));
-}
-function parseVoice(voice) {
-  if (!voice) return null;
-  const m = String(voice).split('+').map(s => s.trim());
-  return m.length === 2 && VOICES.includes(m[0]) && VOICES.includes(m[1]) ? m : null;
+function splitVoice(voice) {
+  return String(voice || '').split('+').map(s => s.trim()).filter(Boolean);
 }
 function openTTSModal() {
   const art = currentArtifact();
   $('tts-material-title').textContent = art.meta.title;
-  const cur = parseVoice(art.meta.voice);
-  const a = cur ? cur[0] : VOICES[0], b = cur ? cur[1] : VOICES[1];
-  $('cfg-voice-a').value = a; $('cfg-voice-b').value = b;
-  let preset = 'custom';
-  for (const k in VOICE_PRESETS) if (VOICE_PRESETS[k][0] === a && VOICE_PRESETS[k][1] === b) preset = k;
-  $('cfg-voice-preset').value = preset;
-  let rate = '1';
-  try { const s = JSON.parse(localStorage.getItem('telg-settings') || 'null'); if (s && s.tts && s.tts.speechRate) rate = String(s.tts.speechRate); } catch (e) {}
-  $('cfg-voice-rate').value = rate;
-  let style = 'neutral';
-  try { const s = JSON.parse(localStorage.getItem('telg-settings') || 'null'); if (s && s.tts && s.tts.style) style = s.tts.style; } catch (e) {}
-  $('cfg-voice-style').value = style;
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; } catch (e) {}
+  const tts = st.tts || {};
+  $('adj-tts-provider').value = tts.provider || 'edge-tts (Microsoft Neural)';
+  $('adj-tts-rate').value = tts.speechRate || '1';
+  $('adj-tts-style').value = art.meta.ttsStyle || tts.style || 'neutral';
+  const cur = splitVoice(art.meta.voice);
+  renderAdjustVoiceRoles(cur.length ? cur : ['en-US-GuyNeural', 'en-US-JennyNeural']);
   const ready = art.meta.audioReady === false;
   $('tts-status').textContent = I18N[state.lang][ready ? 'tts.statusReady' : 'tts.statusExist'];
   openAdjustModal('voice');
 }
 function closeTTSModal() { closeAdjustModal(); }
+function renderAdjustVoiceRoles(voices) {
+  const box = $('adj-voice-roles'); if (!box) return;
+  const list = (voices && voices.length) ? voices : [{ name: 'Speaker A', voice: 'en-US-GuyNeural' }, { name: 'Speaker B', voice: 'en-US-JennyNeural' }];
+  box.innerHTML = list.map((r, i) => {
+    if (typeof r === 'string') r = { name: 'Speaker ' + String.fromCharCode(65 + i), voice: r };
+    return roleRowHTML(r);
+  }).join('');
+}
+function currentAdjustVoiceRoles() {
+  const box = $('adj-voice-roles'); if (!box) return [];
+  return Array.from(box.querySelectorAll('.voice-role-row')).map(row => ({
+    name: (row.querySelector('.role-name') || { value: '' }).value.trim(),
+    voice: row.querySelector('select') ? row.querySelector('select').value : ''
+  }));
+}
+function addAdjustRole() {
+  const cur = currentAdjustVoiceRoles();
+  const used = new Set(cur.map(x => x.voice));
+  const next = TTS_VOICES.find(v => !used.has(v)) || 'en-US-GuyNeural';
+  renderAdjustVoiceRoles(cur.concat([{ name: 'Speaker ' + String.fromCharCode(65 + cur.length), voice: next }]));
+}
+function delAdjustRole(btn) {
+  const row = btn.closest('.voice-role-row'); if (!row) return;
+  if (currentAdjustVoiceRoles().length <= 1) return;
+  row.remove();
+}
+async function auditionAdjustRole(btn) {
+  const row = btn.closest('.voice-role-row'); if (!row) return;
+  const voice = row.querySelector('select') ? row.querySelector('select').value : '';
+  const res = $('adj-tts-result'), aud = $('adj-audio');
+  if (!res) return;
+  res.className = 'test-output'; res.textContent = '…';
+  document.querySelectorAll('#adj-voice-roles .btn-role-test.played').forEach(b => b.classList.remove('played'));
+  btn.classList.add('loading');
+  if (aud) { aud.pause(); aud.onended = null; aud.removeAttribute('src'); }
+  const txt = $('adj-voice-text') ? $('adj-voice-text').value.trim() : '';
+  try {
+    const r = await API.testTTS({ provider: $('adj-tts-provider').value, voice, speech_rate: parseFloat($('adj-tts-rate').value), style: $('adj-tts-style').value, text: txt || undefined });
+    if (r.ok) {
+      res.className = 'test-output ok';
+      res.textContent = I18N[state.lang]['settings.tts.ok'] + ' · ' + voice + (r.audio_url ? '' : ' · Mock');
+      if (r.audio_url && aud) {
+        aud.src = r.audio_url;
+        aud.onended = () => btn.classList.remove('played');
+        aud.play().then(() => btn.classList.add('played')).catch(() => {});
+      }
+    } else { res.className = 'test-output err'; res.textContent = (r.error || I18N[state.lang]['settings.test.err']); }
+  } catch (e) { res.className = 'test-output err'; res.textContent = e.message; }
+  btn.classList.remove('loading');
+}
 function applyTTS() {
   const art = currentArtifact();
-  const a = $('cfg-voice-a').value, b = $('cfg-voice-b').value, rate = $('cfg-voice-rate').value;
-  art.meta.voice = a + ' + ' + b;
-  art.meta.ttsStyle = $('cfg-voice-style').value;
+  const roles = currentAdjustVoiceRoles();
+  const voices = roles.map(r => r.voice).filter(Boolean);
+  if (!voices.length) voices.push('en-US-GuyNeural');
+  art.meta.voice = voices.join(' + ');
+  art.meta.voiceRoles = roles;
+  art.meta.ttsStyle = $('adj-tts-style').value;
   try {
     const s = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {};
-    s.tts = s.tts || {}; s.tts.voice = art.meta.voice; s.tts.speechRate = rate; s.tts.style = art.meta.ttsStyle;
+    s.tts = s.tts || {};
+    s.tts.voice = art.meta.voice; s.tts.speechRate = $('adj-tts-rate').value; s.tts.style = art.meta.ttsStyle;
+    s.tts.provider = $('adj-tts-provider').value;
     localStorage.setItem('telg-settings', JSON.stringify(s));
   } catch (e) {}
   art.meta.audioReady = false;          /* force (re-)conversion */
@@ -3582,63 +3639,228 @@ function openGenPanel() {
   input.select();
 }
 function closeGenPanel() { $('gen-panel').classList.add('hidden'); }
+let usageGran = 'week';
+let usageSel = -1;
+let usageOffsetDays = 0;
+let usageData = null;
+let usageBuckets = [];
+
+const pad2 = n => String(n).padStart(2, '0');
+const rndOf = k => { let h = 0; for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; return (h % 1000) / 1000; };
+const dstr = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+
+function usageWindowJS(gran, od) {
+  const now = new Date();
+  const anchor = addDays(now, -od);
+  let start, end, label;
+  if (gran === 'day') {
+    start = end = anchor; label = dstr(start);
+  } else if (gran === 'week') {
+    const dow = (anchor.getDay() + 6) % 7; // Mon=0
+    start = addDays(anchor, -dow); end = addDays(start, 6);
+    label = dstr(start).slice(5) + ' – ' + dstr(end).slice(5);
+  } else if (gran === 'month') {
+    start = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+    end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+    label = dstr(start).slice(0, 7);
+  } else {
+    start = new Date(anchor.getFullYear(), 0, 1);
+    end = new Date(start.getFullYear(), 11, 31);
+    label = String(start.getFullYear());
+  }
+  return { start: dstr(start), end: dstr(end), label };
+}
+
+function mockUsage(gran, od) {
+  const win = usageWindowJS(gran, od);
+  const base = new Date(win.start + 'T00:00:00');
+  const days = (new Date(win.end + 'T00:00:00') - base) / 86400000;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const buckets = [];
+  const push = (key, label, v, calls) => buckets.push({ key, label, total_tokens: v, calls });
+  const drift = od === 0 ? 1 : Math.max(0.15, 1 - od / 240); // 越早数据越稀疏
+  if (gran === 'day') {
+    for (let h = 0; h < 24; h++) {
+      const v = od === 0 ? 400 + Math.round(2600 * Math.exp(-Math.pow(h - 11, 2) / 14)) : Math.round(1400 * rndOf(pad2(h) + win.start) * drift);
+      push(pad2(h), pad2(h) + ':00', v, Math.max(1, Math.round(v / 900)));
+    }
+  } else if (gran === 'week') {
+    for (let i = 0; i <= days; i++) {
+      const d = addDays(base, i);
+      const v = od === 0 ? 8000 + Math.round(26000 * Math.exp(-Math.pow(i - 3.5, 2) / 3)) : Math.round(22000 * rndOf(dstr(d)) * drift);
+      push(dstr(d), dstr(d).slice(5), v, Math.max(1, Math.round(v / 8000)));
+    }
+  } else if (gran === 'month') {
+    for (let i = 0; i <= days; i++) {
+      const d = addDays(base, i);
+      const v = od === 0 ? 6000 + Math.round(18000 * Math.exp(-Math.pow(i - 15, 2) / 60)) : Math.round(16000 * rndOf(dstr(d)) * drift);
+      push(dstr(d), String(d.getDate()), v, Math.max(1, Math.round(v / 7000)));
+    }
+  } else {
+    for (let i = 0; i < 12; i++) {
+      const m = new Date(win.start.slice(0, 4), i, 1);
+      const v = od === 0 ? 30000 + Math.round(90000 * Math.exp(-Math.pow(i - 6, 2) / 10)) : Math.round(90000 * rndOf(dstr(m).slice(0, 7)) * drift);
+      push(dstr(m).slice(0, 7), months[i], v, Math.round(v / 9000));
+    }
+  }
+  return {
+    granularity: gran, offset_days: od, window: win, buckets,
+    total: { calls: 32, prompt_tokens: 84211, completion_tokens: 120390, total_tokens: 204601 },
+    today: { calls: 4, prompt_tokens: 8420, completion_tokens: 12039, total_tokens: 20459 },
+    breakdown: { generate: 24, regenerate: 3, 'test-llm': 5 }
+  };
+}
+
+function fillBuckets(d) {
+  const win = d.window;
+  const map = {};
+  (d.buckets || []).forEach(b => { map[b.key] = b; });
+  const base = new Date(win.start + 'T00:00:00');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const out = [];
+  const push = (key, label) => {
+    const b = map[key];
+    out.push(b ? { key, label, total_tokens: b.total_tokens, calls: b.calls } : { key, label, total_tokens: 0, calls: 0 });
+  };
+  if (d.granularity === 'day') {
+    for (let h = 0; h < 24; h++) push(pad2(h), pad2(h) + ':00');
+  } else if (d.granularity === 'week') {
+    for (let i = 0; i < 7; i++) { const k = dstr(addDays(base, i)); push(k, k.slice(5)); }
+  } else if (d.granularity === 'month') {
+    const n = new Date(win.end + 'T00:00:00').getDate();
+    for (let i = 0; i < n; i++) { const k = dstr(addDays(base, i)); push(k, String(i + 1)); }
+  } else {
+    for (let i = 0; i < 12; i++) { const k = dstr(new Date(win.start.slice(0, 4), i, 1)).slice(0, 7); push(k, months[i]); }
+  }
+  return out;
+}
+
+function usageChartSVG(buckets, sel, w) {
+  const H = 150, top = 10, bottom = 22;
+  const n = buckets.length;
+  if (!n) return '';
+  const max = Math.max(...buckets.map(b => b.total_tokens)) || 1;
+  const plotH = H - top - bottom;
+  const bw = w / n;
+  let bars = '', labels = '';
+  buckets.forEach((b, i) => {
+    const h = b.total_tokens > 0 ? Math.max(2, Math.round(b.total_tokens / max * plotH)) : 1;
+    const x = Math.round(i * bw + bw * 0.14);
+    const bw2 = Math.max(2, Math.round(bw * 0.72));
+    const y = H - bottom - h;
+    const on = i === sel;
+    const fill = b.total_tokens > 0 ? (on ? 'var(--primary)' : 'var(--surface-highest)') : 'var(--line)';
+    bars += '<rect class="usage-bar" data-idx="' + i + '" x="' + x + '" y="' + y + '" width="' + bw2 + '" height="' + h +
+      '" rx="2" fill="' + fill + '">' +
+      '<title>' + b.label + ' · ' + (b.total_tokens || 0).toLocaleString() + ' tokens · ' + b.calls + ' calls</title></rect>';
+    const show = n <= 8 ? true : (i % Math.ceil(n / 8) === 0 || i === n - 1);
+    if (show) labels += '<text x="' + (x + bw2 / 2) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="9" fill="var(--outline)">' + b.label + '</text>';
+  });
+  return '<svg viewBox="0 0 ' + w + ' ' + H + '" style="overflow:visible">' +
+    '<g id="usage-pan">' + bars + labels + '</g></svg>';
+}
+
 async function renderUsage() {
   const box = $('usage-body');
   if (!box) return;
+  box.innerHTML = '<div class="usage-grid" id="usage-cards"></div>' +
+    '<div class="s-sec-title" data-i18n="settings.usage.trend">Trend</div>' +
+    '<div class="usage-chart-head">' +
+    '<div class="seg" id="usage-gran" style="grid-template-columns:repeat(4,1fr);max-width:220px">' +
+    '<button class="seg-item" data-gran="day" data-i18n="settings.usage.viewDay">Day</button>' +
+    '<button class="seg-item" data-gran="week" data-i18n="settings.usage.viewWeek">Week</button>' +
+    '<button class="seg-item" data-gran="month" data-i18n="settings.usage.viewMonth">Month</button>' +
+    '<button class="seg-item" data-gran="year" data-i18n="settings.usage.viewYear">Year</button>' +
+    '</div>' +
+    '<span class="t-10 dim" id="usage-sel" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span>' +
+    '<span style="display:flex;align-items:center;gap:4px;flex-shrink:0">' +
+    '<button class="btn btn-ghost" id="usage-now" style="display:none;padding:2px 8px;font-size:11px" data-i18n="settings.usage.now">Now</button>' +
+    '<button class="icon-btn" id="usage-prev" title="Earlier" style="width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center"><svg class="icon icon-sm"><use href="#i-chevron-left"/></svg></button>' +
+    '<button class="icon-btn" id="usage-next" title="Later" style="width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center"><svg class="icon icon-sm"><use href="#i-chevron-right"/></svg></button>' +
+    '</span>' +
+    '</div>' +
+    '<div class="usage-chart" id="usage-chart" title="Click a bar to inspect"></div>';
+  applyLang();
+  box.querySelectorAll('#usage-gran .seg-item').forEach(b => b.classList.toggle('active', b.dataset.gran === usageGran));
+  box.addEventListener('click', e => {
+    const g = e.target.closest('#usage-gran .seg-item');
+    if (g && g.dataset.gran !== usageGran) {
+      usageGran = g.dataset.gran; usageOffsetDays = 0; usageSel = -1;
+      box.querySelectorAll('#usage-gran .seg-item').forEach(b => b.classList.toggle('active', b.dataset.gran === usageGran));
+      loadUsage();
+    }
+    if (e.target.closest('#usage-now')) { usageOffsetDays = 0; usageSel = -1; loadUsage(); }
+    if (e.target.closest('#usage-prev') || e.target.closest('#usage-next')) {
+      const half = Math.max(1, Math.round(usageWinDays() / 2));
+      const dir = e.target.closest('#usage-prev') ? 1 : -1;
+      usageOffsetDays = Math.max(0, usageOffsetDays + dir * half);
+      usageSel = -1; loadUsage();
+    }
+  });
+  box.addEventListener('click', e => {
+    const bar = e.target.closest('.usage-bar');
+    if (bar) { usageSel = +bar.dataset.idx; renderUsageChart(); }
+  });
+  await loadUsage();
+}
+
+async function loadUsage() {
+  const box = $('usage-body');
+  if (!box) return;
   const fmt = n => (n || 0).toLocaleString();
-  const kb = n => ((n || 0) * 3 / 1024).toFixed(1) + ' KB';
-  const actName = { generate: 'Corpus', regenerate: 'Regenerate', 'test-llm': 'Test' };
-  const render = (d, isMock) => {
-    let html = '';
-    if (isMock) html += '<div class="t-10 dim" style="margin-bottom:8px" data-i18n="settings.usage.mock">Test-data mode — sample records shown.</div>';
-    html += '<div class="usage-grid">' +
-      '<div class="usage-cell"><span class="t-10 uc faint" data-i18n="settings.usage.total">Total</span>' +
-      '<span class="t-15 mono">' + fmt(d.total.total_tokens) + '</span>' +
-      '<span class="t-10 dim">' + d.total.calls + ' calls</span></div>' +
-      '<div class="usage-cell"><span class="t-10 uc faint" data-i18n="settings.usage.today">Today</span>' +
-      '<span class="t-15 mono">' + fmt(d.today.total_tokens) + '</span>' +
-      '<span class="t-10 dim">' + d.today.calls + ' calls</span></div>' +
-      '</div>';
-    html += '<div class="s-row"><div class="s-info"><div class="s-name" data-i18n="settings.usage.promptComp">Prompt / Completion</div>' +
-      '<div class="s-desc mono">' + fmt(d.total.prompt_tokens) + ' / ' + fmt(d.total.completion_tokens) +
-      ' <span class="dim">(today ' + fmt(d.today.prompt_tokens) + ' / ' + fmt(d.today.completion_tokens) + ')</span></div></div></div>';
-    const acts = Object.keys(d.breakdown || {});
-    if (acts.length) {
-      html += '<div class="s-row"><div class="s-info"><div class="s-name" data-i18n="settings.usage.byAction">By action</div>' +
-        '<div class="s-desc">' + acts.map(k => (actName[k] || k) + ' ' + d.breakdown[k]).join(' · ') + '</div></div></div>';
-    }
-    if (d.by_day && d.by_day.length) {
-      html += '<div class="s-sec-title" data-i18n="settings.usage.byDay">By day</div>';
-      html += '<div class="usage-days">' + d.by_day.map(x =>
-        '<div class="usage-day"><span class="mono">' + x.date + '</span>' +
-        '<span class="dim">' + x.calls + ' calls</span>' +
-        '<span class="mono">' + fmt(x.total_tokens) + ' · ' + kb(x.total_tokens) + '</span></div>').join('') + '</div>';
-    }
-    box.innerHTML = html;
-    applyLang();
-  };
-  if (mockMode()) {
-    render({
-      total: { calls: 32, prompt_tokens: 84211, completion_tokens: 120390, total_tokens: 204601 },
-      today: { calls: 4, prompt_tokens: 8420, completion_tokens: 12039, total_tokens: 20459 },
-      breakdown: { generate: 24, regenerate: 3, 'test-llm': 5 },
-      by_day: [
-        { date: '2026-09-14', calls: 9, total_tokens: 50211 },
-        { date: '2026-09-15', calls: 19, total_tokens: 133931 },
-        { date: '2026-09-16', calls: 4, total_tokens: 20459 }
-      ]
-    }, true);
-    return;
-  }
-  box.innerHTML = '<div class="t-11 dim" data-i18n="settings.usage.loading">Loading…</div>';
+  let d;
   try {
-    const d = await API.usage();
-    render(d, false);
+    d = mockMode() ? mockUsage(usageGran, usageOffsetDays) : await API.usage(usageGran, usageOffsetDays);
   } catch (e) {
     box.innerHTML = '<div class="t-11 dim" data-i18n="settings.usage.unavailable">Usage unavailable — backend not reachable.</div>';
-    applyLang();
+    applyLang(); return;
+  }
+  usageData = d;
+  usageBuckets = fillBuckets(d);
+  const cards = $('usage-cards');
+  if (cards) cards.innerHTML =
+    '<div class="usage-cell"><span class="t-10 uc faint" data-i18n="settings.usage.total">Total</span>' +
+    '<span class="t-15 mono">' + fmt(d.total.total_tokens) + '</span>' +
+    '<span class="t-10 dim">' + d.total.calls + ' calls</span></div>' +
+    '<div class="usage-cell"><span class="t-10 uc faint" data-i18n="settings.usage.today">Today</span>' +
+    '<span class="t-15 mono">' + fmt(d.today.total_tokens) + '</span>' +
+    '<span class="t-10 dim">' + d.today.calls + ' calls</span></div>';
+  renderUsageChart();
+}
+
+function usageBucketText(b) {
+  if (usageGran === 'day') {
+    const h = parseInt(b.key, 10);
+    return pad2(h) + ':00–' + pad2(h + 1) + ':00';
+  }
+  return b.key; // YYYY-MM-DD or YYYY-MM
+}
+
+function renderUsageChart() {
+  const chart = $('usage-chart');
+  const selEl = $('usage-sel');
+  const nowBtn = $('usage-now');
+  if (!chart || !usageData) return;
+  const w = Math.max(280, chart.clientWidth || 460);
+  usageSel = Math.min(usageSel, usageBuckets.length - 1);
+  chart.innerHTML = usageChartSVG(usageBuckets, usageSel, w);
+  nowBtn.style.display = usageOffsetDays > 0 ? '' : 'none';
+  const selB = usageBuckets[usageSel];
+  if (selB && selB.total_tokens > 0) {
+    selEl.textContent = usageBucketText(selB) + ' · ' + (selB.total_tokens || 0).toLocaleString() + ' tokens · ' + selB.calls + ' calls';
+  } else {
+    const sum = usageBuckets.reduce((a, b) => a + (b.total_tokens || 0), 0);
+    const calls = usageBuckets.reduce((a, b) => a + (b.calls || 0), 0);
+    selEl.textContent = usageData.window.label + ' · ' + sum.toLocaleString() + ' tokens · ' + calls + ' calls';
   }
 }
+
+function usageWinDays() {
+  if (!usageData || !usageData.window) return 7;
+  return Math.max(1, Math.round((new Date(usageData.window.end + 'T00:00:00') - new Date(usageData.window.start + 'T00:00:00')) / 86400000) + 1);
+}
+
 
 function switchMTab(tab, smooth) {
   document.querySelectorAll('#engine-modal .s-nav-item').forEach(b => b.classList.toggle('active', b.dataset.mtab === tab));
@@ -3868,6 +4090,9 @@ function onClick(e) {
   if (e.target.closest && e.target.closest('#lib-fold')) { toggleFold('lib'); return; }
   if (e.target.closest && e.target.closest('#ins-fold')) { toggleFold('ins'); return; }
   if (e.target.closest('#btn-rename')) { startRenameHead(); return; }
+  if (e.target.closest('#adj-role-add')) { addAdjustRole(); return; }
+  if (e.target.closest('#adj-voice-roles .btn-role-del')) { delAdjustRole(e.target.closest('.btn-role-del')); return; }
+  if (e.target.closest('#adj-voice-roles .btn-role-test')) { auditionAdjustRole(e.target.closest('.btn-role-test')); return; }
   if (e.target.closest('#btn-role-add')) { addVoiceRole(); return; }
   if (e.target.closest('.btn-role-del')) { delVoiceRole(e.target.closest('.btn-role-del')); return; }
   if (e.target.closest('.btn-role-test')) { auditionRole(e.target.closest('.btn-role-test')); return; }
@@ -3877,8 +4102,6 @@ function onClick(e) {
   if (e.target.id === 'gen-backdrop') { closeGenPanel(); return; }
   if (e.target.closest('#btn-theme')) { toggleTheme(); return; }
   if (e.target.closest('#btn-engine-config')) { openModal(); return; }
-  const aTab = e.target.closest('#adjust-modal .m-tab');
-  if (aTab) { switchAdjustTab(aTab.dataset.atab); return; }
   const mTab = e.target.closest('#engine-modal .s-nav-item');
   if (mTab) { switchMTab(mTab.dataset.mtab); return; }
   const thOpt = e.target.closest('#cfg-theme-seg .seg-item');
@@ -3895,16 +4118,14 @@ function onClick(e) {
   if (e.target.id === 'cfg-test-data') { selectTestData(e.target.value); return; }
   if (e.target.closest('#btn-store-audio')) { storeTestAudio(); return; }
   if (e.target.id === 'engine-modal') { closeModal(); return; }
-  if (e.target.closest('#btn-regenerate')) { const a = currentArtifact(); if (a) runGenerate(paramsFromArt(a), a.id); return; }
   if (e.target.closest('#btn-adjust-close') || e.target.closest('#btn-adjust-cancel')) { closeAdjustModal(); return; }
   if (e.target.closest('#btn-adjust-apply')) {
-    const cur = document.querySelector('#adjust-modal .m-tab.active');
-    if (cur && cur.dataset.atab === 'voice') applyTTS(); else refineGenerate();
+    if (adjustPanel === 'voice') applyTTS(); else refineGenerate();
     return;
   }
   if (e.target.id === 'adjust-modal') { closeAdjustModal(); return; }
   if (e.target.closest('#btn-refine')) { openRefineModal(); return; }
-  if (e.target.closest('#btn-voice')) { openTTSModal(); return; }
+  if (e.target.closest('#btn-voice') || e.target.closest('#btn-edit-audio')) { openTTSModal(); return; }
   if (e.target.closest('#btn-synth')) { openTTSModal(); return; }
   if (e.target.closest('#btn-generate')) { runGenerate(); return; }
   if (e.target.closest('#btn-reset')) { resetDefaults(); return; }
@@ -3943,7 +4164,7 @@ function onClick(e) {
     return;
   }
   if (e.target.closest('#btn-zh-toggle')) { state.zhVisible = !state.zhVisible; applyTranscriptLang(); return; }
-  if (e.target.closest('#btn-publish')) { openPublishModal(); return; }
+  if (e.target.closest('#btn-publish') || e.target.closest('#btn-publish-banner')) { openPublishModal(); return; }
   if (e.target.closest('#btn-pub-close') || e.target.closest('#btn-pub-cancel')) { closePublishModal(); return; }
   if (e.target.closest('#btn-pub-ok')) { publishCurrent(); return; }
   if (e.target.id === 'publish-modal') { closePublishModal(); return; }
@@ -4114,17 +4335,11 @@ function init() {
   initResize();
   updateDepth();
   watchMTab();
-  fillVoiceOptions();
   $('cfg-llm-provider').addEventListener('change', () => {
     const pr = LLM_PRESETS[$('cfg-llm-provider').value];
     if (pr) { $('cfg-llm-base').value = pr.base; $('cfg-llm-model').value = pr.model; }
   });
-  $('cfg-voice-preset').addEventListener('change', () => {
-    const v = VOICE_PRESETS[$('cfg-voice-preset').value];
-    if (v) { $('cfg-voice-a').value = v[0]; $('cfg-voice-b').value = v[1]; }
-  });
-  ['cfg-voice-a', 'cfg-voice-b'].forEach(id => $(id).addEventListener('change', () => { $('cfg-voice-preset').value = 'custom'; }));
-  $('search-input').addEventListener('input', e => { state.query = e.target.value; renderLibrary(); });
+$('search-input').addEventListener('input', e => { state.query = e.target.value; renderLibrary(); });
   document.addEventListener('click', onClick);
   document.addEventListener('change', onClick);
   document.addEventListener('input', onClick);

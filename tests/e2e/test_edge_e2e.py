@@ -43,10 +43,10 @@ with sync_playwright() as p:
     pg.set_viewport_size({'width':480,'height':800}); pg.wait_for_timeout(400)
     ov=pg.evaluate("document.documentElement.scrollWidth - window.innerWidth")
     log('K6 480px 无横向溢出', ov<=0, f'overflow={ov}')
-    # K9 Regenerate
+    # K9 Edit Corpus（原 Regenerate 已合并）
     pg.set_viewport_size({'width':1440,'height':900}); pg.wait_for_timeout(300)
-    pg.evaluate("(()=>{const b=document.querySelector('#transcript-body .btn-regenerate, #btn-regenerate'); if(b){b.click(); return true;} return false;})()"); pg.wait_for_timeout(300)
-    log('K9 Regenerate 入口存在', pg.evaluate("document.getElementById('btn-regenerate')") is not None)
+    pg.evaluate("(()=>{const b=document.getElementById('btn-refine'); if(b){b.click(); return true;} return false;})()"); pg.wait_for_timeout(300)
+    log('K9 Edit Corpus 入口存在', pg.evaluate("!document.getElementById('adjust-modal').classList.contains('hidden')"))
     # K2 生成中切换素材（竞态）
     pg.evaluate("document.getElementById('btn-open-gen').click(); true"); pg.wait_for_timeout(200)
     pg.evaluate("document.getElementById('btn-generate').click(); true"); pg.wait_for_timeout(200)
