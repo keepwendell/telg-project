@@ -1,15 +1,17 @@
-"""TELG — Technical English Listening Generator · Backend (Phase 1 skeleton)
+"""TELG — Technical English Listening Generator · Backend
 
-FastAPI + SQLite. Phase 1 scope:
+FastAPI + SQLite. Current scope:
   - Full CRUD for materials (Generation Artifact persisted as: core columns +
     meta_json for runtime fidelity, plus dialogue/vocabulary/questions/patterns
     child tables)
   - Playlists CRUD (backend ready; frontend wiring comes in a later phase)
-  - generation_jobs table reserved for Phase 4 async pipeline (no jobs yet)
-  - Mock /generate and /synthesize so the full frontend loop can run with
-    CONFIG.useMock = false before real LLM/TTS land in Phase 2/3.
-  - Serves the single-file frontend (telg/index.html) at / so the app is
-    reachable over http:// (file:// would block fetch).
+  - generation_jobs table reserved for a later async pipeline (no jobs yet)
+  - /generate runs the real LLM (OpenAI-compatible, pydantic-validated JSON
+    with retry); Test Data on the frontend switches to fixed templates
+  - /materials/{mid}/synthesize runs real edge-tts: per-sentence synthesis,
+    ffmpeg merge and start_ms/end_ms backfill
+  - Serves the single-file frontend (../frontend/index.html) at / so the app
+    is reachable over http:// (file:// would block fetch)
 
 Run:  uvicorn main:app --reload --port 8000   (from this directory)
 """
@@ -20,6 +22,7 @@ import os
 import re
 import socket
 import sqlite3
+import subprocess
 import time
 import urllib.error
 import urllib.request
@@ -34,7 +37,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 BASE_DIR = Path(__file__).resolve().parent
-FRONTEND_DIR = BASE_DIR.parent / "telg"
+FRONTEND_DIR = BASE_DIR.parent / "frontend"
 DB_PATH = BASE_DIR / "telg.db"
 SEED_PATH = BASE_DIR / "seed_materials.json"
 STORAGE_DIR = BASE_DIR / "storage" / "audio"
@@ -145,11 +148,36 @@ def init_db():
     conn.executescript(SCHEMA)
     conn.commit()
     seed(conn)
+    migrate_audio_status(conn)
     conn.close()
 
 
+def migrate_audio_status(conn: sqlite3.Connection) -> int:
+    """Old databases seeded materials as 'published' without real audio files.
+    Demote them to 'draft' so the UI shows them as unsynthesized until the
+    real /synthesize pipeline produces an mp3."""
+    rows = conn.execute(
+        "SELECT id, audio_url FROM materials WHERE status IN ('audio_ready','published')"
+    ).fetchall()
+    changed = 0
+    for r in rows:
+        url = r["audio_url"] or ""
+        m = re.search(r"/api/v1/audio/([^/]+)$", url)
+        f = STORAGE_DIR / m.group(1) if m else None
+        if not f or not f.exists():
+            conn.execute(
+                "UPDATE materials SET status='draft', updated_at=? WHERE id=?",
+                (int(time.time()), r["id"]),
+            )
+            changed += 1
+    if changed:
+        conn.commit()
+    return changed
+
+
 # ----------------------------------------------------------------------------
-# Seed — mock materials become published seed data, same schema as user-created
+# Seed — template materials become draft seed data (synthesize later produces
+# the audio); same schema as user-created materials
 # ----------------------------------------------------------------------------
 def seed(conn: sqlite3.Connection):
     cur = conn.execute("SELECT COUNT(*) AS c FROM materials")
@@ -157,7 +185,7 @@ def seed(conn: sqlite3.Connection):
         return
     data = json.loads(SEED_PATH.read_text(encoding="utf-8"))
     for art in data:
-        insert_artifact(conn, art, status="published")
+        insert_artifact(conn, art, status="draft")
     # Seed playlists mirroring the frontend defaults
     playlists = [
         ("pl-vd", "Vehicle Dynamics & Chassis", ["m1", "m3"]),
@@ -378,6 +406,14 @@ class TestTTSIn(BaseModel):
     voice: str = ""
     speech_rate: float = 1.0
     style: str = ""
+
+
+class SynthIn(BaseModel):
+    """Optional per-run TTS override from the frontend (voice roles + rate).
+    voices: 'VoiceA + VoiceB' (frontend settings); '' falls back to meta.voice."""
+
+    voices: str = ""
+    rate: float = 1.0
 
 
 # ----------------------------------------------------------------------------
@@ -728,7 +764,11 @@ def estimate_timeline(dialogue: list[dict], total_ms: int) -> None:
 # ----------------------------------------------------------------------------
 @app.get("/api/v1/health")
 def health():
-    return {"status": "ok", "mock": False, "phase": 1}
+    try:
+        db().execute("SELECT 1").fetchone()
+        return {"status": "ok"}
+    except sqlite3.Error:
+        raise HTTPException(503, "database unavailable")
 
 
 def build_artifact(p: GenerateIn) -> dict:
@@ -830,27 +870,112 @@ def regenerate(mid: str, p: GenerateIn):
     return artifact_of(db(), mid)
 
 
+def voices_of(meta: dict) -> list[str]:
+    """Parse 'VoiceA + VoiceB' (or a single voice) from meta.voice into a list."""
+    vs = [v.strip() for v in re.split(r"[+]", meta.get("voice") or "") if v.strip()]
+    return vs or ["en-US-GuyNeural"]
+
+
+def probe_ms(path: Path) -> int:
+    p = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+         "-of", "default=nw=1:nk=1", str(path)],
+        capture_output=True, text=True, timeout=30,
+    )
+    try:
+        return int(round(float(p.stdout.strip()) * 1000))
+    except ValueError:
+        raise RuntimeError("ffprobe failed on %s" % path.name)  # noqa: TRY003
+
+
+def merge_mp3(out_dir: Path, mid: str, n: int, out: Path) -> None:
+    lst = out_dir / (mid + "-concat.txt")
+    with lst.open("w", encoding="utf-8") as fh:
+        for i in range(n):
+            seg = out_dir / ("%s-seg-%d.mp3" % (mid, i))
+            if not seg.exists():
+                raise RuntimeError("missing segment %s" % seg.name)
+            fh.write("file '%s'\n" % seg.name.replace("'", "'\\''"))
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+             "-c", "copy", str(out)],
+            capture_output=True, text=True, timeout=120, check=True,
+        )
+    finally:
+        lst.unlink(missing_ok=True)
+
+
 @app.post("/api/v1/materials/{mid}/synthesize")
-def synthesize(mid: str):
+async def synthesize(mid: str, body: SynthIn | None = None):
+    body = body or SynthIn()
     conn = db()
-    row = conn.execute("SELECT meta_json, status FROM materials WHERE id = ?", (mid,)).fetchone()
+    row = conn.execute(
+        "SELECT meta_json, status FROM materials WHERE id = ?", (mid,)
+    ).fetchone()
     if not row:
         conn.close()
         raise HTTPException(404, "material not found")
     meta = json.loads(row["meta_json"])
+    segs = conn.execute(
+        "SELECT seq, speaker, text_en FROM dialogue_segments "
+        "WHERE material_id = ? ORDER BY seq",
+        (mid,),
+    ).fetchall()
+    if not segs:
+        conn.close()
+        raise HTTPException(400, "no dialogue segments to synthesize")
+    vs = [v.strip() for v in re.split(r"[+]", body.voices or "") if v.strip()] or voices_of(meta)
+    rate = body.rate if 0.5 <= body.rate <= 2.0 else 1.0
+    rate_arg = "%+d%%" % int((rate - 1.0) * 100)
+    gap_ms = 300
+    try:
+        import edge_tts
+    except ImportError:
+        conn.close()
+        raise HTTPException(500, "edge-tts not installed — run: pip install edge-tts")
+    STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        times = []
+        start = 0
+        for i, seg in enumerate(segs):
+            text = (seg["text_en"] or "").strip() or "…"
+            voice = vs[i % len(vs)]
+            seg_path = STORAGE_DIR / ("%s-seg-%d.mp3" % (mid, i))
+            com = edge_tts.Communicate(text, voice=voice, rate=rate_arg)
+            await com.save(str(seg_path))
+            dur = probe_ms(seg_path)
+            times.append((seg["seq"], start, start + dur))
+            start += dur + gap_ms
+        out_path = STORAGE_DIR / (mid + ".mp3")
+        merge_mp3(STORAGE_DIR, mid, len(segs), out_path)
+        for i in range(len(segs)):
+            (STORAGE_DIR / ("%s-seg-%d.mp3" % (mid, i))).unlink(missing_ok=True)
+    except Exception as e:  # noqa: BLE001
+        conn.close()
+        raise HTTPException(502, "TTS synthesis failed: %s" % e)
+    for seq, st, en in times:
+        conn.execute(
+            "UPDATE dialogue_segments SET start_ms=?, end_ms=? "
+            "WHERE material_id = ? AND seq = ?",
+            (st, en, mid, seq),
+        )
     meta["audio_url"] = "/api/v1/audio/" + mid + ".mp3"
+    meta["total_duration_ms"] = times[-1][2]
     meta["audioReady"] = True
     meta["saved"] = False
     status = "published" if row["status"] == "published" else "audio_ready"
     conn.execute(
-        "UPDATE materials SET meta_json=?, status=?, updated_at=? WHERE id=?",
-        (json.dumps(meta, ensure_ascii=False), status, int(time.time()), mid),
+        "UPDATE materials SET meta_json=?, status=?, audio_url=?, "
+        "total_duration_ms=?, updated_at=? WHERE id=?",
+        (json.dumps(meta, ensure_ascii=False), status, meta["audio_url"],
+         meta["total_duration_ms"], int(time.time()), mid),
     )
     conn.commit()
     conn.close()
     return {
         "audio_url": meta["audio_url"],
-        "total_duration_ms": meta.get("total_duration_ms", 0),
+        "total_duration_ms": meta["total_duration_ms"],
     }
 
 
@@ -1058,3 +1183,8 @@ app.mount("/api/v1/audio", StaticFiles(directory=str(STORAGE_DIR)), name="audio"
 init_db()
 if FRONTEND_DIR.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)

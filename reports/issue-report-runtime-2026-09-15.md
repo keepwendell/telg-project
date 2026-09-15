@@ -89,3 +89,20 @@ UPDATE materials SET meta_json=?, status=?
 2. **P3**（与 P1 同轮）：种子素材状态修正，避免真实模式播放 404；
 3. **P2**（核心功能，工作量最大）：真实 edge-tts 逐句合成 + 拼接 + 时间轴回填；
 4. **P4/P5**：文档与注释清理，随以上修复同轮完成。
+
+---
+
+## 八、修复与验证结果（2026-09-15 晚）
+
+| 编号 | 修复 | 验证方式 | 结果 |
+|------|------|----------|------|
+| P1 | `FRONTEND_DIR` 改为 `BASE_DIR.parent / "frontend"` | `python main.py` 启动，`curl /` | 200，返回 index.html |
+| P2 | synthesize 真实化：逐句 edge-tts + ffprobe 时长 + ffmpeg concat 拼接 + 时间轴回填；`SynthIn{voices,rate}` 支持前端音色/语速透传 | ①HTTP 直调 m1：返回 `{audio_url, total_duration_ms:69612}`；②音频下载 408KB/68.1s；③DB 时间轴逐句真实（含 300ms 停顿）；④UI 全链 m2：draft → 点合成 → 35.58s 音频 → audioReady=True | 全部通过，无 JS 错误 |
+| P3 | 种子改 `draft` + `migrate_audio_status()` 旧库自动降级 | 新库 seed 后 audioReady=False；旧库迁移逻辑审读 | 通过 |
+| P4 | 头部注释更新为真实 LLM/TTS 现状 | 审读 | 通过 |
+| P5 | `health` 改为 DB 可达检查 | `curl /api/v1/health` → `{"status":"ok"}` | 通过 |
+| P6 | 补充 `__main__` → `uvicorn.run` 启动入口 | `python main.py` 正常监听 8000 | 通过 |
+
+**回归**：前端三套 e2e（mock 链路）35/35、10/10、11/11 全部通过；前端真实模式（live）素材加载、播放、句级高亮、UI 合成全链均正常。
+
+**过程中发现的插曲**：初版 synthesize 替换时残留旧装饰器挂在 `voices_of` 上，FastAPI 注册了错误处理函数（返回 `["en-US-GuyNeural"]`），已定位并移除；提醒后续大块 Edit 替换时核对装饰器归属。

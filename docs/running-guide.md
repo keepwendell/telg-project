@@ -1,9 +1,8 @@
 # TELG 项目运行指南（Running Guide）
 
-> 版本：2026-09-15 · 适用工程：telg-project（单文件前端 + FastAPI 后端）
+> 版本：2026-09-15（含运行时修复）· 适用工程：telg-project（单文件前端 + FastAPI 后端）
 >
-> ⚠️ **重要**：本指南基于「现状」编写。当前后端存在 1 个阻断性 bug（P1，见文末「已知问题」），
-> 真实后端模式需先按 P1 的修复建议处理后方可启动；纯前端体验不受影响。
+> 2026-09-15 运行时检查发现的问题（P1–P6）已全部修复并验证，见文末「修复记录」。
 
 ---
 
@@ -89,15 +88,18 @@ python3 telg-project/tests/e2e/test_edge_e2e.py       # 边缘 11 项
 - 远程 `https://github.com/keepwendell/telg-project.git`（branch `main`），凭据已持久化（`~/.git-credentials`，600）；
 - 仅用户明确要求「推送」时执行 `git push origin main`；commit 中英双语、标题体现关键重点、正文列具体变更点（中文在前）。
 
-## 7. 已知问题（2026-09-15 检查）
+## 7. 运行时修复记录（2026-09-15）
 
-| 编号 | 级别 | 问题 | 影响 | 修复建议 |
+2026-09-15 运行时检查发现 6 项问题，已全部修复并验证：
+
+| 编号 | 级别 | 问题 | 修复 | 验证结果 |
 |------|------|------|------|----------|
-| P1 | 🔴 阻断 | `backend/main.py` 的 `FRONTEND_DIR = BASE_DIR.parent / "telg"`，但前端实际在 `frontend/`，目录不存在 → `StaticFiles` 挂载即抛 `RuntimeError`，`python main.py` 无法启动 | 真实后端模式完全不可用 | 改为 `BASE_DIR.parent / "frontend"`（并确认 storage 目录存在） |
-| P2 | 🟠 功能缺口 | `POST /materials/{mid}/synthesize` 为 stub：仅改写 meta（`audioReady=True`），不调用 edge-tts、不生成 mp3、不回填真实时间轴 | 真实模式「合成」不产出可播放音频，句级时间轴为估算值 | 按逐句 edge-tts 合成 → 拼接 → 回填 `start_ms/end_ms` 实现 |
-| P3 | 🟠 数据一致性 | 种子素材（m1/m2/m3）`status=published`、`audioReady=True`，但 `storage/audio/` 无对应 mp3 | 真实模式点击种子素材播放 → `/api/v1/audio/m1.mp3` 404 | 方案 a：种子改为 `draft` 并标记未合成；方案 b：首次启动为种子生成占位音频 |
-| P4 | 🟡 过时注释 | `backend/main.py` 头部注释仍描述「Phase 2/3 mock 阶段」，与真实 LLM 已接入的现状不符 | 误导维护者 | 更新注释 |
-| P5 | 🟡 次要 | `health` 返回硬编码 `mock: False, phase: 1`，字段无实际依据 | 诊断信息失真 | 返回真实服务状态或精简字段 |
+| P1 | 🔴 阻断 | `FRONTEND_DIR` 指向不存在的 `telg/`，前端页面未托管 | 改为 `BASE_DIR.parent / "frontend"` | `http://127.0.0.1:8000/` 返回 index.html |
+| P2 | 🟠 功能缺口 | synthesize 为 stub，无真实 TTS | 实现逐句 edge-tts 合成 → ffmpeg 拼接 → `start_ms/end_ms` 回填；支持前端音色/语速透传（`SynthIn`） | m1/m2 真实合成成功（68.1s / 35.6s），时间轴逐句回填，音频可下载播放 |
+| P3 | 🟠 数据一致性 | 种子素材标记 published 但无音频 | 种子改 `draft`；旧库启动时 `migrate_audio_status()` 自动降级无音频的 published/audio_ready 素材 | 种子素材 audioReady=False，合成后转 audio_ready |
+| P4 | 🟡 过时注释 | 头部注释描述旧 mock 阶段 | 更新为真实 LLM/TTS 现状 | 审读通过 |
+| P5 | 🟡 次要 | `health` 硬编码字段 | 改为真实 DB 可达检查 | `{"status":"ok"}`；DB 异常时 503 |
+| P6 | 🟡 运行方式 | `python main.py` 直接退出（无启动入口） | 补充 `if __name__ == "__main__": uvicorn.run(...)` | `python main.py` 正常启动服务 |
 
-> 修复优先级建议：P1（启动）→ P3（数据一致性）→ P2（真实 TTS）→ P4/P5（清理）。
-> 完整检查过程与复现见 `reports/issue-report-runtime-2026-09-15.md`。
+> 验证方式：`python main.py` 启动 → health/前端托管/素材列表 → 真实 synthesize（HTTP 层 + UI 全链）→ 前端真实模式播放 → 三套 e2e 回归（35/35、10/10、11/11）全部通过。
+> 完整检查过程见 `reports/issue-report-runtime-2026-09-15.md`。

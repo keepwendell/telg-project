@@ -1928,9 +1928,9 @@ const API = {
     if (mockMode()) return MOCK_MATERIALS.find(m => m.id === id) || MOCK_MATERIALS[0];
     return apiFetch('/materials/' + id);
   },
-  async synthesize(id) {
+  async synthesize(id, cfg) {
     if (mockMode()) return { audio_url: '/mock/audio/' + id + '.wav', total_duration_ms: 0 };
-    return apiFetch('/materials/' + id + '/synthesize', { method: 'POST' }, 300000);
+    return apiFetch('/materials/' + id + '/synthesize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg || {}) }, 300000);
   },
   async health() {
     return apiFetch('/health', {}, 8000);
@@ -3164,7 +3164,12 @@ function synthesizeAudio() {
     try {
       if (!mockMode()) {
         genPaint(steps, 0);            /* TTS step stays active while the backend synthesizes */
-        const r = await API.synthesize(art.id);
+        let ttsCfg = {};
+        try {
+          const t = JSON.parse(localStorage.getItem('telg-settings') || '{}');
+          ttsCfg = { voices: (t.tts && t.tts.voices) || '', rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1 };
+        } catch (e) {}
+        const r = await API.synthesize(art.id, ttsCfg);
         if (r.audio_url) art.meta.audio_url = r.audio_url;
         if (r.total_duration_ms) art.meta.total_duration_ms = r.total_duration_ms;
       } else {
