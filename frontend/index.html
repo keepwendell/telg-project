@@ -3376,7 +3376,9 @@ function synthesizeAudio() {
         let ttsCfg = {};
         try {
           const t = JSON.parse(localStorage.getItem('telg-settings') || '{}');
-          ttsCfg = { voices: (t.tts && t.tts.voices) || '', rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1 };
+          let storedVoices = (t.tts && t.tts.voice) || (t.tts && t.tts.voices) || '';
+          if (Array.isArray(storedVoices)) storedVoices = storedVoices.map(x => (x && x.voice) || x).filter(Boolean).join(' + ');
+          ttsCfg = { voices: storedVoices, rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1 };
         } catch (e) {}
         const r = await API.synthesize(art.id, ttsCfg);
         if (r.audio_url) art.meta.audio_url = r.audio_url;

@@ -428,7 +428,7 @@ class SynthIn(BaseModel):
 
     model_config = {"extra": "allow"}
 
-    voices: str | None = None
+    voices: str | list | None = None
     rate: float | None = None
 
 
@@ -915,6 +915,33 @@ def voices_of(meta: dict) -> list[str]:
     return vs or ["en-US-GuyNeural"]
 
 
+# Voices verified against the real edge-tts endpoint (en-*).
+TTS_VERIFIED = [
+    "en-US-GuyNeural", "en-US-JennyNeural", "en-US-ChristopherNeural",
+    "en-US-EricNeural", "en-US-AriaNeural", "en-US-MichelleNeural",
+    "en-US-RogerNeural", "en-US-SteffanNeural", "en-US-AnaNeural",
+    "en-US-BrianNeural", "en-GB-SoniaNeural", "en-GB-RyanNeural",
+    "en-AU-NatashaNeural", "en-AU-WilliamNeural",
+]
+_SHORT_PREFIX = {"GuyNeural": "en-US", "JennyNeural": "en-US", "ChristopherNeural": "en-US",
+                 "EricNeural": "en-US", "AriaNeural": "en-US", "MichelleNeural": "en-US",
+                 "RogerNeural": "en-US", "SteffanNeural": "en-US", "AnaNeural": "en-US",
+                 "BrianNeural": "en-US", "SoniaNeural": "en-GB", "RyanNeural": "en-GB",
+                 "NatashaNeural": "en-AU", "WilliamNeural": "en-AU"}
+
+
+def normalize_voice(v: str) -> str:
+    """Map legacy short names / unverified voices to a working edge-tts voice."""
+    v = (v or "").strip()
+    if not v:
+        return "en-US-GuyNeural"
+    if v in TTS_VERIFIED:
+        return v
+    if v in _SHORT_PREFIX:
+        return _SHORT_PREFIX[v] + "-" + v
+    return "en-US-GuyNeural"  # unknown voice → safe default
+
+
 def probe_ms(path: Path) -> int:
     p = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -964,7 +991,11 @@ async def synthesize(mid: str, body: SynthIn | None = None):
     if not segs:
         conn.close()
         raise HTTPException(400, "no dialogue segments to synthesize")
-    vs = [v.strip() for v in re.split(r"[+]", body.voices or "") if v.strip()] or voices_of(meta)
+    raw_voices = body.voices
+    if isinstance(raw_voices, list):
+        raw_voices = " + ".join(str(x.get("voice") if isinstance(x, dict) else x) for x in raw_voices)
+    vs = [v.strip() for v in re.split(r"[+]", raw_voices or "") if v.strip()] or voices_of(meta)
+    vs = [normalize_voice(v) for v in vs] or ["en-US-GuyNeural"]
     rate = body.rate if (body.rate is not None and 0.5 <= body.rate <= 2.0) else 1.0
     rate_arg = "%+d%%" % int((rate - 1.0) * 100)
     gap_ms = 300
@@ -1280,7 +1311,7 @@ async def test_tts(c: TestTTSIn):
         import edge_tts
     except ImportError:
         return {"ok": False, "error": "edge-tts not installed — run: pip install edge-tts"}
-    voice = (c.voice or "").split("+")[0].strip() or "en-US-GuyNeural"
+    voice = normalize_voice((c.voice or "").split("+")[0])
     rate = max(0.5, min(2.0, c.speech_rate or 1.0))
     text = (c.text or "").strip() or "Technical English, grounded in real engineering. 以真实技术知识为背景，以英语为训练载体。"
     STORAGE_DIR.mkdir(parents=True, exist_ok=True)
