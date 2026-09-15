@@ -305,9 +305,6 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .gen-step.done{color:var(--on-variant)}
 .gen-step.active{color:var(--on-surface)}
 .gen-step .icon{width:15px;height:15px}
-.step-num{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--mono);background:var(--surface-highest);color:var(--dim);transition:all .15s var(--ease);flex-shrink:0}
-.step-num.ok{background:var(--primary);color:var(--on-primary)}
-.step-num.cur{background:var(--surface-highest);color:var(--on-surface);box-shadow:inset 0 0 0 1px var(--primary)}
 .gen-phases{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface-low);border:1px solid var(--line);border-radius:7px;margin-bottom:10px;flex-shrink:0}
 .gen-phase{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);white-space:nowrap}
 .gen-phase-n{width:16px;height:16px;border-radius:50%;background:var(--surface-highest);color:var(--dim);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--mono);transition:all .15s var(--ease)}
@@ -429,9 +426,6 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .modal-body{padding:18px;display:flex;flex-direction:column;gap:16px}
 .modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
 .form-row{display:flex;flex-direction:column;gap:6px}
-.refine-ctx{border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:var(--surface-low);margin-bottom:2px}
-.refine-ctx .form-row{flex-direction:row;align-items:baseline;gap:8px;padding:2px 0}
-.refine-ctx .form-row>span:first-child{min-width:86px}
 .radio-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--on-variant);cursor:pointer;transition:color .12s var(--ease)}
 .radio-row:hover{color:var(--on-surface)}
 .radio-row input{accent-color:var(--primary);margin:0}
@@ -1139,91 +1133,113 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
       <div class="m-panel" id="ap-text">
         <div class="m-section-head">
           <div class="t-12 bold" data-i18n="adjust.textSub">Corpus Text</div>
-          <div class="t-11 dim" data-i18n="adjust.textHint">Adjust parameters or add directives, then regenerate the corpus.</div>
+          <div class="t-11 dim" data-i18n="adjust.textHint">Adjust parameters, then regenerate the corpus.</div>
         </div>
-        <div class="refine-ctx">
-          <div class="form-row"><span class="t-10 uc faint" data-i18n="refine.topic">Topic</span><span class="t-12" id="refine-topic">—</span></div>
-          <div class="form-row"><span class="t-10 uc faint" data-i18n="refine.domain">Domain</span><span class="t-12" id="refine-domain">—</span></div>
-          <div class="form-row"><span class="t-10 uc faint" data-i18n="refine.role">Role</span><span class="t-12" id="refine-role">—</span></div>
-          <div class="form-row"><span class="t-10 uc faint" data-i18n="refine.scenario">Scenario</span><span class="t-12" id="refine-scenario">—</span></div>
-        </div>
-        <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span class="t-10 uc faint" data-i18n="refine.difficulty">Difficulty</span>
+        <div class="s-sec-title" data-i18n="refine.secCore">Core</div>
+        <div class="s-row">
+          <div class="s-info">
+            <div class="s-name" data-i18n="refine.difficulty">Difficulty</div>
+            <div class="s-desc" data-i18n="refine.difficultyDesc">Language complexity &amp; terminology density.</div>
+          </div>
+          <div class="s-ctrl" style="flex-direction:column;align-items:stretch;gap:4px">
+            <div class="seg" id="refine-diff" style="grid-template-columns:repeat(5,1fr)">
+              <button class="seg-item" data-level="1">L1</button>
+              <button class="seg-item" data-level="2">L2</button>
+              <button class="seg-item active" data-level="3">L3</button>
+              <button class="seg-item" data-level="4">L4</button>
+              <button class="seg-item" data-level="5">L5</button>
+            </div>
             <span class="t-10 dim" id="refine-diff-label">Level 3 of 5</span>
           </div>
-          <div class="seg" id="refine-diff" style="grid-template-columns:repeat(5,1fr)">
-            <button class="seg-item" data-level="1">L1</button>
-            <button class="seg-item" data-level="2">L2</button>
-            <button class="seg-item active" data-level="3">L3</button>
-            <button class="seg-item" data-level="4">L4</button>
-            <button class="seg-item" data-level="5">L5</button>
-          </div>
         </div>
-        <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span class="t-10 uc faint" data-i18n="refine.length">Length</span>
+        <div class="s-row">
+          <div class="s-info">
+            <div class="s-name" data-i18n="refine.length">Length</div>
+            <div class="s-desc" data-i18n="refine.lengthDesc">Target audio duration of the dialogue.</div>
+          </div>
+          <div class="s-ctrl" style="flex-direction:column;align-items:stretch;gap:4px">
+            <div class="seg" id="refine-len" style="grid-template-columns:repeat(5,1fr)">
+              <button class="seg-item" data-length="60">60s</button>
+              <button class="seg-item" data-length="90">90s</button>
+              <button class="seg-item active" data-length="120">120s</button>
+              <button class="seg-item" data-length="180">180s</button>
+              <button class="seg-item" data-length="240">240s</button>
+            </div>
             <span class="t-10 dim" id="refine-len-label">120s</span>
           </div>
-          <div class="seg" id="refine-len" style="grid-template-columns:repeat(5,1fr)">
-            <button class="seg-item" data-length="60">60s</button>
-            <button class="seg-item" data-length="90">90s</button>
-            <button class="seg-item active" data-length="120">120s</button>
-            <button class="seg-item" data-length="180">180s</button>
-            <button class="seg-item" data-length="240">240s</button>
-          </div>
         </div>
-        <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span class="t-10 uc faint" data-i18n="refine.depth">Technical Depth</span>
+        <div class="s-sec-title" data-i18n="refine.secScope">Depth &amp; Scope</div>
+        <div class="s-row">
+          <div class="s-info">
+            <div class="s-name" data-i18n="refine.depth">Technical Depth</div>
+            <div class="s-desc" data-i18n="refine.depthDesc">How deeply the underlying principle is explained.</div>
+          </div>
+          <div class="s-ctrl" style="flex-direction:column;align-items:stretch;gap:4px">
+            <div class="seg" id="refine-depth" style="grid-template-columns:repeat(5,1fr)">
+              <button class="seg-item" data-depth="1">D1</button>
+              <button class="seg-item" data-depth="2">D2</button>
+              <button class="seg-item active" data-depth="3">D3</button>
+              <button class="seg-item" data-depth="4">D4</button>
+              <button class="seg-item" data-depth="5">D5</button>
+            </div>
             <span class="t-10 dim" id="refine-depth-label">Depth 3 of 5</span>
           </div>
-          <div class="seg" id="refine-depth" style="grid-template-columns:repeat(5,1fr)">
-            <button class="seg-item" data-depth="1">D1</button>
-            <button class="seg-item" data-depth="2">D2</button>
-            <button class="seg-item active" data-depth="3">D3</button>
-            <button class="seg-item" data-depth="4">D4</button>
-            <button class="seg-item" data-depth="5">D5</button>
-          </div>
         </div>
-        <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span class="t-10 uc faint" data-i18n="refine.breadth">Breadth · Topic Coverage</span>
+        <div class="s-row">
+          <div class="s-info">
+            <div class="s-name" data-i18n="refine.breadth">Breadth · Topic Coverage</div>
+            <div class="s-desc" data-i18n="refine.breadthDesc">How many related aspects the discussion touches.</div>
+          </div>
+          <div class="s-ctrl" style="flex-direction:column;align-items:stretch;gap:4px">
+            <div class="seg" id="refine-breadth" style="grid-template-columns:repeat(5,1fr)">
+              <button class="seg-item" data-breadth="1">B1</button>
+              <button class="seg-item" data-breadth="2">B2</button>
+              <button class="seg-item active" data-breadth="3">B3</button>
+              <button class="seg-item" data-breadth="4">B4</button>
+              <button class="seg-item" data-breadth="5">B5</button>
+            </div>
             <span class="t-10 dim" id="refine-breadth-label">Breadth 3 of 5</span>
           </div>
-          <div class="seg" id="refine-breadth" style="grid-template-columns:repeat(5,1fr)">
-            <button class="seg-item" data-breadth="1">B1</button>
-            <button class="seg-item" data-breadth="2">B2</button>
-            <button class="seg-item active" data-breadth="3">B3</button>
-            <button class="seg-item" data-breadth="4">B4</button>
-            <button class="seg-item" data-breadth="5">B5</button>
+        </div>
+        <div class="s-row">
+          <div class="s-info">
+            <div class="s-name" data-i18n="refine.tone">Tone &amp; Mood</div>
+            <div class="s-desc" data-i18n="refine.toneDesc">Emotional color of the conversation.</div>
+          </div>
+          <div class="s-ctrl">
+            <div class="select-wrap">
+              <select class="select" id="refine-tone">
+                <option value="neutral" data-i18n="tone.neutral">Neutral professional</option>
+                <option value="urgent" data-i18n="tone.urgent">Urgent · deadline pressure</option>
+                <option value="interview" data-i18n="tone.interview">Interview · high-pressure Q&amp;A</option>
+                <option value="collaborative" data-i18n="tone.collaborative">Collaborative &amp; calm</option>
+                <option value="debate" data-i18n="tone.debate">Confrontational debate</option>
+                <option value="mentoring" data-i18n="tone.mentoring">Explanatory mentorship</option>
+              </select>
+              <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+            </div>
           </div>
         </div>
-        <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span class="t-10 uc faint" data-i18n="refine.tone">Tone &amp; Mood</span>
-            <span class="t-10 dim" id="refine-tone-label">Neutral professional</span>
+        <div class="s-sec-title" data-i18n="refine.secDirectives">Directives</div>
+        <div class="s-row s-row-stack">
+          <div class="s-info">
+            <div class="s-name" data-i18n="refine.inject">Improvement Directives</div>
+            <div class="s-desc" data-i18n="refine.injectHint">Optional — injected into the generation prompt.</div>
           </div>
-          <select class="select" id="refine-tone">
-            <option value="neutral" data-i18n="tone.neutral">Neutral professional</option>
-            <option value="urgent" data-i18n="tone.urgent">Urgent · deadline pressure</option>
-            <option value="interview" data-i18n="tone.interview">Interview · high-pressure Q&amp;A</option>
-            <option value="collaborative" data-i18n="tone.collaborative">Collaborative &amp; calm</option>
-            <option value="debate" data-i18n="tone.debate">Confrontational debate</option>
-            <option value="mentoring" data-i18n="tone.mentoring">Explanatory mentorship</option>
-          </select>
-        </div>
-        <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
-          <span class="t-10 uc faint" data-i18n="refine.inject">Improvement Directives</span>
           <textarea class="input" id="refine-inject" rows="3" data-i18n-ph="refine.injectPh" placeholder="e.g. Add concrete numbers and measurements, make it more conversational…"></textarea>
-          <p class="t-10 dim" data-i18n="refine.injectHint">Optional — these will be injected into the generation prompt.</p>
         </div>
-        <div class="form-row" style="flex-direction:column;align-items:stretch;gap:8px">
-          <span class="t-10 uc faint" data-i18n="refine.dir">Generation Direction</span>
-          <label class="radio-row"><input type="radio" name="refine-dir" value="rephrase" checked><span data-i18n="refine.dirRephrase">Rewrite — keep the same scope</span></label>
-          <label class="radio-row"><input type="radio" name="refine-dir" value="expand"><span data-i18n="refine.dirExpand">Expand — add more technical depth</span></label>
-          <label class="radio-row"><input type="radio" name="refine-dir" value="narrow"><span data-i18n="refine.dirNarrow">Narrow — focus on a single aspect</span></label>
-          <label class="radio-row"><input type="radio" name="refine-dir" value="re-angle"><span data-i18n="refine.dirAngle">Re-angle — different engineering perspective</span></label>
+        <div class="s-sec-title" data-i18n="refine.secDir">Direction</div>
+        <div class="s-row s-row-stack">
+          <div class="s-info">
+            <div class="s-name" data-i18n="refine.dir">Generation Direction</div>
+            <div class="s-desc" data-i18n="refine.dirDesc">Which way to steer the rewrite.</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label class="radio-row"><input type="radio" name="refine-dir" value="rephrase" checked><span data-i18n="refine.dirRephrase">Rewrite — keep the same scope</span></label>
+            <label class="radio-row"><input type="radio" name="refine-dir" value="expand"><span data-i18n="refine.dirExpand">Expand — add more technical depth</span></label>
+            <label class="radio-row"><input type="radio" name="refine-dir" value="narrow"><span data-i18n="refine.dirNarrow">Narrow — focus on a single aspect</span></label>
+            <label class="radio-row"><input type="radio" name="refine-dir" value="re-angle"><span data-i18n="refine.dirAngle">Re-angle — different engineering perspective</span></label>
+          </div>
         </div>
       </div>
       <div class="m-panel hidden" id="ap-voice">
@@ -2233,10 +2249,15 @@ const I18N = {
     'tr.regenerate': 'Regenerate', 'tr.refine': 'Refine…',
     'refine.title': 'Refine Generation', 'refine.sub': 'Adjust parameters or add directives, then regenerate the corpus.',
     'refine.topic': 'Topic', 'refine.domain': 'Domain', 'refine.role': 'Role', 'refine.scenario': 'Scenario',
-    'refine.difficulty': 'Difficulty', 'refine.length': 'Length', 'refine.depth': 'Technical Depth', 'refine.breadth': 'Breadth · Topic Coverage',
+    'refine.difficulty': 'Difficulty', 'refine.difficultyDesc': 'Language complexity & terminology density.',
+    'refine.length': 'Length', 'refine.lengthDesc': 'Target audio duration of the dialogue.',
+    'refine.depth': 'Technical Depth', 'refine.depthDesc': 'How deeply the underlying principle is explained.',
+    'refine.breadth': 'Breadth · Topic Coverage', 'refine.breadthDesc': 'How many related aspects the discussion touches.',
+    'refine.tone': 'Tone & Mood', 'refine.toneDesc': 'Emotional color of the conversation.',
+    'refine.secCore': 'Core', 'refine.secScope': 'Depth & Scope', 'refine.secDirectives': 'Directives', 'refine.secDir': 'Direction',
     'refine.inject': 'Improvement Directives', 'refine.injectPh': 'e.g. Add concrete numbers and measurements, make it more conversational…',
-    'refine.injectHint': 'Optional — these will be injected into the generation prompt.',
-    'refine.dir': 'Generation Direction',
+    'refine.injectHint': 'Optional — injected into the generation prompt.',
+    'refine.dir': 'Generation Direction', 'refine.dirDesc': 'Which way to steer the rewrite.',
     'refine.dirRephrase': 'Rewrite — keep the same scope',
     'refine.dirExpand': 'Expand — add more technical depth',
     'refine.dirNarrow': 'Narrow — focus on a single aspect',
@@ -2370,10 +2391,15 @@ const I18N = {
     'tr.regenerate': '重新生成', 'tr.refine': '改进…',
     'refine.title': '改进生成', 'refine.sub': '调整参数或添加指令，然后重新生成语料。',
     'refine.topic': '主题', 'refine.domain': '领域', 'refine.role': '角色', 'refine.scenario': '场景',
-    'refine.difficulty': '难度', 'refine.length': '时长', 'refine.depth': '技术深度', 'refine.breadth': '广度 · 话题覆盖',
+    'refine.difficulty': '难度', 'refine.difficultyDesc': '语言复杂度与术语密度。',
+    'refine.length': '时长', 'refine.lengthDesc': '对话的目标音频时长。',
+    'refine.depth': '技术深度', 'refine.depthDesc': '对底层原理的讲解深度。',
+    'refine.breadth': '广度 · 话题覆盖', 'refine.breadthDesc': '讨论涉及的相关方面数量。',
+    'refine.tone': '语气与氛围', 'refine.toneDesc': '对话的情绪色彩。',
+    'refine.secCore': '核心', 'refine.secScope': '深度与范围', 'refine.secDirectives': '指令', 'refine.secDir': '方向',
     'refine.inject': '改进指令', 'refine.injectPh': '例如：加入具体数值与测量数据、让对话更自然…',
-    'refine.injectHint': '可选 — 将注入生成提示。',
-    'refine.dir': '生成方向',
+    'refine.injectHint': '可选 — 注入生成提示。',
+    'refine.dir': '生成方向', 'refine.dirDesc': '重写时希望朝哪个方向调整。',
     'refine.dirRephrase': '重写 — 保持范围不变',
     'refine.dirExpand': '扩写 — 增加更多技术细节',
     'refine.dirNarrow': '收敛 — 聚焦单一问题',
@@ -3042,9 +3068,7 @@ function setPhases(done, active) {
   document.querySelectorAll('.gen-phase').forEach((ph, i) => {
     ph.classList.toggle('active', i === active);
     ph.classList.toggle('done', i < done);
-    ph.querySelector('.gen-phase-n').innerHTML = i < done
-      ? '<svg class="icon" style="width:10px;height:10px"><use href="#i-check"/></svg>'
-      : String(i + 1);
+    ph.querySelector('.gen-phase-n').innerHTML = String(i + 1);
   });
 }
 function syncPhases() {
@@ -3059,12 +3083,9 @@ function genPaint(steps, i) {
   steps.forEach((s, j) => {
     s.classList.toggle('active', j === i);
     s.classList.toggle('done', j < i);
-    const n = j + 1;
     s.querySelector('.step-ic').innerHTML = j < i
-      ? '<span class="step-num ok">' + n + '</span>'
-      : (j === i
-          ? '<span class="step-num cur">' + n + '</span>'
-          : '<span class="step-num">' + n + '</span>');
+      ? '<svg class="icon ok"><use href="#i-check"/></svg>'
+      : (j === i ? '<span class="dot pulse"></span>' : '<svg class="icon faint"><use href="#i-chevron-right"/></svg>');
   });
 }
 function setGenSteps(mode) {
@@ -3160,7 +3181,8 @@ function updateRefineLabels() {
 }
 function updateRefineToneLabel() {
   const sel = $('refine-tone');
-  $('refine-tone-label').textContent = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
+  const lbl = $('refine-tone-label');
+  if (lbl) lbl.textContent = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
 }
 function openAdjustModal(tab) {
   const lock = state.current;
@@ -3188,10 +3210,6 @@ function closeRefineModal() { closeAdjustModal(); }
 function closeTTSModal() { closeAdjustModal(); }
 function openRefineModal() {
   const art = currentArtifact();
-  $('refine-topic').textContent = art.meta.topic || '—';
-  $('refine-domain').textContent = art.meta.domainLabel || art.meta.domain || '—';
-  $('refine-role').textContent = art.meta.role || '—';
-  $('refine-scenario').textContent = art.meta.scenario || '—';
   $('refine-inject').value = art.meta.injections || '';
   $('refine-tone').value = art.meta.tone || 'neutral';
   updateRefineToneLabel();
