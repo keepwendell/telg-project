@@ -305,6 +305,9 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .gen-step.done{color:var(--on-variant)}
 .gen-step.active{color:var(--on-surface)}
 .gen-step .icon{width:15px;height:15px}
+.step-num{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--mono);background:var(--surface-highest);color:var(--dim);transition:all .15s var(--ease);flex-shrink:0}
+.step-num.ok{background:var(--primary);color:var(--on-primary)}
+.step-num.cur{background:var(--surface-highest);color:var(--on-surface);box-shadow:inset 0 0 0 1px var(--primary)}
 .gen-phases{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface-low);border:1px solid var(--line);border-radius:7px;margin-bottom:10px;flex-shrink:0}
 .gen-phase{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);white-space:nowrap}
 .gen-phase-n{width:16px;height:16px;border-radius:50%;background:var(--surface-highest);color:var(--dim);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--mono);transition:all .15s var(--ease)}
@@ -2966,9 +2969,12 @@ function genPaint(steps, i) {
   steps.forEach((s, j) => {
     s.classList.toggle('active', j === i);
     s.classList.toggle('done', j < i);
+    const n = j + 1;
     s.querySelector('.step-ic').innerHTML = j < i
-      ? '<svg class="icon ok"><use href="#i-check"/></svg>'
-      : (j === i ? '<span class="dot pulse"></span>' : '<svg class="icon faint"><use href="#i-chevron-right"/></svg>');
+      ? '<span class="step-num ok">' + n + '</span>'
+      : (j === i
+          ? '<span class="step-num cur">' + n + '</span>'
+          : '<span class="step-num">' + n + '</span>');
   });
 }
 function setGenSteps(mode) {
