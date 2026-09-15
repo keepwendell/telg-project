@@ -2560,7 +2560,7 @@ function startRenameHead() {
   input.addEventListener('blur', commit);
 }
 /* ---------- TTS voice roles ---------- */
-const TTS_VOICES = ['en-US-GuyNeural','en-US-JennyNeural','en-US-ChristopherNeural','en-US-EricNeural','en-US-AriaNeural','en-US-DavisNeural','en-US-JaneNeural','en-US-JasonNeural','en-US-MichelleNeural','en-US-NancyNeural','en-US-TonyNeural','en-US-RogerNeural','en-US-SteffanNeural','en-US-AmberNeural','en-US-AnaNeural','en-US-AshleyNeural','en-US-BrandonNeural','en-US-BrianNeural','en-US-CoraNeural','en-US-DanielNeural','en-US-ElizabethNeural','en-US-EllaNeural','en-US-JacobNeural','en-GB-SoniaNeural','en-GB-RyanNeural','en-AU-NatashaNeural','en-AU-WilliamNeural'];
+const TTS_VOICES = ['en-US-GuyNeural','en-US-JennyNeural','en-US-ChristopherNeural','en-US-EricNeural','en-US-AriaNeural','en-US-MichelleNeural','en-US-RogerNeural','en-US-SteffanNeural','en-US-AnaNeural','en-US-BrianNeural','en-GB-SoniaNeural','en-GB-RyanNeural','en-AU-NatashaNeural','en-AU-WilliamNeural'];
 function roleRowHTML(r) {
   const name = (r && typeof r === 'object') ? String(r.name || '') : '';
   const v = (r && typeof r === 'object') ? r.voice : r;
