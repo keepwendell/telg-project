@@ -2903,6 +2903,18 @@ function toggleInspector() {
 
 
 /* ---------------- GENERATOR FLOW ---------------- */
+function buildLLMConfig() {
+  try {
+    const s = JSON.parse(localStorage.getItem('telg-settings') || 'null');
+    return s && s.llm ? { provider: s.llm.provider, base_url: s.llm.baseUrl, api_key: s.llm.apiKey, model: s.llm.model, temperature: parseFloat(s.llm.temperature) || 0.7 } : {};
+  } catch (e) { return {}; }
+}
+function buildTestMode() {
+  try {
+    const s = JSON.parse(localStorage.getItem('telg-settings') || 'null');
+    return !!(s && s.llm && s.llm.testMode);
+  } catch (e) { return false; }
+}
 function collectParams() {
   return {
     topic: $('topic-input').value.trim(),
@@ -2913,8 +2925,8 @@ function collectParams() {
     difficulty: +document.querySelector('#diff-seg .seg-item.active').dataset.level,
     length: document.querySelector('#len-seg .seg-item.active').dataset.length,
     llm: 'DeepSeek-V3', tts: 'edge-tts', voice: 'en-US-GuyNeural + en-US-JennyNeural',
-    llm_config: (() => { try { const s = JSON.parse(localStorage.getItem('telg-settings') || 'null'); return s && s.llm ? { provider: s.llm.provider, base_url: s.llm.baseUrl, api_key: s.llm.apiKey, model: s.llm.model, temperature: parseFloat(s.llm.temperature) || 0.7 } : {}; } catch (e) { return {}; } })(),
-    test_mode: (() => { try { const s = JSON.parse(localStorage.getItem('telg-settings') || 'null'); return !!(s && s.llm && s.llm.testMode); } catch (e) { return false; } })(),
+    llm_config: buildLLMConfig(),
+    test_mode: buildTestMode(),
     advanced: {
       depth: +document.querySelector('#depth-seg .seg-item.active').dataset.depth,
       vocabDensity: +$('adv-vocab').value,
@@ -3024,6 +3036,8 @@ function paramsFromArt(art) {
     difficulty: parseInt(String(m.difficulty).replace(/\D/g, ''), 10) || 3,
     length: String(parseSec(m.length) || 120),
     llm: 'DeepSeek-V3', tts: 'edge-tts', voice: m.voice || 'en-US-GuyNeural + en-US-JennyNeural',
+    llm_config: buildLLMConfig(),
+    test_mode: buildTestMode(),
     advanced: { depth: 3, vocabDensity: 28, style: 'technical', injections: '', tone: m.tone || 'neutral', breadth: m.breadth || 3, directions: [] }
   };
 }

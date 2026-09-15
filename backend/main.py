@@ -410,10 +410,14 @@ class TestTTSIn(BaseModel):
 
 class SynthIn(BaseModel):
     """Optional per-run TTS override from the frontend (voice roles + rate).
-    voices: 'VoiceA + VoiceB' (frontend settings); '' falls back to meta.voice."""
+    voices: 'VoiceA + VoiceB' (frontend settings); '' falls back to meta.voice.
+    Lenient on purpose: unknown fields from older frontends are ignored and
+    null values fall back to defaults instead of failing with 422."""
 
-    voices: str = ""
-    rate: float = 1.0
+    model_config = {"extra": "allow"}
+
+    voices: str | None = None
+    rate: float | None = None
 
 
 # ----------------------------------------------------------------------------
@@ -926,7 +930,7 @@ async def synthesize(mid: str, body: SynthIn | None = None):
         conn.close()
         raise HTTPException(400, "no dialogue segments to synthesize")
     vs = [v.strip() for v in re.split(r"[+]", body.voices or "") if v.strip()] or voices_of(meta)
-    rate = body.rate if 0.5 <= body.rate <= 2.0 else 1.0
+    rate = body.rate if (body.rate is not None and 0.5 <= body.rate <= 2.0) else 1.0
     rate_arg = "%+d%%" % int((rate - 1.0) * 100)
     gap_ms = 300
     try:
