@@ -81,7 +81,10 @@ telg-project/
 - **推送时机**：仅用户明确要求「推送到 GitHub / 同步远程」时才执行 `git push origin main`；本地 commit 可按需执行。
 - **推送必须写清楚 commit**：每次推送远程时，向用户说明本次推送包含的 commit（hash + message 概要 + 具体改动内容），不得含糊带过。
 - commit message：`<type>: <summary>`（feat/fix/ui/docs/refactor），英文简洁。
-- **commit 中英双语**：commit 标题（subject）与正文（body）都必须同时提供中英双语——标题格式 `type: EN summary / 中文摘要`；正文含英文说明 + 中文说明两段。推送汇报时同样以双语列出。
+- **commit 中英双语 + 重点化标题 + 具体变更点**：
+  - 标题（subject）体现变更的关键重点，格式 `<type>: 中文重点 / EN key point`（如 `feat: 播放器图标清晰化与步长可配置 / clearer seek icons & configurable step`），不写泛泛的 "update/refactor" 式标题。
+  - 正文（body）逐条列明本次的具体变更点（what changed），中英双语（每条英文 + 中文）。
+  - 推送汇报时同样以双语列出标题与变更点。
 
 ## 8. 变更记录（Changelog of rules）
 
@@ -90,4 +93,5 @@ telg-project/
 | 2026-09-15 | 新增第 1 节：默认只交付 index.html，打包/推送按需 | 用户：「后续只有当我要求提供打包和远程推送时你再提供即可，平时只需提供index」 |
 | 2026-09-15 | 第 7 节补充：推送远程时必须写清楚 commit（hash + 概要 + 改动内容） | 用户：「后续推送远程仓库时应该写清楚commit」 |
 | 2026-09-15 | 第 7 节补充：commit 标题与正文均需中英双语 | 用户：「commit要提供中英双语的标题和内容」 |
+| 2026-09-15 | 第 7 节细化：标题体现变更关键重点（类型-标题），正文逐条列具体变更点 | 用户：「标题应体现变更的关键重点（变更类型-标题），commit正文写清楚本次的具体变更点」 |
 | 2026-09-15 | 本文件创建，沉淀此前已确认的全部约定 | 用户：「将工程目录新建一个目录，存放持久性的记忆规则」 |
