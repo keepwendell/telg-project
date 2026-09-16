@@ -25,6 +25,13 @@
 | [design-system-视觉设计规范](./设计/design-system-视觉设计规范.md) | design-system.md | 视觉与交互规范（参考 OpenCode/Linear） |
 | [design-精调面板与用量统计](./设计/design-精调面板与用量统计.md) | design-refine-and-usage.md | 专题设计（状态：draft） |
 
+## 规划 — 往哪走
+
+| 文件 | 英文原名 | 内容 |
+|---|---|---|
+| [roadmap-待办事项](./规划/roadmap-待办事项.md) | roadmap.md | 待办事项与状态机（backlog/planned/done） |
+| [plan-学习档案与首启引导](./规划/plan-学习档案与首启引导.md) | plan-learning-profile-onboarding.md | 产品方向拓展：领域档案 / 首启引导 / 学习档案 / 持久化演进 |
+
 ## 运维 — 怎么跑
 
 | 文件 | 英文原名 | 内容 |
