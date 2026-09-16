@@ -558,11 +558,11 @@ def mock_generate(p: GenerateIn) -> dict:
 LENGTH_WORDS = {60: 140, 90: 215, 120: 290, 180: 435, 240: 580}
 
 DIFFICULTY_DEFS = {
-    1: "简单短句，技术词汇密度低，每句 8-15 词，含义直白无隐含。",
-    2: "标准工程词汇，术语偶尔出现且伴随解释，每句 10-20 词。",
-    3: "真实工程师讨论：术语密集但有上下文支撑，含权衡与因果推理，每句 12-25 词。",
-    4: "高密度技术交流：术语不加解释、隐含推理、复杂从句，每句 15-30 词。",
-    5: "主审级评审：快速轮转、隐含含义、跨域引用、常省略主语，每句 18-35 词。",
+    1: "短句为主，每句 8-15 词；技术词汇密度约 10%，出现即伴随解释；不含复合从句。",
+    2: "标准工程词汇，每句 10-20 词；术语约 20% 且伴随解释；复合从句不超过 1 层。",
+    3: "真实工程师讨论，每句 12-25 词；术语密集约 35% 但有上下文支撑；含权衡与因果推理；复合从句不超过 2 层。",
+    4: "高密度技术交流，每句 15-30 词；术语约 50% 且不加解释；隐含推理；允许复杂从句。",
+    5: "主审级评审，每句 18-35 词；术语密集约 65% 且跨域引用；常省略主语；隐含含义为主。",
 }
 
 BREADTH_DEFS = {
@@ -590,64 +590,81 @@ DEPTH_DEFS = {
     5: "主审级：研究前沿、边界条件、局限性与权衡深度分析。",
 }
 
-LLM_SYSTEM_PROMPT = """你是资深技术英语听力素材生成器，面向汽车、智能驾驶、底盘控制、控制算法与嵌入式软件等研发工程师。根据用户给定的技术主题与参数，生成一套真实、自然、可直接用于听力训练的双语技术对话。
+LLM_SYSTEM_PROMPT = """你是 TELG 技术英语听力素材生成引擎，为研发工程师生成真实、自然、可直接用于听力训练的双语技术对话（英文对话 + 中文翻译）。
 
-## 输出格式（必须严格输出 JSON 对象，禁止任何多余文字、Markdown 代码块或注释）
+## 输出契约（硬约束，违反即失败）
+- 必须输出合法 JSON 对象。禁止 Markdown 代码块、注释、或任何 JSON 之外的文字。JSON 示例仅供参考，输出时不得包含注释。
+- JSON 结构（字段名必须完全一致）：
 {
   "background": {
-    "technical_background": "...",   // 英文：该主题工程背景，2-3 句
-    "technical_principle": "...",    // 英文：核心技术原理，2-3 句，可含公式符号如 C_α
-    "engineering_scenario": "..."    // 英文：这段对话发生在什么工作场景，1-2 句
+    "technical_background": "英文：该主题工程背景，2-3 句",
+    "technical_principle": "英文：核心技术原理，2-3 句，可含公式符号如 C_alpha",
+    "engineering_scenario": "英文：这段对话发生在什么工作场景，1-2 句"
   },
   "dialogue": [
-    {"speaker": "...", "role": "...", "text_en": "...", "text_zh": "..."}
+    {"speaker": "说话人标识", "role": "角色", "text_en": "英文台词", "text_zh": "对应中文翻译"}
   ],
   "vocabulary": [
-    {"en": "...", "zh": "...", "symbol": "...", "def": "..."}
+    {"en": "英文术语", "zh": "标准译法", "symbol": "符号，无则空串", "def": "英文释义"}
   ],
   "listening_questions": [
-    {"q": "...", "options": ["...", "...", "..."], "answer": "正确选项的完整原文", "explain": "答案出自哪句台词"}
+    {"q": "问题", "options": ["选项1", "选项2", "选项3"], "answer": "正确选项的完整原文", "explain": "答案出自哪句台词"}
   ],
   "core_sentence_patterns": [
-    {"title": "...", "pattern": "...", "example": "..."}
+    {"title": "句型名", "pattern": "句式模板", "example": "例句"}
   ]
 }
+- dialogue 元素中不得出现 start_ms/end_ms/voice 等字段。
 
-## 内容要求（Technical Grounding）
-- 必须围绕主题使用真实工程概念与术语，严禁编造明显错误的工程原理。
-- 对话要有具体信息量：数据、时序、参数、权衡、因果，不要空泛寒暄。
-- text_en 必须是地道工程英语：自然口语、带真实工程师讨论的口吻与语气词。
-- 严禁教科书腔与 "Today we are going to talk about..." 式生硬开头。
-- text_zh 是 text_en 的准确中文翻译，工程术语用标准译法。
-- dialogue 中不要出现 start_ms/end_ms/voice 等字段。
+## 质量红线（按优先级排序，违反前者比违反后者更严重）
+1. 技术真实性：所有概念、参数、因果必须真实，宁浅勿错；严禁编造工程原理。
+2. 可听性：对话必须像真实工程师在现场讨论——有语气词、有追问、有观点碰撞；严禁教科书腔与 "Today we are going to talk about..." 式生硬开头。
+3. 信息密度：每句都要携带具体信息（数值、时序、参数、权衡、因果），删除所有空泛寒暄。
+- text_en 必须是地道工程英语口语；text_zh 是 text_en 的准确中文翻译，工程术语用标准译法。
 
-## 参数控制
-- 英语难度 L{difficulty}：{difficulty_def}
-- 对话广度 B{breadth}：{breadth_def}
-- 技术深度：{depth_def}
-- 语气：{tone_def}
-- 目标总词数：约 {words} 词（按对话轮数合理分配，宁精勿灌水）
-- 特殊要求：{injections}
-
-## 对话结构（根据 Scenario 决定说话人数与角色，必须严格遵守）
-- 单人技术讲解/汇报场景（Scenario 为 Single Technical Deep-Dive、Technical Presentation 等）：dialogue 只包含 1 个 speaker，role 为该场景角色（如 Vehicle Dynamics Engineer），全程一人连贯讲解，可带少量自问自答，但不要出现第二个人名或 Interviewer/Candidate 角色。
-- 技术面试场景（Scenario 为 Staff Systems Technical Interview、Interview 等）：dialogue 恰好 2 个 speaker，role 分别为 Interviewer 与 Candidate，一问一答。
-- 其余场景（讨论、评审、RCA 等）：dialogue 恰好 2 个 speaker，role 为对应工程师角色（如 Vehicle Dynamics Engineer、Controls Lead）。
+## 对话结构（严格遵守）
+- 单人技术讲解/汇报场景（Scenario 为 Single Technical Deep-Dive、Technical Presentation 等）：dialogue 只包含 1 个 speaker，role 为该场景角色，全程一人连贯讲解，可带少量自问自答，但不得出现第二个人名或 Interviewer/Candidate 角色。
+- 技术面试场景（Scenario 含 Interview）：dialogue 恰好 2 个 speaker，role 分别为 Interviewer 与 Candidate，一问一答。
+- 其余场景：dialogue 的 speaker 数量与角色由用户消息中的"广度"约束决定。
 
 请直接输出 JSON。"""
 
 
-def build_user_prompt(p: GenerateIn) -> str:
+def build_user_prompt(p: GenerateIn, action: str = "generate") -> str:
+    """需求简报式 user prompt：把参数组织成任务陈述，让模型理解"为什么生成"而非"填什么字段"。
+    生成约束（难度/广度/深度等可执行化定义）随请求动态组装，System 保持完全静态以命中缓存。"""
+    advanced = p.advanced if isinstance(p.advanced, dict) else {}
+    breadth = advanced.get("breadth", 2)
+    depth = advanced.get("depth", 3)
+    tone = advanced.get("tone", "neutral")
+    sec = parse_sec(p.length) or 120
+    target_words = LENGTH_WORDS.get(sec, 290)
+    turns = max(4, round(target_words / 38))  # ~38 词/轮 → 轮数，避免篇幅与时长脱节
+    domain = p.domainLabel or p.domain or "Engineering"
+
     lines = [
-        "请为以下主题生成一套技术英语听力素材。",
+        "请生成一套可直接用于听力训练的技术英语素材（英文对话 + 中文翻译）。",
         "",
-        "Topic: " + (p.topic or ""),
-        "Domain: " + (p.domainLabel or p.domain or "Engineering"),
-        "Role: " + (p.role or ""),
-        "Scenario: " + (p.scenario or "Technical Discussion"),
-        "Difficulty: Level " + str(p.difficulty),
-        "Length: " + str(p.length) + " seconds",
+        "## 本次任务",
+        "- 主题：" + (p.topic or ""),
+        "- 领域：" + domain + "（必须符合该领域研发工程师的真实语境与术语惯例）",
+        "- 角色：" + (p.role or "领域工程师"),
+        "- 场景：" + (p.scenario or "Technical Discussion"),
+        "- 语气：" + TONE_DEFS.get(tone, TONE_DEFS["neutral"]),
+        "",
+        "## 生成约束",
+        "- 难度 Level " + str(p.difficulty) + "：" + DIFFICULTY_DEFS.get(p.difficulty, DIFFICULTY_DEFS[3]),
+        "- 广度 Level " + str(breadth) + "：" + BREADTH_DEFS.get(breadth, BREADTH_DEFS[2]),
+        "- 技术深度：" + DEPTH_DEFS.get(depth, DEPTH_DEFS[3]),
+        "- 时长 " + str(p.length) + " 秒，目标总词数约 " + str(target_words) + " 词（约 " + str(turns) + " 轮对话，宁精勿灌水）",
+        "- 特殊要求：" + (advanced.get("injections") or "无"),
+        "",
+        "## 对话看点",
+        "请根据主题自行确定一个最有价值的讨论焦点（如某参数/方案的权衡、一次故障排查、一场评审分歧），"
+        "让对话围绕该焦点自然展开、有张力；不要平铺直叙地罗列知识点。",
     ]
+    if action == "regenerate":
+        lines.insert(1, "（本次为重新生成：请更换切入角度或结构，内容与上一版不雷同，质量更优。）")
     return "\n".join(lines)
 
 
@@ -739,27 +756,25 @@ def call_llm_with_retry(p: GenerateIn, action: str = "generate") -> dict:
     except UnicodeEncodeError:
         raise LLMGenerationError("api_key contains non-ASCII characters (placeholder?) — enter a real key")  # noqa: B904
     target_words = LENGTH_WORDS.get(parse_sec(p.length) or 120, 290)
+    # System prompt is fully static (no per-request substitution) so the
+    # stable prefix hits provider context caching; all dynamic params live
+    # in the user prompt (需求简报).
+    system = LLM_SYSTEM_PROMPT
+    # Bound output so long dialogues are never silently truncated by the model.
+    max_tokens = int(target_words * 9) + 800
     client = OpenAI(base_url=base, api_key=key, timeout=60)
-    breadth = p.advanced.get("breadth", 2) if isinstance(p.advanced, dict) else 2
-    system = (LLM_SYSTEM_PROMPT
-              .replace("{difficulty}", str(p.difficulty))
-              .replace("{difficulty_def}", DIFFICULTY_DEFS.get(p.difficulty, DIFFICULTY_DEFS[3]))
-              .replace("{breadth}", str(breadth))
-              .replace("{breadth_def}", BREADTH_DEFS.get(breadth, BREADTH_DEFS[2]))
-              .replace("{depth_def}", DEPTH_DEFS.get(p.advanced.get("depth", 3), DEPTH_DEFS[3]) if isinstance(p.advanced, dict) else DEPTH_DEFS[3])
-              .replace("{tone_def}", TONE_DEFS.get(p.advanced.get("tone", "neutral"), TONE_DEFS["neutral"]) if isinstance(p.advanced, dict) else TONE_DEFS["neutral"])
-              .replace("{words}", str(target_words))
-              .replace("{injections}", (p.advanced.get("injections") or "无") if isinstance(p.advanced, dict) else "无"))
     errors = []
     last_usage = None
     for attempt in range(3):
-        user = build_user_prompt(p)
+        user = build_user_prompt(p, action)
         if errors:
-            user += "\n\n上一次输出校验失败：" + "\n".join(errors) + "\n请修正后重新输出完整 JSON。"
+            user += ("\n\n## 校验失败反馈\n你上次输出未通过校验：\n" + "\n".join(errors)
+                     + "\n请只修正上述问题、保留其余内容，重新输出完整 JSON（不得输出任何 JSON 之外的内容）。")
         try:
             resp = client.chat.completions.create(
                 model=model,
                 temperature=temp,
+                max_tokens=max_tokens,
                 response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": system},
@@ -1435,6 +1450,18 @@ def test_generate(c: TestLLMIn):
         "questions": len(art.get("listening_questions", [])),
         "patterns": len(art.get("core_sentence_patterns", [])),
     }
+
+
+@app.post("/api/v1/config/prompt-preview")
+def prompt_preview(c: GenerateIn):
+    """Preview the exact system + user prompt that WOULD be sent to the LLM
+    for the given generation parameters. Pure prompt assembly — no LLM call,
+    no DB writes. Used by the LLM Mock debug panel to inspect the pipeline."""
+    try:
+        user = build_user_prompt(c, "generate")
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "error": str(e)}
+    return {"ok": True, "system": LLM_SYSTEM_PROMPT, "user": user, "action": "generate"}
 
 
 @app.post("/api/v1/config/unlock-dev")

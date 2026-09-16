@@ -247,6 +247,14 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .lib-section-head{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 6px}
 .lib-item{display:flex;align-items:flex-start;gap:10px;padding:8px;border-radius:6px;cursor:pointer;color:var(--on-variant);transition:background .15s var(--ease)}
 .lib-item:hover{background:var(--surface-low);color:var(--on-surface)}
+.lib-new-btn{display:flex;align-items:center;gap:9px;width:100%;padding:7px 10px;border-radius:6px;
+  border:1px solid var(--line);background:var(--surface-low);color:var(--on-variant);cursor:pointer;
+  font:inherit;text-align:left;transition:background .15s var(--ease),border-color .15s var(--ease)}
+.lib-new-btn:hover{border-color:var(--primary);color:var(--on-surface);background:var(--surface-container)}
+.lib-new-btn .ln-ic{width:24px;height:24px;border-radius:6px;background:var(--surface);display:flex;
+  align-items:center;justify-content:center;color:var(--primary);flex-shrink:0}
+.lib-new-btn .ln-ic .icon{width:13px;height:13px}
+.lib-new-btn .ln-name{font-size:12px;font-weight:500;color:var(--on-surface)}
 .lib-item.active{background:var(--surface-high);color:var(--on-surface);box-shadow:inset 2px 0 0 var(--primary)}
 .lib-ic{width:26px;height:26px;border-radius:6px;background:var(--surface-low);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--outline)}
 .lib-item.active .lib-ic{background:var(--primary);color:var(--on-primary)}
@@ -273,6 +281,17 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .playlist-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;color:var(--on-variant);transition:background .15s var(--ease),color .15s var(--ease)}
 .playlist-row:hover{background:var(--surface-low);color:var(--on-surface)}
 .playlist-row.active{background:var(--surface-high);color:var(--on-surface)}
+.pl-wrap{position:relative}
+.pl-expand{display:none;margin:2px 0 8px 14px;padding:2px 4px 4px 12px;border-left:2px solid var(--line)}
+.playlist-row.active + .pl-expand{display:block}
+.pl-item{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:5px;cursor:pointer;color:var(--on-variant);font-size:11.5px;transition:background .12s var(--ease)}
+.pl-item:hover{background:var(--surface-low);color:var(--on-surface)}
+.pl-item .icon{width:12px;height:12px;color:var(--outline);flex-shrink:0}
+.pl-item-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-item-dur{color:var(--outline);font-family:var(--mono);font-size:10px;flex-shrink:0}
+.pl-item .lib-act{display:none;flex-shrink:0}
+.pl-item:hover .lib-act{display:inline-flex}
+.pl-item-empty{padding:6px 4px;font-size:11px;color:var(--outline)}
 .playlist-row .pl-acts{display:none;align-items:center;gap:2px;flex-shrink:0}
 .playlist-row:hover .pl-acts{display:flex}
 .playlist-row.confirm-del{border:1px solid var(--error);background:var(--surface-low)}
@@ -339,12 +358,15 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .gen-total-track{flex:1;height:3px;background:var(--surface-highest);border-radius:2px;overflow:hidden}
 .gen-total-fill{height:100%;width:0%;background:var(--primary);border-radius:2px;transition:width .35s var(--ease)}
 .gen-total-pct{font-size:10px;font-family:var(--mono);color:var(--outline);min-width:36px;text-align:right}
-.confirm-box{width:min(340px,92vw);background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;padding:26px 24px 0;display:flex;flex-direction:column;align-items:center;animation:genIn .18s var(--ease)}
-.confirm-ic{width:42px;height:42px;border-radius:10px;background:var(--error-container);color:var(--on-error-container);display:flex;align-items:center;justify-content:center;margin-bottom:6px}
-.confirm-ic .icon{width:19px;height:19px}
-.confirm-name{font-family:var(--mono);font-size:11px;letter-spacing:.01em;color:var(--on-surface);background:var(--surface-high);border:1px solid var(--line);border-radius:5px;padding:3px 9px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:6px 0 10px}
-.confirm-text{font-size:12px;line-height:1.65;color:var(--dim);text-align:center;margin:0}
-.confirm-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;width:100%;margin-top:18px;padding:14px 0;border-top:1px solid var(--line)}
+.modal-overlay{backdrop-filter:blur(3px)}
+.confirm-box{width:min(360px,92vw);background:var(--surface);border:1px solid var(--line-strong);border-radius:14px;padding:30px 26px 0;display:flex;flex-direction:column;align-items:center;text-align:center;animation:genIn .2s var(--ease);box-shadow:0 22px 60px rgba(0,0,0,.38)}
+.confirm-ic{width:52px;height:52px;border-radius:14px;background:linear-gradient(140deg,var(--error),color-mix(in oklch,var(--error) 55%,var(--surface-high)));color:var(--on-error);display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 8px 20px color-mix(in oklch,var(--error) 28%,transparent)}
+.confirm-ic .icon{width:24px;height:24px}
+.confirm-title{font-size:16px;font-weight:700;letter-spacing:-.01em;color:var(--on-surface);line-height:1.3}
+.confirm-name{font-family:var(--mono);font-size:11.5px;letter-spacing:.01em;color:var(--on-surface);background:var(--surface-high);border:1px solid var(--line);border-radius:6px;padding:4px 10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:10px 0 12px}
+.confirm-text{font-size:12.5px;line-height:1.7;color:var(--dim);text-align:center;margin:0;max-width:300px}
+.confirm-actions{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:22px;padding:16px 0;border-top:1px solid var(--line)}
+.confirm-actions .btn{min-width:96px;height:34px;border-radius:8px}
 /* empty state */
 .gen-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:64px 20px;text-align:center}
 .gen-empty .icon{width:30px;height:30px;color:var(--outline)}
@@ -368,17 +390,10 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .player-main{flex:1;display:flex;flex-direction:column;min-width:0}
 /* --- fold & resize controls --- */
 .lib-sidebar,.inspector{position:relative;transition:width .18s var(--ease)}
-.side-fold{position:absolute;top:12px;z-index:40;width:22px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--surface-high);border:1px solid var(--line);border-radius:6px;color:var(--on-variant);cursor:pointer;transition:background .12s var(--ease),color .12s var(--ease)}
-.side-fold:hover{color:var(--on-surface);background:var(--surface-container)}
-.side-fold .icon{width:13px;height:13px}
-.lib-sidebar .side-fold{right:-11px}
-.inspector .side-fold{left:-11px}
 .lib-sidebar.collapsed{width:0!important;border-right:none;overflow:visible}
 .inspector.collapsed{width:0!important;border-left:none;overflow:visible}
-.lib-sidebar.collapsed>*:not(.side-fold){visibility:hidden}
-.inspector.collapsed>*:not(.side-fold){visibility:hidden}
-.lib-sidebar.collapsed .side-fold{right:auto;left:2px}
-.inspector.collapsed .side-fold{left:auto;right:2px}
+.lib-sidebar.collapsed>*{visibility:hidden}
+.inspector.collapsed>*{visibility:hidden}
 .resize-handle{position:absolute;top:0;bottom:0;width:5px;cursor:col-resize;z-index:30;background:transparent}
 .resize-handle:hover,.resize-handle.dragging{background:var(--primary-dim)}
 .lib-resize{right:-3px}
@@ -395,6 +410,11 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .material-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
 .player-split{flex:1;display:flex;min-height:0}
 .transcript-pane{flex:1;overflow-y:auto;padding:18px 22px 32px;min-width:0}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:72px 24px;text-align:center}
+.empty-state .es-ic{width:46px;height:46px;border-radius:12px;background:var(--surface-low);display:flex;align-items:center;justify-content:center;color:var(--outline);margin-bottom:4px}
+.empty-state .es-ic .icon{width:22px;height:22px}
+.empty-state .es-title{font-size:14px;font-weight:600;color:var(--on-surface)}
+.empty-state .es-sub{font-size:12px;color:var(--on-variant);max-width:380px;line-height:18px}
 .inspector{width:416px;flex-shrink:0;background:var(--bg-lowest);border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
 
 /* ---------- global player bar ---------- */
@@ -467,31 +487,35 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 
 /* ---------- toast ---------- */
 .toast{
-  position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(8px);z-index:120;
+  position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(12px);z-index:120;
   background:var(--surface-high);border:1px solid var(--line-strong);color:var(--on-surface);
-  padding:9px 16px;border-radius:7px;font-size:12px;display:flex;align-items:center;gap:8px;
-  opacity:0;pointer-events:none;transition:opacity .2s var(--ease),transform .2s var(--ease);
+  padding:10px 16px;border-radius:9px;font-size:12px;line-height:1.55;
+  display:flex;align-items:center;gap:10px;
+  max-width:min(480px,calc(100vw - 48px));white-space:normal;word-break:break-word;
+  box-shadow:0 8px 28px rgba(0,0,0,.16),0 2px 8px rgba(0,0,0,.10);
+  opacity:0;pointer-events:none;transition:opacity .22s var(--ease),transform .22s var(--ease);
 }
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast .toast-ic{flex:none;width:22px;height:22px;padding:3px;border-radius:50%;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.toast.success .toast-ic{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.toast.error .toast-ic{background:color-mix(in srgb,var(--error) 14%,transparent);color:var(--error)}
+.toast.warn .toast-ic{background:color-mix(in srgb,var(--warning) 16%,transparent);color:var(--warning)}
 
 /* ---------- responsive ---------- */
 @media (max-width:1180px){ .inspector{width:330px} }
 @media (max-width:960px){
   .inspector{width:0!important;border-left:none;overflow:hidden}
-  .inspector .side-fold,.inspector.collapsed .side-fold{left:auto;right:2px}
   .param-grid{grid-template-columns:1fr 1fr}
 }
 @media (max-width:900px){
   .lib-sidebar{width:0!important;border-right:none;overflow:hidden}
-  .lib-sidebar .side-fold,.lib-sidebar.collapsed .side-fold{right:auto;left:2px}
 }
 @media (max-width:720px){
   .lib-sidebar{position:fixed;left:0;top:0;bottom:0;z-index:70;width:288px!important;max-width:85vw;display:flex;transform:translateX(-105%);transition:transform .18s var(--ease);border-right:1px solid var(--line);box-shadow:none}
   .lib-sidebar.open{transform:none;box-shadow:0 8px 40px rgba(0,0,0,.4)}
-  .lib-sidebar .side-fold,.lib-sidebar.collapsed .side-fold{display:flex;right:auto;left:2px}
   .lib-sidebar .lib-resize{display:none}
   .lib-sidebar.collapsed{width:288px!important;border-right:1px solid var(--line);transform:translateX(-105%)}
-  .lib-sidebar.collapsed>*:not(.side-fold){visibility:visible}
+  .lib-sidebar.collapsed>*{visibility:visible}
   #btn-sidebar{display:flex}
   #sidebar-backdrop{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .18s var(--ease)}
   #sidebar-backdrop.show{opacity:1;pointer-events:auto}
@@ -590,6 +614,9 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 .debug-panel{margin:14px 0 4px;padding:14px 16px;background:var(--surface-low);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;gap:4px}
 .debug-panel .s-row{padding:10px 0}
 .debug-pre{margin-top:10px;padding:12px 14px;background:var(--surface-lowest);border:1px solid var(--line);border-radius:6px;font-family:var(--font-mono);font-size:11px;line-height:1.6;color:var(--on-variant);white-space:pre-wrap;word-break:break-all;max-height:180px;overflow-y:auto;display:none}
+.prompt-preview-out{margin-top:10px;display:flex;flex-direction:column;gap:2px}
+.prompt-preview-out .pp-block-title{margin-top:10px;font-size:11px;font-weight:600;color:var(--accent)}
+.prompt-preview-out .debug-pre{display:block;max-height:240px}
 .s-ctrl .test-result{max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .test-output{display:block;margin:2px 0 10px;padding:8px 12px;background:var(--surface-low);border:1px solid var(--line);border-radius:6px;font-family:var(--font-mono);font-size:11px;line-height:1.55;color:var(--outline);white-space:normal;word-break:break-all;min-height:0}
 .test-output:empty{display:none}
@@ -663,6 +690,9 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   <symbol id="i-panel-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="15" y1="4" x2="15" y2="20"/></symbol>
   <symbol id="i-translate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></symbol>
   <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+  <symbol id="i-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></symbol>
+  <symbol id="i-alert-triangle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-info-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
   <symbol id="i-tune" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
   <symbol id="i-quiz" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M9.1 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
@@ -690,11 +720,6 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
       <span class="brand-name nowrap">Technical Listening</span>
     </a>
     <span class="version-pill nowrap">v1.0 MVP</span>
-    <button class="gen-trigger" id="btn-open-gen" title="Generate new material (⌘K)">
-      <svg class="icon icon-sm"><use href="#i-bolt"/></svg>
-      <span class="nowrap" data-i18n="nav.generate">Generate new material…</span>
-      <span class="kbd">⌘K</span>
-    </button>
   </div>
   <div class="header-right">
     <button class="btn-icon" id="btn-sidebar" title="Materials"><svg class="icon"><use href="#i-menu"/></svg></button>
@@ -720,28 +745,14 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 <div class="player-layout">
   <aside class="lib-sidebar" id="lib-sidebar">
     <div class="resize-handle lib-resize" id="lib-resize" title="Drag to resize"></div>
-    <button class="side-fold" id="lib-fold" title="Collapse / expand sidebar"><svg class="icon"><use href="#i-chevron-left"/></svg></button>
     <div style="padding:12px 12px 8px;flex-shrink:0">
-      <div style="position:relative">
-        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--outline);display:flex">
-          <svg class="icon icon-sm"><use href="#i-search"/></svg>
-        </span>
-        <input class="input input-sm" id="search-input" placeholder="Search technical topics, terms..." data-i18n-ph="sidebar.search" style="padding-left:32px;padding-right:42px"/>
-        <span class="kbd" style="position:absolute;right:9px;top:50%;transform:translateY(-50%)">/</span>
-      </div>
+      <button class="lib-new-btn" id="btn-lib-gen" title="Generate new material (⌘K)">
+        <span class="ln-ic"><svg class="icon"><use href="#i-bolt"/></svg></span>
+        <span class="ln-name" data-i18n="nav.new">New Material</span>
+      </button>
       <div id="filter-tags" style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap"></div>
     </div>
     <div class="lib-scroll">
-      <div class="lib-section">
-        <div class="lib-section-head">
-          <div style="display:flex;align-items:center;gap:6px;min-width:0">
-            <span class="t-10 uc faint bold" id="lib-head-title">My Materials</span>
-            <button class="btn-icon" id="lib-head-clear" style="display:none;width:18px;height:18px" title="Exit playlist view"><svg class="icon" style="width:12px;height:12px"><use href="#i-close"/></svg></button>
-          </div>
-          <span class="t-10 faint mono" id="lib-count">0 total</span>
-        </div>
-        <div id="lib-list"></div>
-      </div>
       <div class="lib-section">
         <div class="lib-section-head">
           <span class="t-10 uc faint bold" data-i18n="sidebar.playlists">Playlists</span>
@@ -755,9 +766,6 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <span class="t-10 accent mono today-time">0m / 30m</span>
         </div>
         <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-        <div style="display:flex;justify-content:space-between;margin-top:8px" class="t-10 faint">
-          <span class="today-speed">Speed 1.0x</span>
-        </div>
       </div>
     </div>
   </aside>
@@ -794,10 +802,6 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <button class="btn btn-sm" id="btn-voice" title="Adjust corpus text or TTS voice">
           <svg class="icon icon-sm"><use href="#i-tune"/></svg>
           <span class="nowrap" data-i18n="adjust.open">Adjust</span>
-        </button>
-        <button class="btn btn-sm" id="btn-add-pl" title="Add to playlist">
-          <svg class="icon icon-sm"><use href="#i-folder"/></svg>
-          <span class="nowrap" data-i18n="pl.addTo">Playlist</span>
         </button>
         <button class="btn btn-sm" id="btn-md-export" title="Export study handout (Markdown)">
           <svg class="icon icon-sm"><use href="#i-download"/></svg>
@@ -850,8 +854,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
               <button class="btn btn-sm btn-primary hidden" id="btn-publish-banner"><svg class="icon icon-sm"><use href="#i-save"/></svg><span data-i18n="gen.publish">Publish</span></button>
             </div>
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px" class="t-10 uc faint">
-            <span style="display:flex;align-items:center;gap:6px"><svg class="icon icon-sm"><use href="#i-mic"/></svg><span data-i18n="tr.header">Synchronized Technical Dialogue</span></span>
+          <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;flex-wrap:wrap;gap:6px" class="t-10 uc faint">
             <span style="display:flex;gap:10px;align-items:center" class="mono">
               <button class="zh-toggle on" id="btn-zh-toggle" title="Toggle Chinese translation">
                 <svg class="icon icon-sm"><use href="#i-translate"/></svg>
@@ -868,7 +871,6 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 
       <aside class="inspector" id="inspector">
         <div class="resize-handle ins-resize" id="ins-resize" title="Drag to resize"></div>
-        <button class="side-fold" id="ins-fold" title="Collapse / expand details"><svg class="icon"><use href="#i-chevron-right"/></svg></button>
         <div class="tabbar">
           <button class="tab-btn active" data-tab="grounding"><svg class="icon icon-sm"><use href="#i-tune"/></svg><span data-i18n="tab.grounding">Grounding</span></button>
           <button class="tab-btn" data-tab="vocab"><svg class="icon icon-sm"><use href="#i-book"/></svg><span data-i18n="tab.vocab">Vocabulary</span> <span class="mono faint" style="font-size:10px" id="tab-vocab-count"></span></button>
@@ -1131,12 +1133,12 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 <div class="modal-overlay hidden" id="confirm-modal">
   <div class="confirm-box">
     <div class="confirm-ic"><svg class="icon"><use href="#i-trash"/></svg></div>
-    <div class="t-15" id="confirm-title" data-i18n="del.title">Delete?</div>
+    <div class="confirm-title" id="confirm-title">Delete?</div>
     <div class="confirm-name" id="confirm-name">…</div>
     <p class="confirm-text" id="confirm-text"></p>
     <div class="confirm-actions">
       <button class="btn" id="btn-confirm-cancel" data-i18n="del.cancel">Cancel</button>
-      <button class="btn btn-danger" id="btn-confirm-ok" data-i18n="del.delete">Delete</button>
+      <button class="btn btn-danger" id="btn-confirm-ok" data-i18n="del.delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg><span>Delete</span></button>
     </div>
   </div>
 </div>
@@ -1701,6 +1703,16 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
             </div>
             <div class="test-output" id="llm-gen-result"></div>
             <pre class="debug-pre" id="llm-debug-detail"></pre>
+            <div class="s-row">
+              <div class="s-info">
+                <div class="s-name" data-i18n="settings.developer.promptPrev">LLM Prompt Preview</div>
+                <div class="s-desc" data-i18n="settings.developer.promptPrevHint">Shows the exact system + user prompt assembled from the current generation panel settings. No LLM call.</div>
+              </div>
+              <div class="s-ctrl">
+                <button class="btn btn-sm" id="btn-prompt-preview" data-i18n="settings.developer.promptPrevBtn">Show Prompt</button>
+              </div>
+            </div>
+            <div id="prompt-preview-out" class="prompt-preview-out" style="display:none"></div>
           </div>
           <div class="s-sec-title" data-i18n="settings.developer.ttsMockSec">TTS Mock</div>
           <div class="s-row">
@@ -1820,7 +1832,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 
 <!-- ===================== TOAST ===================== -->
 <div class="toast" id="toast">
-  <svg class="icon icon-sm ok"><use href="#i-check-circle"/></svg>
+  <svg class="icon icon-sm toast-ic"><use id="toast-ic" href="#i-check-circle"/></svg>
   <span id="toast-msg"></span>
 </div>
 <script>
@@ -1897,15 +1909,43 @@ function fmtCheckTs(ts) {
   const d = new Date(ts), p = n => String(n).padStart(2, '0');
   return p(d.getMonth() + 1) + p(d.getDate()) + ' ' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
 }
+/* Map raw backend/network error text to a short human-readable phrase. */
+function friendlyErr(e, lang) {
+  const s = String(e || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  const zh = lang === 'zh';
+  const rules = [
+    [/\\(placeholder\\)|placeholder key/i, zh ? '使用占位 Key，未配置真实 Key' : 'placeholder key, no real key set'],
+    [/api[ _-]?key contains non[- ]ascii/i, zh ? 'API Key 含非 ASCII 字符' : 'API key has non-ASCII chars'],
+    [/returned html instead of json|not served here|static file server/i, zh ? '后端不可达（非 API 服务）' : 'backend unreachable (not an API server)'],
+    [/connection timed? ?out/i, zh ? '网络连接超时' : 'connection timeout'],
+    [/connection refused/i, zh ? '连接被拒绝' : 'connection refused'],
+    [/failed to fetch|fetch failed|network error/i, zh ? '网络请求失败' : 'network request failed'],
+    [/unauthorized|invalid api key|\b401\b/i, zh ? 'Key 无效或未授权' : 'invalid or unauthorized key'],
+    [/\b429\b|rate limit/i, zh ? '请求频率受限' : 'rate limited'],
+    [/model not found|model .*not.*exist/i, zh ? '模型不存在或不可用' : 'model not found'],
+  ];
+  for (const [re, msg] of rules) if (re.test(s)) return msg;
+  return s;
+}
+/* Compress a raw error into a short user-facing toast line. */
+function humanToast(msg, lang) {
+  const s = String(msg || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  const f = friendlyErr(s, lang);
+  if (f !== s) return f;
+  return s.length > 130 ? s.slice(0, 130) + '…' : s;
+}
 function renderEngineTip(c) {
   const tip = $('eng-tip'); if (!tip) return;
-  if (!c || !c.llm || !c.tts) { tip.textContent = 'Self-check in progress…'; return; }
-  const L = (n, ok, extra) => 'LLM（' + n + '）' + (ok ? '可用' : '不可用') + (extra ? ' · ' + extra : '');
-  const T = (n, ok, extra) => 'TTS（' + n + '）' + (ok ? '可用' : '不可用') + (extra ? ' · ' + extra : '');
-  tip.textContent =
-    fmtCheckTs(c.ts) + ' 自检 Self-check\n' +
-    L(c.llm.name, c.llm.ok, c.llm.detail || (c.llm.ok && c.llm.ms ? c.llm.ms + 'ms' : '')) + '\n' +
-    T(c.tts.name, c.tts.ok, c.tts.detail || (c.tts.ok && c.tts.ms ? c.tts.ms + 'ms' : ''));
+  if (!c || !c.llm || !c.tts) { tip.textContent = state.lang === 'zh' ? '自检中…' : 'Self-check…'; return; }
+  const lang = state.lang;
+  const L = 'LLM ' + c.llm.name + ' ' + (c.llm.ok ? '可用' : '不可用');
+  const T = 'TTS ' + c.tts.name + ' ' + (c.tts.ok ? '可用' : '不可用');
+  const lx = c.llm.detail ? friendlyErr(c.llm.detail, lang) : (c.llm.ok && c.llm.ms ? c.llm.ms + 'ms' : '');
+  const tx = c.tts.detail ? friendlyErr(c.tts.detail, lang) : (c.tts.ok && c.tts.ms ? c.tts.ms + 'ms' : '');
+  const cut = v => (v && v.length > 56) ? v.slice(0, 56) + '…' : v;
+  tip.textContent = fmtCheckTs(c.ts) + '\n' + L + (lx ? ' · ' + cut(lx) : '') + '\n' + T + (tx ? ' · ' + cut(tx) : '');
 }
 function updateEngineBadge() {
   const dot = $('eng-dot'), label = $('eng-label'), mode = $('eng-mode');
@@ -2248,6 +2288,11 @@ const API = {
     if (llmMockOn()) { await new Promise(r => setTimeout(r, 800)); return { ok: true, latency_ms: 42, segs: 6, words: 290, total_ms: 120000, title: 'Tire Burst Stability Control' }; }
     return apiFetchSoft('/config/test-generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
   },
+  async promptPreview(params) {
+    /* Pure prompt assembly on the backend — always real, regardless of
+       LLM Mock (it never calls the LLM and needs no API key). */
+    return apiFetchSoft('/config/prompt-preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) });
+  },
   async unlockDev(key) {
     if (mockMode()) { await new Promise(r => setTimeout(r, 200)); return { ok: key === 'telg-dev' }; }
     return apiFetchSoft('/config/unlock-dev', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) });
@@ -2364,7 +2409,7 @@ function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '
 /* ---------------- I18N ---------------- */
 const I18N = {
   en: {
-    'nav.generate': 'New material…', 'nav.engine': 'Settings', 'nav.new': 'New Material',
+    'nav.generate': 'New material…', 'nav.engine': 'Settings', 'nav.new': 'New Material', 'nav.newSub': 'Generate · ⌘K',
     'sidebar.search': 'Search technical topics, terms...', 'sidebar.materials': 'My Materials', 'sidebar.playlists': 'Playlists', 'sidebar.today': "Today's Ear Training",
     'mode.normal': 'Normal', 'mode.blind': 'Blind', 'mode.export': 'MD Export',
     'pb.queue': 'Queue',
@@ -2394,6 +2439,8 @@ const I18N = {
     'settings.developer.llmDiag': 'LLM Diagnostics',
     'settings.developer.llmMock': 'LLM Mock', 'settings.developer.llmMockHint': 'LLM link debugging — real call with the configured key; intermediate steps shown on the main page. No key → real failure reported.',
     'settings.developer.reqResp': 'LLM Request / Response',
+    'settings.developer.promptPrev': 'LLM Prompt Preview', 'settings.developer.promptPrevHint': 'Shows the exact system + user prompt assembled from the current generation panel settings. No LLM call.',
+    'settings.developer.promptPrevBtn': 'Show Prompt',
     'settings.developer.testData': 'Test Data',
     'settings.developer.ttsMockSec': 'TTS Mock',
     'settings.developer.ttsMock': 'TTS Mock', 'settings.developer.ttsMockHint': 'Corpus take-over — generate from the selected dataset. Audio synthesis, audition and playback stay fully real.',
@@ -2505,7 +2552,8 @@ const I18N = {
     'refine.apply': 'Refine & Regenerate',
     'save.title': 'Save', 'save.saved': 'Saved', 'save.done': 'Saved to My Materials — ',
     'lib.rename': 'Rename', 'lib.delete': 'Delete', 'lib.draft': 'Draft', 'lib.unsynth': 'No audio', 'lib.clearFilters': 'Clear filters',
-    'lib.renamed': 'Renamed — ', 'lib.deleted': 'Deleted — ', 'lib.empty': 'Library empty — generate a new material to start.',
+    'lib.renamed': 'Renamed — ', 'lib.deleted': 'Deleted — ', 'lib.empty': 'No materials yet',
+    'lib.emptyTitle': 'No materials yet', 'lib.emptySub': 'Generate a technical listening material from a real engineering scenario.',
     'gen.tone': 'Tone & Mood', 'refine.tone': 'Tone & Mood',
     'tone.neutral': 'Neutral professional', 'tone.urgent': 'Urgent · deadline pressure', 'tone.interview': 'Interview · high-pressure Q&A',
     'tone.collaborative': 'Collaborative & calm', 'tone.debate': 'Confrontational debate', 'tone.mentoring': 'Explanatory mentorship',
@@ -2513,12 +2561,13 @@ const I18N = {
     'tts.style.neutral': 'Neutral', 'tts.style.cheerful': 'Cheerful', 'tts.style.empathetic': 'Empathetic',
     'tts.style.serious': 'Serious', 'tts.style.urgent': 'Urgent', 'tts.style.whispering': 'Whispering',
     'pl.addTo': 'Playlist', 'pl.title': 'Add to Playlist', 'pl.new': 'New playlist…', 'pl.done': 'Done',
-    'pl.createPh': 'Playlist name…', 'pl.in': 'in', 'pl.empty': 'No materials in this playlist yet — add from a material.', 'pl.exit': 'Exit playlist view',
+    'pl.createPh': 'Playlist name…', 'pl.in': 'in', 'pl.empty': 'No materials in this playlist', 'pl.exit': 'Exit playlist view', 'pl.all': 'All Materials',
     'pl.created': 'Playlist created — ', 'pl.renamed': 'Playlist renamed — ', 'pl.deleted': 'Playlist deleted — ', 'pl.added': 'Added to ', 'pl.removed': 'Removed from ',
-    'del.title': 'Delete?', 'del.cancel': 'Cancel', 'del.delete': 'Delete',
-    'del.materialText': 'This will permanently delete the material from My Materials, and remove it from all playlists. This cannot be undone.',
-    'del.materialInPl': 'This will permanently delete the material from My Materials and from all playlists (including this one). This cannot be undone.',
-    'del.playlistText': 'This will delete the playlist. The materials inside are kept in My Materials.',
+    'del.title': 'Delete?', 'del.mTitle': 'Delete material?', 'del.pTitle': 'Delete playlist?',
+    'del.cancel': 'Cancel', 'del.delete': 'Delete',
+    'del.materialText': 'This permanently deletes the material from All Materials and every playlist. It cannot be undone.',
+    'del.materialInPl': 'This permanently deletes the material from All Materials and every playlist (including this one). It cannot be undone.',
+    'del.playlistText': 'This deletes the playlist. Its materials stay in All Materials.',
     'gen.stepC0': 'Parsing parameters & building prompt', 'gen.stepC1': 'LLM generating technical corpus', 'gen.stepC2': 'Validating structure & technical grounding',
     'gen.stepA0': 'Synthesizing sentences via TTS', 'gen.stepA1': 'Stitching audio segments', 'gen.stepA2': 'Aligning sentence-level timeline',
     'gen.corpusLabel': 'Topic — ', 'gen.audioLabel': 'TTS synthesis — ',
@@ -2528,7 +2577,7 @@ const I18N = {
     'pub.name': 'File name', 'pub.cancel': 'Cancel', 'pub.ok': 'Publish', 'pub.done': 'Published · '
   },
   zh: {
-    'nav.generate': '新建素材…', 'nav.engine': '设置', 'nav.new': '新建素材',
+    'nav.generate': '新建素材…', 'nav.engine': '设置', 'nav.new': '新建素材', 'nav.newSub': '生成 · ⌘K',
     'sidebar.search': '搜索技术主题、术语…', 'sidebar.materials': '我的素材', 'sidebar.playlists': '播放列表', 'sidebar.today': '今日听力训练',
     'mode.normal': '常规', 'mode.blind': '盲听', 'mode.export': '导出 MD',
     'pb.queue': '队列',
@@ -2557,6 +2606,8 @@ const I18N = {
     'settings.developer.sub': 'LLM 链路调试与 TTS 语料接管。',
     'settings.developer.llmDiag': 'LLM 诊断',
     'settings.developer.reqResp': 'LLM 请求与响应',
+    'settings.developer.promptPrev': 'LLM Prompt 预览', 'settings.developer.promptPrevHint': '展示当前生成面板参数实际组装出的 System + User prompt（不调用 LLM）。',
+    'settings.developer.promptPrevBtn': 'Show Prompt',
     'settings.developer.llmMock': 'LLM Mock', 'settings.developer.llmMockHint': 'LLM 链路调试——使用已配置 Key 真实调用，主页面展示中间过程；未配置 Key 时如实反馈未联通。',
     'settings.developer.ttsMockSec': 'TTS Mock',
     'settings.developer.ttsMock': 'TTS Mock', 'settings.developer.ttsMockHint': '语料接管——使用所选数据集生成语料；音频合成、试听与播放保持真实。',
@@ -2669,7 +2720,8 @@ const I18N = {
     'refine.apply': '改进并重新生成',
     'save.title': '保存', 'save.saved': '已保存', 'save.done': '已保存到我的素材 — ',
     'lib.rename': '重命名', 'lib.delete': '删除', 'lib.draft': '草稿', 'lib.unsynth': '未合成', 'lib.clearFilters': '清除筛选',
-    'lib.renamed': '已重命名 — ', 'lib.deleted': '已删除 — ', 'lib.empty': '素材库为空 — 生成一个新素材开始吧。',
+    'lib.renamed': '已重命名 — ', 'lib.deleted': '已删除 — ', 'lib.empty': '暂无素材',
+    'lib.emptyTitle': '暂无素材', 'lib.emptySub': '从真实工程场景生成一份技术听力素材，即刻开始练习。',
     'gen.tone': '语气与情绪', 'refine.tone': '语气与情绪',
     'tone.neutral': '中性专业', 'tone.urgent': '紧急 · 时间压力', 'tone.interview': '面试 · 高压问答',
     'tone.collaborative': '协作 · 冷静', 'tone.debate': '对抗性辩论', 'tone.mentoring': '讲解式指导',
@@ -2677,12 +2729,13 @@ const I18N = {
     'tts.style.neutral': '中性', 'tts.style.cheerful': '欢快', 'tts.style.empathetic': '共情',
     'tts.style.serious': '严肃', 'tts.style.urgent': '急促', 'tts.style.whispering': '耳语',
     'pl.addTo': '播放列表', 'pl.title': '加入播放列表', 'pl.new': '新建播放列表…', 'pl.done': '完成',
-    'pl.createPh': '播放列表名称…', 'pl.in': '收录于', 'pl.empty': '该列表暂无素材 — 从素材添加。', 'pl.exit': '退出播放列表视图',
+    'pl.createPh': '播放列表名称…', 'pl.in': '收录于', 'pl.empty': '列表暂无素材', 'pl.exit': '退出播放列表视图', 'pl.all': '全部素材',
     'pl.created': '已创建播放列表 — ', 'pl.renamed': '已重命名播放列表 — ', 'pl.deleted': '已删除播放列表 — ', 'pl.added': '已加入 ', 'pl.removed': '已移出 ',
-    'del.title': '确认删除？', 'del.cancel': '取消', 'del.delete': '删除',
-    'del.materialText': '该素材将从「我的素材」中永久删除，并从所有播放列表中移除。此操作无法撤销。',
-    'del.materialInPl': '该素材将从「我的素材」中永久删除，并从所有播放列表（含当前列表）中移除。此操作无法撤销。',
-    'del.playlistText': '将删除该播放列表。列表内的素材会保留在「我的素材」中。',
+    'del.title': '确认删除？', 'del.mTitle': '删除素材？', 'del.pTitle': '删除播放列表？',
+    'del.cancel': '取消', 'del.delete': '删除',
+    'del.materialText': '该素材将从素材库中永久删除，并从所有播放列表中移除。此操作无法撤销。',
+    'del.materialInPl': '该素材将从素材库中永久删除，并从所有播放列表（含当前列表）中移除。此操作无法撤销。',
+    'del.playlistText': '将删除该播放列表。列表内的素材会保留在素材库中。',
     'gen.stepC0': '解析参数并构建提示词', 'gen.stepC1': 'LLM 生成技术语料', 'gen.stepC2': '校验结构与技术锚定',
     'gen.stepA0': '逐句 TTS 语音合成', 'gen.stepA1': '拼接音频片段', 'gen.stepA2': '对齐句级时间轴',
     'gen.corpusLabel': '主题 — ', 'gen.audioLabel': 'TTS 合成 — ',
@@ -2745,19 +2798,16 @@ function setTheme(t) {
 /* ---------- sidebar / inspector fold & resize ---------- */
 function readUI() { try { return JSON.parse(localStorage.getItem('telg-ui') || '{}'); } catch (e) { return {}; } }
 function saveUI(patch) { try { const u = readUI(); Object.assign(u, patch); localStorage.setItem('telg-ui', JSON.stringify(u)); } catch (e) {} }
-function toggleFold(which) {
-  const el = which === 'lib' ? $('lib-sidebar') : $('inspector');
+function toggleLibCollapsed() {
+  const el = $('lib-sidebar');
+  if (!el) return;
   const collapsed = el.classList.toggle('collapsed');
-  const btn = $((which === 'lib' ? 'lib' : 'ins') + '-fold');
-  const ic = btn ? btn.querySelector('use') : null;
-  if (ic) ic.setAttribute('href', which === 'lib' ? (collapsed ? '#i-chevron-right' : '#i-chevron-left') : (collapsed ? '#i-chevron-left' : '#i-chevron-right'));
-  saveUI(which === 'lib' ? { libCollapsed: collapsed } : { insCollapsed: collapsed });
+  saveUI({ libCollapsed: collapsed });
 }
 function initFold() {
   const ui = readUI();
   const lib = $('lib-sidebar'), ins = $('inspector');
-  if (ui.libCollapsed) { lib.classList.add('collapsed'); const u = lib.querySelector('#lib-fold use'); if (u) u.setAttribute('href', '#i-chevron-right'); }
-  if (ui.insCollapsed) { ins.classList.add('collapsed'); const u = ins.querySelector('#ins-fold use'); if (u) u.setAttribute('href', '#i-chevron-left'); }
+  if (ui.libCollapsed) lib.classList.add('collapsed');
   if (ui.libW) lib.style.width = ui.libW + 'px';
   if (ui.insW) ins.style.width = ui.insW + 'px';
 }
@@ -3005,6 +3055,7 @@ function toggleTheme() {
 /* ---------------- CONFIRM MODAL (delete) ---------------- */
 function openConfirmModal(type, id, title, text) {
   state.confirm = { type: type, id: id };
+  $('confirm-title').textContent = I18N[state.lang][type === 'material' ? 'del.mTitle' : 'del.pTitle'];
   $('confirm-name').textContent = title;
   $('confirm-text').textContent = text;
   $('confirm-modal').classList.remove('hidden');
@@ -3053,11 +3104,9 @@ function renderToday() {
   const w = document.querySelector('.widget');
   if (!w) return;
   const s = state.stats;
-  const t = w.querySelector('.today-time'), sp = w.querySelector('.today-speed'), f = w.querySelector('.progress-fill');
+  const t = w.querySelector('.today-time'), f = w.querySelector('.progress-fill');
   const mins = Math.floor(s.playSec / 60);
   if (t) t.textContent = mins + 'm / ' + state.goalMin + 'm';
-  const rate = CONFIG.speeds[state.speedIdx];
-  if (sp) sp.textContent = 'Speed ' + (rate === 1 ? '1.0x' : rate + 'x');
   if (f) f.style.width = Math.min(100, s.playSec / (state.goalMin * 60) * 100) + '%';
 }
 function renderFilters() {
@@ -3088,12 +3137,12 @@ function addBookmark(idx) {
   if (!art || !art.dialogue[idx]) return;
   const s = art.dialogue[idx];
   if (s.start_ms == null || Number.isNaN(Number(s.start_ms))) {
-    showToast('Synthesize audio first — bookmarks need real timestamps');
+    showToast('Synthesize audio first — bookmarks need real timestamps', 'warn');
     return;
   }
   const bm = { mid: art.id, title: art.meta.title, idx: idx, speaker: s.speaker, text: s.text_en, time: s.start_ms, ts: Date.now() };
   const dup = state.bookmarks.find(x => x.mid === bm.mid && x.idx === bm.idx);
-  if (dup) { showToast(I18N[state.lang]['bm.exists']); return; }
+  if (dup) { showToast(I18N[state.lang]['bm.exists'], 'warn'); return; }
   state.bookmarks.unshift(bm);
   persistBookmarks();
   showToast(I18N[state.lang]['bm.added'] + (s.speaker || ''));
@@ -3142,14 +3191,15 @@ function jumpToBookmark(mid, idx) {
   const local = state.library.find(m => m.id === mid);
   const go = (m) => { playArtifact(m); seekSentence(idx, true); };
   if (local) go(local);
-  else API.getMaterial(mid).then(m => { const i = state.library.findIndex(x => x.id === mid); if (i >= 0) state.library[i] = m; else state.library.unshift(m); go(m); }).catch(() => showToast('Load failed'));
+  else API.getMaterial(mid).then(m => { const i = state.library.findIndex(x => x.id === mid); if (i >= 0) state.library[i] = m; else state.library.unshift(m); go(m); }).catch(() => showToast('Load failed', 'error'));
 }
 
 /* ---------------- PLAYLIST QUEUE / REMOVE ---------------- */
 function toggleQueuePlay() {
   state.queuePlay = !state.queuePlay;
   renderPlayerBar();
-  showToast(state.queuePlay ? I18N[state.lang]['pl.queueOn'] : I18N[state.lang]['pl.queueOff']);
+  showToast(state.queuePlay ? I18N[state.lang]['pl.queueOn'] : I18N[state.lang]['pl.queueOff'], 'info');
+  toggleLibCollapsed();   /* sidebar open/close is bound to the Queue control */
 }
 function removeFromActivePlaylist(id) {
   const pl = state.playlists.find(x => x.id === state.activePlaylist);
@@ -3223,70 +3273,44 @@ function doDeleteMaterial(id) {
     if (next) playArtifact(next);
     else {
       state.current = null;
-      $('transcript-body').classList.add('hidden');
-      $('gen-progress-box').classList.add('hidden');
-      $('transcript-list').innerHTML = '<div class="t-11 dim" style="padding:28px 20px;text-align:center">' + I18N[state.lang]['lib.empty'] + '</div>';
+      renderMaterial();   /* shows the empty-state card and disables all content actions */
     }
   }
   renderLibrary(); renderPlaylists(); renderPlayerBar();
   syncPhases();
   showToast(I18N[state.lang]['lib.deleted'] + name);
 }
+/* All materials now live inside the "All Materials" accordion in
+   renderPlaylists; this wrapper keeps every existing call site valid. */
+function materialRowHTML(m) {
+  const active = state.current && state.current.id === m.id;
+  const cls = 'lib-item' + (active ? ' active' : '') + (state.renamingId === m.id ? ' renaming' : '');
+  const nameCell = state.renamingId === m.id
+    ? '<input class="lib-rename-input" value="' + escapeHtml(m.meta.title) + '" data-rid="' + m.id + '"/>'
+    : '<span class="lib-item-name">' + escapeHtml(m.meta.title) + '</span>' + (m.meta.saved === false ? '<span class="lib-draft">' + I18N[state.lang]['lib.draft'] + '</span>' : '') + (m.meta.generated && m.meta.audioReady === false ? '<span class="lib-draft unsynth">' + I18N[state.lang]['lib.unsynth'] + '</span>' : '');
+  return '<div class="' + cls + '" data-id="' + m.id + '" title="' + escapeHtml(m.meta.title) + '">' +
+    '<div class="lib-ic"><svg class="icon"><use href="#i-waveform"/></svg></div>' +
+    '<div class="lib-item-body">' +
+      '<div class="lib-item-title">' + nameCell + '<span class="lib-item-dur">' + fmt(m.meta.total_duration_ms) + '</span></div>' +
+      '<div class="lib-item-meta"><span>' + escapeHtml(String(m.meta.domain).split(' ')[0]) + '</span><span>·</span><span>Lvl ' + m.meta.difficulty.replace('Level ', '') + '</span></div>' +
+    '</div>' +
+    '<div class="lib-item-actions">' +
+      '<span class="lib-act" data-act="pl-add" title="' + escapeHtml(I18N[state.lang]['pl.addTo']) + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-folder"/></svg></span>' +
+      '<span class="lib-act" data-act="rename" title="Rename"><svg class="icon" style="width:13px;height:13px"><use href="#i-edit"/></svg></span>' +
+      '<span class="lib-act del" data-act="delete" title="Delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></span>' +
+    '</div></div>';
+}
 function renderLibrary() {
-  renderFilters();
-  const q = state.query.toLowerCase();
-  let items = state.library.filter(m => {
-    const hay = (m.meta.title + ' ' + m.meta.domain + ' ' + (m.meta.tag || '') + ' ' + m.meta.role).toLowerCase();
-    const fOk = state.filters.length === 0 || state.filters.some(f => hay.includes(f.toLowerCase()));
-    return fOk && hay.includes(q);
-  });
-  const pl = state.activePlaylist ? state.playlists.find(p => p.id === state.activePlaylist) : null;
-  if (pl) items = items.filter(m => pl.materialIds.includes(m.id));
-  const head = pl ? pl.name : I18N[state.lang]['sidebar.materials'];
-  $('lib-head-title').textContent = head;
-  $('lib-head-title').title = head;
-  $('lib-head-clear').style.display = pl ? '' : 'none';
-  $('lib-count').textContent = items.length + (pl ? ' / ' + pl.materialIds.filter(id => state.library.some(m => m.id === id)).length : ' total');
-  $('lib-list').innerHTML = items.map(m => {
-    const active = state.current && state.current.id === m.id;
-    const cls = 'lib-item' + (active ? ' active' : '') + (state.renamingId === m.id ? ' renaming' : '');
-    const nameCell = state.renamingId === m.id
-      ? '<input class="lib-rename-input" value="' + escapeHtml(m.meta.title) + '" data-rid="' + m.id + '"/>'
-      : '<span class="lib-item-name">' + escapeHtml(m.meta.title) + '</span>' + (m.meta.saved === false ? '<span class="lib-draft">' + I18N[state.lang]['lib.draft'] + '</span>' : '') + (m.meta.generated && m.meta.audioReady === false ? '<span class="lib-draft unsynth">' + I18N[state.lang]['lib.unsynth'] + '</span>' : '');
-    return '<div class="' + cls + '" data-id="' + m.id + '" title="' + escapeHtml(m.meta.title) + '">' +
-      '<div class="lib-ic"><svg class="icon"><use href="#i-waveform"/></svg></div>' +
-      '<div class="lib-item-body">' +
-        '<div class="lib-item-title">' + nameCell + '<span class="lib-item-dur">' + fmt(m.meta.total_duration_ms) + '</span></div>' +
-        '<div class="lib-item-meta"><span>' + escapeHtml(String(m.meta.domain).split(' ')[0]) + '</span><span>·</span><span>Lvl ' + m.meta.difficulty.replace('Level ', '') + '</span></div>' +
-      '</div>' +
-      '<div class="lib-item-actions">' +
-        '<span class="lib-act" data-act="pl-add" title="' + escapeHtml(I18N[state.lang]['pl.addTo']) + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-folder"/></svg></span>' +
-        (pl ? '<span class="lib-act" data-act="pl-remove" title="' + escapeHtml(I18N[state.lang]['pl.remove']) + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-minus"/></svg></span>' : '') +
-        '<span class="lib-act" data-act="rename" title="Rename"><svg class="icon" style="width:13px;height:13px"><use href="#i-edit"/></svg></span>' +
-        '<span class="lib-act del" data-act="delete" title="Delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></span>' +
-      '</div></div>';
-  }).join('');
-  if (!items.length) {
-    const msg = pl ? (I18N[state.lang]['pl.empty']) : (I18N[state.lang]['lib.empty']);
-    const clearBtn = !pl && (state.query || state.filters.length)
-      ? '<button class="btn btn-sm" id="btn-clear-filter" style="margin:10px auto 0">' + escapeHtml(I18N[state.lang]['lib.clearFilters']) + '</button>'
-      : '';
-    $('lib-list').innerHTML = '<div class="t-11 dim" style="padding:14px 10px;text-align:center">' + msg + '</div>' + clearBtn;
-  }
+  renderPlaylists();   /* materials + playlists all render in the sidebar accordion */
 }
 function clearFilters() {
   state.query = '';
   state.filters = [];
-  const si = $('search-input'); if (si) si.value = '';
   renderFilters(); renderLibrary();
 }
 function setActivePlaylist(id) {
   state.activePlaylist = state.activePlaylist === id ? null : id;
   state.plRenamingId = null;
-  renderPlaylists(); renderLibrary(); renderPlayerBar();
-}
-function clearActivePlaylist() {
-  state.activePlaylist = null;
   renderPlaylists(); renderLibrary(); renderPlayerBar();
 }
 function startPlCreate() {
@@ -3400,27 +3424,64 @@ function togglePlMaterial(plid) {
   renderPlList(); renderPlaylists();
 }
 function renderPlaylists() {
+  renderFilters();
   const rows = [];
   if (state.plCreating) {
     rows.push('<div class="playlist-row" style="cursor:default">' +
       '<div class="pl-row-input-wrap"><input class="pl-rename-input" id="pl-create-input" placeholder="' + escapeHtml(I18N[state.lang]['pl.createPh']) + '" data-pl-create="1"/></div>' +
       '</div>');
   }
+  /* "All Materials" accordion — every material, no playlist wrapper */
+  const allActive = state.activePlaylist === '__all__';
+  const filtered = state.library.filter(m => {
+    const hay = (m.meta.title + ' ' + m.meta.domain + ' ' + (m.meta.tag || '') + ' ' + m.meta.role).toLowerCase();
+    return state.filters.length === 0 || state.filters.some(f => hay.includes(f.toLowerCase()));
+  });
+  const allExp = filtered.length
+    ? filtered.map(materialRowHTML).join('')
+    : '<div class="pl-item-empty">' + escapeHtml(I18N[state.lang]['lib.empty']) + '</div>' +
+      (state.filters.length ? '<button class="btn btn-sm" id="btn-clear-filter" style="margin:6px 0 2px 4px">' + escapeHtml(I18N[state.lang]['lib.clearFilters']) + '</button>' : '');
+  rows.push(
+    '<div class="pl-wrap">' +
+      '<div class="playlist-row' + (allActive ? ' active' : '') + '" data-plid="__all__" title="' + escapeHtml(I18N[state.lang]['pl.all']) + '">' +
+        '<div class="ic" style="min-width:0"><svg class="icon" style="width:15px;height:15px"><use href="#i-waveform"/></svg><span class="t-12" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(I18N[state.lang]['pl.all']) + '</span></div>' +
+        '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><span class="pill mono">' + filtered.length + '</span></div>' +
+      '</div>' +
+      '<div class="pl-expand" data-plid="__all__">' + allExp + '</div>' +
+    '</div>');
   state.playlists.forEach(p => {
     const active = state.activePlaylist === p.id;
     const cls = 'playlist-row' + (active ? ' active' : '') + (state.plRenamingId === p.id ? ' renaming' : '');
     const nameCell = state.plRenamingId === p.id
       ? '<div class="pl-row-input-wrap"><input class="pl-rename-input" value="' + escapeHtml(p.name) + '" data-rid="' + p.id + '"/></div>'
       : '<div class="ic" style="min-width:0"><svg class="icon" style="width:15px;height:15px"><use href="#i-folder"/></svg><span class="t-12" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(p.name) + '</span></div>';
-    rows.push('<div class="' + cls + '" data-plid="' + p.id + '" title="' + escapeHtml(p.name) + '">' +
-      nameCell +
-      '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">' +
-        '<span class="pill mono">' + p.materialIds.filter(id => state.library.some(m => m.id === id)).length + '</span>' +
-        '<div class="pl-acts">' +
-          '<span class="lib-act" data-act="pl-rename" title="Rename"><svg class="icon" style="width:13px;height:13px"><use href="#i-edit"/></svg></span>' +
-          '<span class="lib-act del" data-act="pl-delete" title="Delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></span>' +
+    const members = p.materialIds.filter(id => state.library.some(m => m.id === id));
+    const exp = members.length
+      ? members.map(id => {
+          const m = state.library.find(x => x.id === id);
+          if (!m) return '';
+          return '<div class="pl-item" data-mid="' + id + '" title="' + escapeHtml(m.meta.title) + '">' +
+            '<svg class="icon"><use href="#i-waveform"/></svg>' +
+            '<span class="pl-item-name">' + escapeHtml(m.meta.title) + '</span>' +
+            '<span class="pl-item-dur">' + fmt(m.meta.total_duration_ms) + '</span>' +
+            '<span class="lib-act" data-act="pl-remove" title="' + escapeHtml(I18N[state.lang]['pl.remove']) + '"><svg class="icon" style="width:12px;height:12px"><use href="#i-minus"/></svg></span>' +
+            '</div>';
+        }).join('')
+      : '<div class="pl-item-empty">' + escapeHtml(I18N[state.lang]['pl.empty']) + '</div>';
+    rows.push(
+      '<div class="pl-wrap">' +
+        '<div class="' + cls + '" data-plid="' + p.id + '" title="' + escapeHtml(p.name) + '">' +
+          nameCell +
+          '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">' +
+            '<span class="pill mono">' + members.length + '</span>' +
+            '<div class="pl-acts">' +
+              '<span class="lib-act" data-act="pl-rename" title="Rename"><svg class="icon" style="width:13px;height:13px"><use href="#i-edit"/></svg></span>' +
+              '<span class="lib-act del" data-act="pl-delete" title="Delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></span>' +
+            '</div>' +
+          '</div>' +
         '</div>' +
-      '</div></div>');
+        '<div class="pl-expand" data-plid="' + p.id + '">' + exp + '</div>' +
+      '</div>');
   });
   $('playlist-list').innerHTML = rows.join('');
   const ci = $('pl-create-input');
@@ -3451,7 +3512,7 @@ function transcriptHTML(art) {
         '</div>' +
       '</div>' +
       '<div class="trow-en" style="font-size:' + fs + ';line-height:' + (parseInt(fs) + 9) + 'px">' + s.text_en + '</div>' +
-      '<div class="trow-zh">' + s.text_zh + '</div>' +
+      '<div class="trow-zh" style="font-size:' + fs + ';line-height:' + (parseInt(fs) + 9) + 'px">' + s.text_zh + '</div>' +
     '</div>';
   }).join('') + '</div>';
 }
@@ -3496,7 +3557,7 @@ function groundingHTML(art) {
 /* Material-header actions that need at least one material loaded. Playback
    controls are handled separately in renderPlayerBar (audioReady gate). */
 function setActionsDisabled(off) {
-  ['btn-rename','btn-voice','btn-add-pl','btn-md-export','btn-zh-toggle'].forEach(id => {
+  ['btn-rename','btn-voice','btn-add-pl','btn-md-export','btn-zh-toggle','btn-font'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.disabled = off; el.classList.toggle('disabled', off); }
   });
@@ -3508,10 +3569,14 @@ function renderMaterial() {
   const art = currentArtifact();
   const tabbar = document.querySelector('.tabbar');
   if (!art) {
-    const empty = I18N[state.lang]['lib.empty'] || 'No materials yet';
-    $('m-title').textContent = empty;
+    $('m-title').textContent = I18N[state.lang]['lib.emptyTitle'] || 'No materials yet';
     $('m-tag').textContent = ''; $('m-level').textContent = ''; $('m-dur').textContent = ''; $('m-meta').textContent = '';
-    $('transcript-list').innerHTML = '<div class="t-13 dim" style="padding:48px 20px;text-align:center">' + empty + '</div>';
+    $('transcript-list').innerHTML =
+      '<div class="empty-state"><span class="es-ic"><svg class="icon"><use href="#i-waveform"/></svg></span>' +
+      '<div class="es-title">' + (I18N[state.lang]['lib.emptyTitle'] || 'No materials yet') + '</div>' +
+      '<div class="es-sub">' + (I18N[state.lang]['lib.emptySub'] || '') + '</div>' +
+      '<button class="btn btn-primary" id="btn-empty-gen" style="margin-top:10px"><svg class="icon icon-sm"><use href="#i-bolt"/></svg><span>' + (I18N[state.lang]['nav.generate'] || 'Generate') + '</span></button>' +
+      '</div>';
     $('synth-banner').classList.add('hidden');
     ['tab-vocab-count', 'tab-quiz-count'].forEach(id => { const el = $(id); if (el) el.textContent = ''; });
     const pg = $('panel-grounding'); if (pg) pg.innerHTML = '';
@@ -3553,7 +3618,7 @@ function cycleFont() {
   state.fontIdx = (state.fontIdx + 1) % CONFIG.fontSizes.length;
   const fs = CONFIG.fontSizes[state.fontIdx];
   $('font-label').textContent = fs;
-  document.querySelectorAll('#transcript-list .trow-en').forEach(el => {
+  document.querySelectorAll('#transcript-list .trow-en, #transcript-list .trow-zh').forEach(el => {
     el.style.fontSize = fs; el.style.lineHeight = (parseInt(fs) + 9) + 'px';
   });
 }
@@ -3571,12 +3636,20 @@ function toggleLoop() {
     const idx = currentSegIndex();
     if (idx >= 0) seekSentence(idx, state.playing);
   }
-  showToast(state.loop ? 'Sentence loop on' : 'Sentence loop off');
+  showToast(state.loop ? 'Sentence loop on' : 'Sentence loop off', 'info');
+}
+function syncDetailBtn() {
+  const ins = document.querySelector('.inspector'), btn = $('btn-pb-subs');
+  if (!ins || !btn) return;
+  const has = !!state.current;      /* show the Details control only when there is content */
+  const on = has && !ins.classList.contains('hidden');
+  btn.classList.toggle('on', on);
+  btn.style.display = has ? '' : 'none';
 }
 function toggleInspector() {
   const ins = document.querySelector('.inspector');
   ins.classList.toggle('hidden');
-  $('btn-pb-subs').classList.toggle('on', !ins.classList.contains('hidden'));
+  syncDetailBtn();
 }
 
 
@@ -3676,7 +3749,7 @@ function setGenSteps(mode) {
 function runGenerate(params, replaceId) {
   if (state.generating || state.synthesizing) return;
   params = params || collectParams();
-  if (!params.topic || !String(params.topic).trim()) { showToast('Please enter a topic first'); return; }
+  if (!params.topic || !String(params.topic).trim()) { showToast('Please enter a topic first', 'warn'); return; }
   closeGenPanel();
   closeRefineModal();
   state.generating = true;
@@ -3751,9 +3824,13 @@ function runGenerate(params, replaceId) {
       const offline = !mockMode() && /Failed to fetch|NetworkError|Load failed|ERR_/i.test(String(err && err.message || err));
       showToast(offline
         ? 'Cannot reach backend at ' + CONFIG.apiBase + ' — start FastAPI (uvicorn backend.main:app --reload) or enable Test Data in Developer settings'
-        : 'Generation failed: ' + (err && err.message || err));
+        : 'Generation failed: ' + (err && err.message || err), 'error');
     } finally {
       state.generating = false;
+      /* Re-enable every banner action now that the pipeline is idle. Without
+         this the buttons stay disabled from the task-phase setSynthBanner()
+         (the last render happened while generating was still true). */
+      setSynthBanner();
     }
   })();
 }
@@ -3800,7 +3877,7 @@ function updateRefineToneLabel() {
 let adjustPanel = 'text';
 function openAdjustModal(tab) {
   const art = state.current;
-  if (!art) { showToast('No material selected'); return; }
+  if (!art) { showToast('No material selected', 'warn'); return; }
   if (state.playing) pause();          /* opening an edit modal suspends playback */
   adjustPanel = tab === 'voice' ? 'voice' : 'text';
   const lock = state.current;
@@ -3842,7 +3919,7 @@ function openRefineModal() {
 function refineGenerate() {
   const art = currentArtifact();
   if (!art) return;
-  if (state.synthesizing) { showToast('Audio synthesis in progress — wait for it to finish'); return; }
+  if (state.synthesizing) { showToast('Audio synthesis in progress — wait for it to finish', 'warn'); return; }
   const params = paramsFromArt(art);
   params.difficulty = +document.querySelector('#refine-diff .seg-item.active').dataset.level;
   params.length = document.querySelector('#refine-len .seg-item.active').dataset.length;
@@ -3891,7 +3968,7 @@ function splitVoice(voice) {
 }
 function openTTSModal() {
   const art = currentArtifact();
-  if (!art) { showToast('No material selected'); return; }
+  if (!art) { showToast('No material selected', 'warn'); return; }
   $('tts-material-title').textContent = art.meta.title;
   let st = {};
   try { st = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; } catch (e) {}
@@ -3966,7 +4043,7 @@ async function auditionAdjustRole(btn) {
 function applyTTS() {
   const art = currentArtifact();
   if (!art) return;
-  if (state.synthesizing) { showToast('Audio synthesis in progress — wait for it to finish'); return; }
+  if (state.synthesizing) { showToast('Audio synthesis in progress — wait for it to finish', 'warn'); return; }
   const roles = currentAdjustVoiceRoles();
   const voices = roles.map(r => r.voice).filter(Boolean);
   const prov = adjTTSProvider();
@@ -4060,7 +4137,7 @@ function synthesizeAudio() {
         showSynthError(err);
       } else {
         renderLibrary();
-        showToast('Synthesis failed for ' + (art.meta.title || art.id) + ' — ' + (err && err.message || err));
+        showToast('Synthesis failed for ' + (art.meta.title || art.id) + ' — ' + (err && err.message || err), 'error');
       }
     }
   })();
@@ -4142,7 +4219,7 @@ function toggleAdvanced() {
 function isPlayable(art) {
   return !!(art && art.meta && art.meta.audioReady === true && art.meta.audio_url);
 }
-function toastNeedSynth() { showToast('Synthesize audio first — click Set Voice & Synthesize'); }
+function toastNeedSynth() { showToast('Synthesize audio first — click Set Voice & Synthesize', 'warn'); }
 function playArtifact(art) {
   state.current = art;
   state.time = 0;
@@ -4160,7 +4237,7 @@ function loadMaterial(id) {
     const i = state.library.findIndex(x => x.id === id);
     if (i >= 0) state.library[i] = m; else state.library.unshift(m);
     if (state.current && state.current.id === id) { playArtifact(m); renderLibrary(); }
-  }).catch(e => { if (!local) showToast('Load failed: ' + e.message); });
+  }).catch(e => { if (!local) showToast('Load failed: ' + e.message, 'error'); });
 }
 function currentSegIndex() {
   const art = currentArtifact();
@@ -4238,7 +4315,9 @@ function setPlayIcon(playing) {
     renderPlayerBar();   /* reset the play icon and progress to the end state */
     /* playlist queue: auto-advance to the next material in the active playlist */
     if (state.queuePlay && state.activePlaylist) {
-      const pl = state.playlists.find(x => x.id === state.activePlaylist);
+      const pl = state.activePlaylist === '__all__'
+        ? { materialIds: state.library.map(m => m.id) }
+        : state.playlists.find(x => x.id === state.activePlaylist);
       if (pl && pl.materialIds.length > 1) {
         const i = pl.materialIds.indexOf(art.id);
         /* skip materials that are not synthesized yet — only playable ones */
@@ -4260,7 +4339,7 @@ function setPlayIcon(playing) {
 })();
 function play() {
   const art = currentArtifact();
-  if (!art || art.meta.audioReady !== true) { showToast('Audio not synthesized yet — click Synthesize Audio'); return; }
+  if (!art || art.meta.audioReady !== true) { showToast('Audio not synthesized yet — click Synthesize Audio', 'warn'); return; }
   if (state.time >= art.meta.total_duration_ms) state.time = 0;
   state.playing = true;
   setPlayIcon(true);
@@ -4268,7 +4347,7 @@ function play() {
      the corpus generator, never the audio path. */
   const audio = $('pb-audio');
   const url = art.meta.audio_url;
-  if (!url) { state.playing = false; setPlayIcon(false); showToast('No audio file for this material'); return; }
+  if (!url) { state.playing = false; setPlayIcon(false); showToast('No audio file for this material', 'warn'); return; }
   if (audio.dataset.src !== url) { audio.dataset.src = url; audio.src = url; audio.load(); }
   audio.playbackRate = CONFIG.speeds[state.speedIdx];
   audio.currentTime = state.time / 1000;
@@ -4331,6 +4410,7 @@ function syncHighlight() {
   if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 function renderPlayerBar() {
+  syncDetailBtn();
   const art = state.current;
   const ctrl = ['btn-pb-play','btn-pb-prev','btn-pb-back10','btn-pb-fwd10','btn-pb-next','btn-pb-bookmark','btn-pb-loop','btn-pb-subs'];
   const setCtrl = disabled => ctrl.forEach(id => {
@@ -4925,6 +5005,29 @@ async function testGen() {
   } catch (e) { res.className = 'test-output err'; res.textContent = 'Failed: ' + e.message; }
   btn.disabled = false; btn.textContent = I18N[state.lang]['settings.llm.genTestBtn'];
 }
+async function promptPreview() {
+  const btn = $('btn-prompt-preview'), out = $('prompt-preview-out');
+  if (!btn || !out) return;
+  btn.disabled = true;
+  try {
+    const params = collectParams();
+    const r = await API.promptPreview(params);
+    if (r && r.ok) {
+      out.style.display = '';
+      out.innerHTML = '<div class="pp-block-title">System · static</div>'
+        + '<pre class="debug-pre">' + escapeHtml(r.system) + '</pre>'
+        + '<div class="pp-block-title">User · this request</div>'
+        + '<pre class="debug-pre">' + escapeHtml(r.user) + '</pre>';
+    } else {
+      out.style.display = '';
+      out.textContent = 'Prompt preview failed: ' + ((r && r.error) || 'unknown error');
+    }
+  } catch (e) {
+    out.style.display = '';
+    out.textContent = 'Prompt preview failed: ' + e.message;
+  }
+  btn.disabled = false;
+}
 function readStoredCfg() {
   try { return JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; } catch (e) { return {}; }
 }
@@ -5042,7 +5145,7 @@ function ttsFriendlyError(cls, raw) {
 }
 function showSynthError(err) {
   const box = $('synth-error');
-  if (!box) { showToast('Synthesis failed: ' + (err && err.message || err)); return; }
+  if (!box) { showToast('Synthesis failed: ' + (err && err.message || err), 'error'); return; }
   const msg = err && err.message || String(err);
   let cls = 'other', raw = msg;
   const m = msg.match(/^TTS synthesis failed \[(\w+)\]: ([\s\S]*)$/);
@@ -5056,12 +5159,21 @@ function showSynthError(err) {
   box.classList.remove('hidden');
 }
 function hideSynthError() { const b = $('synth-error'); if (b) b.classList.add('hidden'); }
-function showToast(msg) {
-  $('toast-msg').textContent = msg;
+const TOAST_IC = { success: '#i-check-circle', error: '#i-x-circle', warn: '#i-alert-triangle', info: '#i-info-circle' };
+const TOAST_MS = 2600;   /* uniform dwell time; hover pauses the countdown */
+function showToast(msg, type) {
+  type = TOAST_IC[type] ? type : 'success';
   const t = $('toast');
+  const ic = $('toast-ic');
+  if (ic) ic.setAttribute('href', TOAST_IC[type]);
+  t.classList.remove('success', 'error', 'warn', 'info');
+  t.classList.add(type);
+  $('toast-msg').textContent = humanToast(msg, state.lang);
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  toastTimer = setTimeout(() => t.classList.remove('show'), TOAST_MS);
+  t.onmouseenter = () => clearTimeout(toastTimer);
+  t.onmouseleave = () => { clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), TOAST_MS); };
 }
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
@@ -5080,11 +5192,6 @@ function onClick(e) {
   if (e.target.closest && e.target.closest('#btn-sidebar')) { toggleSidebar(); return; }
   if (e.target.closest('#sidebar-backdrop')) { toggleSidebar(false); return; }
   if (e.target.closest('#btn-clear-filter')) { clearFilters(); return; }
-  if (e.target.closest && e.target.closest('#lib-fold')) {
-    if (window.innerWidth <= 720) { toggleSidebar(false); return; }
-    toggleFold('lib'); return;
-  }
-  if (e.target.closest && e.target.closest('#ins-fold')) { toggleFold('ins'); return; }
   if (e.target.closest('#btn-rename')) { startRenameHead(); return; }
   if (e.target.closest('#adj-role-add')) { addAdjustRole(); return; }
   if (e.target.closest('#adj-voice-roles .btn-role-del')) { delAdjustRole(e.target.closest('.btn-role-del')); return; }
@@ -5093,7 +5200,6 @@ function onClick(e) {
   if (e.target.closest('.btn-role-del')) { delVoiceRole(e.target.closest('.btn-role-del')); return; }
   if (e.target.closest('.btn-role-test')) { auditionRole(e.target.closest('.btn-role-test')); return; }
   if (!e.target.closest('#speed-menu') && !e.target.closest('#btn-pb-speed')) closeSpeedMenu();
-  if (e.target.closest('#btn-open-gen')) { openGenPanel(); return; }
   if (e.target.closest('#btn-gen-close')) { closeGenPanel(); return; }
   if (e.target.id === 'gen-backdrop') { closeGenPanel(); return; }
   if (e.target.closest('#btn-theme')) { toggleTheme(); return; }
@@ -5106,6 +5212,7 @@ function onClick(e) {
   if (e.target.closest('#btn-modal-save')) { saveModal(); return; }
   if (e.target.closest('#btn-test-llm')) { testLLM(); return; }
   if (e.target.closest('#btn-test-gen')) { testGen(); return; }
+  if (e.target.closest('#btn-prompt-preview')) { promptPreview(); return; }
   if (e.target.closest && e.target.closest('#btn-key-eye')) { toggleKeyVisible(); return; }
   if (e.target.id === 'cfg-dev-mode') { toggleDevMode(); return; }
   if (e.target.id === 'cfg-llm-mock') { toggleLlmMock(); return; }
@@ -5175,7 +5282,7 @@ function onClick(e) {
     closeBookmarkModal();
     return;
   }
-  if (e.target.closest('#btn-add-pl')) { openPlModal(); return; }
+  if (e.target.closest('#btn-lib-gen') || e.target.closest('#btn-empty-gen')) { openGenPanel(); return; }
   if (e.target.closest('#btn-pl-close') || e.target.closest('#btn-pl-done')) { closePlModal(); return; }
   if (e.target.id === 'pl-modal') { closePlModal(); return; }
   if (e.target.closest('#btn-confirm-cancel')) { closeConfirmModal(); return; }
@@ -5189,7 +5296,11 @@ function onClick(e) {
     return;
   }
   if (e.target.closest('.pl-rename-input')) return;
-  if (e.target.closest('#lib-head-clear')) { clearActivePlaylist(); return; }
+  const plItem = e.target.closest('.pl-expand .pl-item');
+  if (plItem) {
+    if (e.target.closest('.lib-act[data-act="pl-remove"]')) { removeFromActivePlaylist(plItem.dataset.mid); return; }
+    loadMaterial(plItem.dataset.mid); return;
+  }
   const libAct = e.target.closest('.lib-item .lib-act');
   if (libAct) {
     const id = libAct.closest('.lib-item').dataset.id;
@@ -5287,7 +5398,6 @@ function onKey(e) {
   if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); openGenPanel(); return; }
   if (mod && e.key.toLowerCase() === 'n') { e.preventDefault(); openGenPanel(); return; }
   if (mod && e.key === 'Enter') { e.preventDefault(); if (!$('gen-panel').classList.contains('hidden')) runGenerate(); return; }
-  if (e.key === '/' && !typing) { e.preventDefault(); $('search-input').focus(); return; }
   if (!$('gen-panel').classList.contains('hidden')) {
     if (e.key === 'Escape') closeGenPanel();
     return;
@@ -5384,7 +5494,7 @@ function init() {
     const pr = LLM_PRESETS[$('cfg-llm-provider').value];
     if (pr) { $('cfg-llm-base').value = pr.base; $('cfg-llm-model').value = pr.model; }
   });
-$('search-input').addEventListener('input', e => { state.query = e.target.value; renderLibrary(); });
+
   $('topic-input').addEventListener('input', updateGenerateBtn);
   document.addEventListener('click', onClick);
   document.addEventListener('change', onClick);
@@ -5407,7 +5517,8 @@ $('search-input').addEventListener('input', e => { state.query = e.target.value;
     }
   });
   $('refine-tone').addEventListener('change', updateRefineToneLabel);
-  $('btn-pb-subs').classList.toggle('on', !document.querySelector('.inspector').classList.contains('hidden'));
+  document.querySelector('.inspector').classList.add('hidden');
+  syncDetailBtn();
   bootLive();
 }
 async function bootLive() {
@@ -5424,7 +5535,7 @@ async function bootLive() {
     renderMaterial(); renderLibrary(); renderPlaylists(); renderPlayerBar(); renderToday();
   } catch (err) {
     console.warn('TELG live backend unavailable:', err);
-    showToast('Backend unavailable at ' + CONFIG.apiBase + ' — start uvicorn and reload, or enable Test Data in Developer settings');
+    showToast('Backend unavailable at ' + CONFIG.apiBase + ' — start uvicorn and reload, or enable Test Data in Developer settings', 'error');
   }
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
