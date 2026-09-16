@@ -2426,7 +2426,7 @@ const I18N = {
     'pb.queue': 'Queue',
     'pl.queueOn': 'Queue playback on', 'pl.queueOff': 'Queue playback off', 'pl.remove': 'Remove from playlist',
     'bm.title': 'Phrase Bookmarks', 'bm.sub': 'Saved phrases across materials — click to jump.', 'bm.empty': 'No bookmarks yet',
-    'bm.added': 'Bookmarked · ', 'bm.exists': 'Already bookmarked', 'bm.cleared': 'Bookmarks cleared', 'bm.clear': 'Clear all', 'bm.done': 'Done',
+    'bm.added': 'Bookmarked · ', 'bm.exists': 'Already bookmarked', 'bm.removed': 'Bookmark removed', 'bm.cleared': 'Bookmarks cleared', 'bm.clear': 'Clear all', 'bm.done': 'Done',
     'tab.grounding': 'Grounding', 'tab.vocab': 'Vocabulary', 'tab.quiz': 'Quiz', 'tab.patterns': 'Patterns',
     'tr.header': 'Synchronized Technical Dialogue', 'tr.zh': 'CN',
     'tr.synth': 'Corpus generated — audio not synthesized yet.',
@@ -2596,7 +2596,7 @@ const I18N = {
     'pb.queue': '队列',
     'pl.queueOn': '队列播放已开启', 'pl.queueOff': '队列播放已关闭', 'pl.remove': '移出列表',
     'bm.title': '短语收藏', 'bm.sub': '跨素材收藏的短语 — 点击跳转。', 'bm.empty': '暂无收藏',
-    'bm.added': '已收藏 · ', 'bm.exists': '该句已收藏', 'bm.cleared': '已清空收藏', 'bm.clear': '清空', 'bm.done': '完成',
+    'bm.added': '已收藏 · ', 'bm.exists': '该句已收藏', 'bm.removed': '已取消收藏', 'bm.cleared': '已清空收藏', 'bm.clear': '清空', 'bm.done': '完成',
     'tab.grounding': '技术接地', 'tab.vocab': '词汇', 'tab.quiz': '测验', 'tab.patterns': '句型',
     'tr.header': '同步技术对话', 'tr.zh': '中文',
     'tr.synth': '语料已生成 — 音频尚未合成。',
@@ -3147,7 +3147,10 @@ function toggleSidebar(force) {
 function persistBookmarks() {
   try { localStorage.setItem('telg-bookmarks', JSON.stringify(state.bookmarks)); } catch (e) {}
 }
-function addBookmark(idx) {
+function isBookmarked(mid, idx) {
+  return state.bookmarks.some(b => b.mid === mid && b.idx === idx);
+}
+function toggleBookmark(idx) {
   const art = currentArtifact();
   if (!art || !art.dialogue[idx]) return;
   const s = art.dialogue[idx];
@@ -3155,12 +3158,19 @@ function addBookmark(idx) {
     showToast('Synthesize audio first — bookmarks need real timestamps', 'warn');
     return;
   }
-  const bm = { mid: art.id, title: art.meta.title, idx: idx, speaker: s.speaker, text: s.text_en, time: s.start_ms, ts: Date.now() };
-  const dup = state.bookmarks.find(x => x.mid === bm.mid && x.idx === bm.idx);
-  if (dup) { showToast(I18N[state.lang]['bm.exists'], 'warn'); return; }
-  state.bookmarks.unshift(bm);
-  persistBookmarks();
-  showToast(I18N[state.lang]['bm.added'] + (s.speaker || ''));
+  const found = state.bookmarks.findIndex(b => b.mid === art.id && b.idx === idx);
+  const btn = document.querySelector('#transcript-list .trow[data-idx="' + idx + '"] [data-act="bookmark"]');
+  if (found >= 0) {
+    state.bookmarks.splice(found, 1);
+    persistBookmarks();
+    if (btn) btn.classList.remove('active');
+    showToast(I18N[state.lang]['bm.removed']);
+  } else {
+    state.bookmarks.unshift({ mid: art.id, title: art.meta.title, idx: idx, speaker: s.speaker, text: s.text_en, time: s.start_ms, ts: Date.now() });
+    persistBookmarks();
+    if (btn) btn.classList.add('active');
+    showToast(I18N[state.lang]['bm.added'] + (s.speaker || ''));
+  }
 }
 function removeBookmark(ts) {
   state.bookmarks = state.bookmarks.filter(x => x.ts !== ts);
@@ -3518,7 +3528,7 @@ function transcriptHTML(art) {
           (hasTs ? '<span class="trow-time">' + fmt(s.start_ms) + ' – ' + fmt(s.end_ms) + '</span>' : '') +
           '<span class="trow-actions">' +
             '<button data-act="sloop" ' + (playable ? '' : 'disabled ') + 'title="Loop this sentence"><svg class="icon icon-sm"><use href="#i-repeat"/></svg></button>' +
-            '<button data-act="bookmark" ' + (playable ? '' : 'disabled ') + 'title="Bookmark phrase"><svg class="icon icon-sm"><use href="#i-bookmark"/></svg></button>' +
+            '<button data-act="bookmark" class="' + (isBookmarked(art.id, i) ? 'active' : '') + '" ' + (playable ? '' : 'disabled ') + 'title="Bookmark phrase"><svg class="icon icon-sm"><use href="#i-bookmark"/></svg></button>' +
           '</span>' +
         '</div>' +
       '</div>' +
@@ -5427,7 +5437,7 @@ function onClick(e) {
       seekSentence(idx, true);
       return;
     }
-    if (act.dataset.act === 'bookmark') { addBookmark(idx); return; }
+    if (act.dataset.act === 'bookmark') { toggleBookmark(idx); return; }
     if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; }
     seekSentence(idx, true);
     return;
