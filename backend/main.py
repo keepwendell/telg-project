@@ -18,12 +18,14 @@ Run:  uvicorn main:app --reload --port 8000   (from this directory)
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import re
 import socket
 import sqlite3
 import subprocess
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -260,6 +262,11 @@ def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
         ),
     )
     for i, s in enumerate(art.get("dialogue", [])):
+        # No timeline at generation time: the TTS pass is the only writer of
+        # start_ms/end_ms. Store NULL (not 0) so the frontend can distinguish
+        # "not synthesized yet" from a real 0ms start.
+        st = s.get("start_ms")
+        en = s.get("end_ms")
         conn.execute(
             """INSERT INTO dialogue_segments
                (material_id,seq,speaker,role,voice,text_en,text_zh,start_ms,end_ms)
@@ -267,7 +274,8 @@ def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
             (
                 mid, i, s.get("speaker"), s.get("role"), s.get("voice"),
                 s.get("text_en"), s.get("text_zh"),
-                int(s.get("start_ms", 0) or 0), int(s.get("end_ms", 0) or 0),
+                int(st) if st is not None else None,
+                int(en) if en is not None else None,
             ),
         )
     for v in art.get("vocabulary", []):
@@ -541,8 +549,6 @@ def mock_generate(p: GenerateIn) -> dict:
     art["meta"]["speechRate"] = adv.get("vocabDensity")
     art["meta"]["audio_url"] = "/api/v1/audio/" + art["id"] + ".mp3"
     art["meta"]["total_duration_ms"] = int(art["meta"]["total_duration_ms"] or 0)
-    if art.get("dialogue") and not art["dialogue"][0].get("start_ms"):
-        estimate_timeline(art["dialogue"], art["meta"]["total_duration_ms"] or 120000)
     return art
 
 
@@ -792,17 +798,6 @@ def _record_usage(cfg: dict, action: str, usage) -> None:
         pass
 
 
-def estimate_timeline(dialogue: list[dict], total_ms: int) -> None:
-    words = [max(len(re.findall(r"[a-zA-Z']+", s.get("text_en", ""))), 3) for s in dialogue]
-    total_words = max(sum(words), 1)
-    gap = 300
-    usable = max(total_ms - gap * (len(words) - 1), total_ms // 2)
-    start = 0
-    for i, w in enumerate(words):
-        dur = int(round(usable * w / total_words))
-        dialogue[i]["start_ms"] = start
-        dialogue[i]["end_ms"] = start + dur
-        start += dur + gap
 
 
 # ----------------------------------------------------------------------------
@@ -827,7 +822,8 @@ def build_artifact(p: GenerateIn, action: str = "generate") -> dict:
         raise HTTPException(502, detail=str(e))  # noqa: B904
     sec = parse_sec(p.length) or 120
     total_ms = sec * 1000
-    estimate_timeline(payload["dialogue"], total_ms)
+    # No estimated timestamps here: start_ms/end_ms are written only by the
+    # TTS pass (real durations + gap). The timeline stays authoritative.
     meta = {
         "title": p.topic or "Untitled", "topic": p.topic or "Untitled",
         "domain": p.domainLabel or p.domain or "Engineering", "role": p.role or "",
@@ -1103,39 +1099,62 @@ def _voice_label(v: str) -> str:
 class KokoroEngine(TTSEngine):
     name = "kokoro"
     is_online = False
+    # Candidate model directories, in priority order:
+    #   1) TELG_KOKORO_CACHE env var   2) project-local backend/models/kokoro
+    #   3) user home ~/.cache/telg/kokoro
+    FILES = ("kokoro-v1.0.onnx", "voices-v1.0.bin")
 
     def __init__(self) -> None:
-        self.cache_dir = Path(os.environ.get(
-            "TELG_KOKORO_CACHE", str(Path.home() / ".cache" / "telg" / "kokoro")))
-        self.model_path = self.cache_dir / "kokoro-v1.0.onnx"
-        self.voices_path = self.cache_dir / "voices-v1.0.bin"
+        self.cache_dir = self._resolve_cache_dir()
+        self.model_path = self.cache_dir / self.FILES[0]
+        self.voices_path = self.cache_dir / self.FILES[1]
         self._kokoro = None
+        self._load_lock = threading.Lock()
+
+    def _resolve_cache_dir(self) -> Path:
+        env = os.environ.get("TELG_KOKORO_CACHE")
+        candidates = []
+        if env:
+            candidates.append(Path(env))
+        candidates.append(Path(__file__).resolve().parent / "models" / "kokoro")
+        candidates.append(Path.home() / ".cache" / "telg" / "kokoro")
+        for c in candidates:
+            if all((c / f).exists() for f in self.FILES):
+                return c
+        # None complete yet: point the hint at the first candidate (env override,
+        # else the project-local dir) — both are index 0 of the candidate list.
+        return candidates[0]
 
     def ensure_loaded(self) -> None:
         if self._kokoro is not None:
             return
-        miss = [str(p) for p in (self.model_path, self.voices_path) if not p.exists()]
-        if miss:
-            raise TTSModelMissing(
-                "Kokoro model not downloaded — put kokoro-v1.0.onnx and voices-v1.0.bin "
-                "under %s (see requirements-tts-kokoro.txt / download script)" % self.cache_dir)
-        try:
-            from kokoro_onnx import Kokoro
-        except ImportError:
-            raise TTSModelMissing(
-                "kokoro-onnx not installed — run: pip install -r requirements-tts-kokoro.txt")
-        try:
-            self._kokoro = Kokoro(str(self.model_path), str(self.voices_path))
-        except Exception as e:  # noqa: BLE001  (InvalidProtobuf etc. → model files corrupt/incomplete)
-            raise TTSModelMissing(
-                "Kokoro model files are incomplete or corrupt under %s — re-download them "
-                "(see requirements-tts-kokoro.txt): %s" % (self.cache_dir, str(e)[:160]))
+        with self._load_lock:  # double-checked: warm-up thread may race a request
+            if self._kokoro is not None:
+                return
+            miss = [str(p) for p in (self.model_path, self.voices_path) if not p.exists()]
+            if miss:
+                raise TTSModelMissing(
+                    "Kokoro model not downloaded — put kokoro-v1.0.onnx and voices-v1.0.bin "
+                    "under %s (see requirements-tts-kokoro.txt / download script)" % self.cache_dir)
+            try:
+                from kokoro_onnx import Kokoro
+            except ImportError:
+                raise TTSModelMissing(
+                    "kokoro-onnx not installed — run: pip install -r requirements-tts-kokoro.txt")
+            try:
+                self._kokoro = Kokoro(str(self.model_path), str(self.voices_path))
+            except Exception as e:  # noqa: BLE001  (InvalidProtobuf etc. → model files corrupt/incomplete)
+                raise TTSModelMissing(
+                    "Kokoro model files are incomplete or corrupt under %s — re-download them "
+                    "(see requirements-tts-kokoro.txt): %s" % (self.cache_dir, str(e)[:160]))
 
     async def synthesize_seg(self, text: str, voice: str, rate: float,
                              wav_path: Path, mid: str, i: int) -> None:
         self.ensure_loaded()
         import soundfile as sf
-        samples, sr = self._kokoro.create(text, voice=voice, speed=rate)
+        # CPU inference is blocking (~1-3s/sentence) — run off the event loop
+        # so other requests (audition pre-warm, UI polls) are not stalled.
+        samples, sr = await asyncio.to_thread(self._kokoro.create, text, voice=voice, speed=rate)
         sf.write(str(wav_path), samples, sr, subtype="PCM_16")
 
     def available_voices(self) -> list[dict]:
@@ -1180,7 +1199,7 @@ async def synthesize(mid: str, body: SynthIn | None = None):
     else:
         vs = [v for v in vs] or ["af_bella"]
     rate = body.rate if (body.rate is not None and 0.5 <= body.rate <= 2.0) else 1.0
-    gap_ms = 300
+    gap_ms = 400
     STORAGE_DIR.mkdir(parents=True, exist_ok=True)
     try:
         engine.ensure_loaded()
@@ -1197,6 +1216,10 @@ async def synthesize(mid: str, body: SynthIn | None = None):
             # sample-exact and the merge pass sees one consistent format
             wav_path = STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i))
             await engine.synthesize_seg(text, voice, rate, wav_path, mid, i)
+            # The TTS output is kept untouched (no silence trimming). The gap
+            # below absorbs the ~30-130ms lead/trail padding TTS models add, so
+            # start_ms/end_ms land on segment boundaries and the voice follows
+            # within a human-imperceptible window.
             dur = probe_ms(wav_path)
             times.append((seg["seq"], start, start + dur))
             start += dur + gap_ms
@@ -1502,9 +1525,57 @@ def tts_voices(provider: str = "edge-tts"):
         return {"ok": False, "error_class": "model_missing", "error": str(e)[:300]}
 
 
+# TTS audition result cache: key -> (timestamp, result). Bounded LRU so it
+# cannot grow forever; 24h TTL only protects against re-synthesising the exact
+# same input, it does NOT make first synthesis fast (see test_tts).
+# Note: audition latency is dominated by synthesis itself — edge-tts pays a
+# ~1-3s WebSocket handshake per synthesis, Kokoro pays CPU inference time
+# (~1-3s for a sentence on typical hardware). The cache only skips repeats.
+from collections import OrderedDict
+_TTS_TEST_CACHE: "OrderedDict[str, tuple[float, dict]]" = OrderedDict()
+_TTS_TEST_TTL = 24 * 3600.0
+_TTS_TEST_MAX = 100
+
+
+def _tts_cache_get(key: str):
+    hit = _TTS_TEST_CACHE.get(key)
+    if not hit or time.time() - hit[0] >= _TTS_TEST_TTL:
+        return None
+    _TTS_TEST_CACHE.move_to_end(key)
+    return hit[1]
+
+
+def _tts_cache_put(key: str, result: dict) -> None:
+    _TTS_TEST_CACHE[key] = (time.time(), result)
+    _TTS_TEST_CACHE.move_to_end(key)
+    while len(_TTS_TEST_CACHE) > _TTS_TEST_MAX:
+        _TTS_TEST_CACHE.popitem(last=False)
+
+
+def _cleanup_test_audio(older_than: float = 24 * 3600.0) -> None:
+    """Remove stale audition clips so storage/audio cannot grow unbounded."""
+    try:
+        now = time.time()
+        for p in STORAGE_DIR.glob("test_*.*") if STORAGE_DIR.exists() else []:
+            try:
+                if now - p.stat().st_mtime > older_than:
+                    p.unlink()
+            except OSError:
+                pass
+    except OSError:
+        pass
+
+
 @app.post("/api/v1/config/test-tts")
 async def test_tts(c: TestTTSIn):
     engine = get_engine(c.provider)
+    # Repeated auditions of the same (provider, voice, rate, text) hit the cache,
+    # since edge-tts pays a ~1-3s WebSocket handshake on every first synthesis.
+    key = "%s|%s|%s|%s" % (c.provider, c.voice or "", c.speech_rate or 1.0, c.text or "")
+    key = hashlib.md5(key.encode()).hexdigest()
+    cached = _tts_cache_get(key)
+    if cached is not None:
+        return cached
     try:
         engine.ensure_loaded()
     except TTSModelMissing as e:
@@ -1525,11 +1596,13 @@ async def test_tts(c: TestTTSIn):
             await com.save(str(out))
         else:
             import soundfile as sf
-            samples, sr = engine._kokoro.create(text, voice=voice, speed=rate)
+            samples, sr = await asyncio.to_thread(engine._kokoro.create, text, voice=voice, speed=rate)
             sf.write(str(out), samples, sr, subtype="PCM_16")
     except Exception as e:  # noqa: BLE001
         return {"ok": False, "error_class": tts_error_class(e), "error": str(e)[:300]}
-    return {"ok": True, "audio_url": "/api/v1/audio/" + out.name, "voice": voice}
+    result = {"ok": True, "audio_url": "/api/v1/audio/" + out.name, "voice": voice}
+    _tts_cache_put(key, result)
+    return result
 
 
 # --- Static frontend + audio (same origin → no CORS / no file:// fetch issue) ---
@@ -1538,6 +1611,21 @@ app.mount("/api/v1/audio", StaticFiles(directory=str(STORAGE_DIR)), name="audio"
 
 
 init_db()
+_cleanup_test_audio()  # drop audition clips older than 24h on startup
+
+
+def _warmup_kokoro() -> None:
+    """Pre-load the Kokoro model in the background so the first audition /
+    synthesis does not pay the ~1-3s model-load cost on top of inference."""
+    try:
+        eng = get_engine("kokoro")
+        if all((eng.cache_dir / f).exists() for f in KokoroEngine.FILES):
+            threading.Thread(target=eng.ensure_loaded, daemon=True).start()
+    except Exception:  # noqa: BLE001 — warm-up must never block startup
+        pass
+
+
+_warmup_kokoro()
 if FRONTEND_DIR.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
 

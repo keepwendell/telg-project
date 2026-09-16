@@ -125,17 +125,29 @@ Kokoro 是本地离线的语音合成引擎（英文音色自然、无需联网�
 pip install -r requirements-tts-kokoro.txt
 ```
 
-然后下载模型（约 310MB，放到缓存目录；二选一）：
+然后下载模型（约 340MB，两个文件）。**推荐放到工程目录内**（随工程一起复制，换环境/团队共用无需重复下载）：
 
 ```powershell
-# 方式一：命令行下载（任选一个地址）
-curl -L -o $env:USERPROFILE\.cache\telg\kokoro\kokoro-v1.0.onnx https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.onnx
-curl -L -o $env:USERPROFILE\.cache\telg\kokoro\voices-v1.0.bin  https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/voices-v1.0.bin
-
-# 方式二：直接手动建目录放文件
-#   目录：%USERPROFILE%\.cache\telg\kokoro\
-#   放两个文件：kokoro-v1.0.onnx、voices-v1.0.bin
+# 工程内目录（推荐，随工程复制共享）
+$dir = "backend\models\kokoro"
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
+curl.exe -L -o "$dir\kokoro-v1.0.onnx" https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.onnx
+curl.exe -L -o "$dir\voices-v1.0.bin"  https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/voices-v1.0.bin
 ```
+
+> **模型查找顺序**：`TELG_KOKORO_CACHE` 环境变量 → 工程内 `backend\models\kokoro\` → `%USERPROFILE%\.cache\telg\kokoro\`，按第一个文件齐全的目录使用。
+>
+> **注意**：`backend\models\` 已在 `.gitignore` 中排除——模型约 340MB，超过 GitHub 单文件 100MB 限制，**不能提交进仓库**。换环境/给同事时把 `backend\models\kokoro\` 整个目录一起复制即可。
+>
+> 文件校验大小：`kokoro-v1.0.onnx` = 325,505,369 字节；`voices-v1.0.bin` = 28,214,398 字节（防止下载中断导致合成报“文件损坏”）。
+>
+> **试听/合成偏慢？可试 INT8 量化模型（体积 325MB → 约 114MB）**。引擎会自动检测并优先使用它：
+>
+> ```powershell
+> curl.exe -L -o "$dir\kokoro-v1.0.int8.onnx" https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.int8.onnx
+> ```
+>
+> 下载后**重启后端**即生效。**注意**：INT8 提速效果取决于机器——多核新 CPU 上通常更快；低核（如 2 核）CPU 实测反而更慢。若下载后试听变慢，删除该文件并重启即可回到 fp32 模型。若链接 404，到 thewh1teagle/kokoro-onnx 的 Releases 页面找 `model-files` 系列资产里带 `int8` 的文件。
 
 然后在设置页把 **Synthesis Engine 切换为 `Kokoro (Local offline)`**，音色列表会自动切换为 Kokoro 音色（如 Bella / Heart / Michael / Xiaobei…），试听与合成均在本机完成。
 
@@ -224,7 +236,7 @@ Uvicorn running on http://127.0.0.1:8000
 | ⑤ | `127.0.0.1 拒绝连接`，但 `netstat` 显示有监听 | 防火墙/安全软件拦截本机回环。临时关闭防火墙（管理员 CMD）：`netsh advfirewall set allprofiles state off`；**调试完务必恢复**：`netsh advfirewall set allprofiles state on`（仅建议在可信网络下短暂使用） |
 | ⑥ | Test Connection 报 `Backend returned HTML instead of JSON` | 前端不是通过 `http://127.0.0.1:8000` 打开（如 file:// 或其它静态端口）。改为通过 8000 访问 |
 | ⑦ | 合成报 `TTS synthesis failed` | edge-tts 需联网访问微软语音服务：检查网络/代理；临时可用「测试数据」验证其余功能 |
-| ⑦b | 合成/试听报 `TTS model not downloaded`（Kokoro） | Kokoro 引擎的模型文件缺失：按 3.1 下载 `kokoro-v1.0.onnx` + `voices-v1.0.bin` 到 `%USERPROFILE%\.cache\telg\kokoro\` |
+| ⑦b | 合成/试听报 `TTS model not downloaded`（Kokoro） | Kokoro 引擎的模型文件缺失：按 3.1 下载 `kokoro-v1.0.onnx` + `voices-v1.0.bin` 到 `backend\models\kokoro\`（工程内，推荐）或 `%USERPROFILE%\.cache\telg\kokoro\` |
 | ⑧ | `pip install` 慢/失败 | 换国内镜像：`pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple` |
 | ⑨ | Generate 报 `LLM API key not configured` | 设置里填 Key 并 **Apply**；或设置环境变量 `DEEPSEEK_API_KEY`（PowerShell：`$env:DEEPSEEK_API_KEY="sk-..."`） |
 | ⑩ | 每次拉到新目录都要新建 venv 吗？ | **不需要**。venv 建一次即可复用：`D:\dev\telg-project\backend\.venv\Scripts\python.exe main.py`。仅换机器 / 换 Python 大版本才重建 |

@@ -105,6 +105,7 @@ a{color:inherit;text-decoration:none}
 #btn-sidebar{display:none}
 .engine-status{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;background:var(--surface-low);border:1px solid var(--line);font-size:11px;color:var(--on-variant)}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex-shrink:0}
+.dot.warn{background:var(--warning)}
 .dot.pulse{animation:pulse 1.6s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
@@ -1333,7 +1334,6 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <div class="test-output" id="adj-tts-result"></div>
           <audio id="adj-audio" class="hidden" preload="none"></audio>
         </div>
-        <p class="t-10 dim" data-i18n="tts.note">edge-tts neural voices · applied at conversion time.</p>
         <p class="t-10 faint" id="tts-status"></p>
       </div>
     </div>
@@ -1880,13 +1880,26 @@ function appendLlmTrace(msg, cls) {
   el.appendChild(line);
   el.scrollTop = el.scrollHeight;
 }
+function readSavedSettings() {
+  try { return JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; } catch (e) { return {}; }
+}
 function updateEngineBadge() {
-  const dot = $('eng-dot'), mode = $('eng-mode');
-  if (!dot || !mode) return;
-  const on = llmMockOn() || ttsMockOn();
-  mode.textContent = on ? 'mock' : 'live';
-  dot.classList.toggle('pulse', !on);
-  dot.style.background = on ? 'var(--tertiary)' : '';
+  const dot = $('eng-dot'), label = $('eng-label'), mode = $('eng-mode');
+  if (!dot || !label) return;
+  const s = readSavedSettings();
+  const llm = s.llm || {};
+  const LLM_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi', ark: 'Doubao', openai: 'OpenAI', qwen: 'Qwen', ollama: 'Ollama' };
+  const llmProv = LLM_PRESETS[llm.provider] ? llm.provider : 'deepseek';
+  const llmName = LLM_LABELS[llmProv] || llmProv;
+  const ttsProv = normalizeTTSProvider((s.tts || {}).provider || 'edge-tts');
+  const ttsName = ttsProv === 'kokoro' ? 'Kokoro' : (ttsProv === 'cosyvoice' ? 'CosyVoice' : 'edge-tts');
+  const llmReady = !!(llm.apiKey || '').trim();
+  const ready = llmReady;
+  label.textContent = llmName + ' · ' + ttsName;
+  if (mode) mode.textContent = (llmMockOn() || ttsMockOn()) ? 'mock' : 'live';
+  dot.classList.add('pulse');
+  dot.classList.toggle('warn', !ready);
+  dot.style.background = ready ? '' : 'var(--warning)';
 }
 
 /* ---------------- MOCK DATA (Generation Artifacts) ---------------- */
@@ -2398,7 +2411,6 @@ const I18N = {
     'tts.title': 'Voice & TTS Settings', 'tts.sub': 'Choose voices and convert the current material.',
     'tts.target': 'Target material — converted with the settings below.',
     'tts.preset': 'Voice Pair Preset', 'tts.speakerA': 'Speaker A — Engineer A', 'tts.speakerB': 'Speaker B — Engineer B',
-    'tts.note': 'edge-tts neural voices · applied at conversion time.',
     'tts.convert': 'Apply & Convert', 'tts.reconvert': 'Re-synthesize',
     'tts.statusReady': 'Corpus ready — not synthesized yet.',
     'tts.statusExist': 'Audio exists — re-converting will replace it.',
@@ -2563,7 +2575,6 @@ const I18N = {
     'tts.title': '音色与 TTS 设置', 'tts.sub': '选择音色并转换当前素材。',
     'tts.target': '目标素材 — 将按以下设置转换。',
     'tts.preset': '音色组合预设', 'tts.speakerA': '说话人 A — 工程师 A', 'tts.speakerB': '说话人 B — 工程师 B',
-    'tts.note': 'edge-tts 神经语音 · 转换时生效。',
     'tts.convert': '应用并转换', 'tts.reconvert': '重新合成',
     'tts.statusReady': '语料已就绪 — 尚未合成。',
     'tts.statusExist': '已有音频 — 重新转换将替换现有音频。',
@@ -2780,9 +2791,14 @@ function adjTTSProvider() {
 async function onProviderChange(kind) {
   const el = kind === 'adj' ? $('adj-tts-provider') : $('cfg-tts-provider');
   const p = normalizeTTSProvider(el ? el.value : 'edge-tts');
-  await loadTTSVoices(p);
+  /* render immediately with the fallback pool so the UI never lags the switch,
+     then refresh roles once the live voice list arrives */
   if (kind === 'adj') renderAdjustVoiceRoles(sanitizeRolesForProvider(currentAdjustVoiceRoles(), p));
   else renderVoiceRoles(sanitizeRolesForProvider(currentVoiceRoles(), p));
+  await loadTTSVoices(p, () => {
+    if (kind === 'adj') renderAdjustVoiceRoles(sanitizeRolesForProvider(currentAdjustVoiceRoles(), p));
+    else renderVoiceRoles(sanitizeRolesForProvider(currentVoiceRoles(), p));
+  });
 }
 async function loadTTSVoices(provider, thenApply) {
   const p = normalizeTTSProvider(provider);
@@ -2802,10 +2818,11 @@ function sanitizeRolesForProvider(roles, provider) {
     return { name: name, voice: ok ? v : defs[i % defs.length].voice };
   });
 }
-function roleRowHTML(r) {
+function roleRowHTML(r, provider) {
+  const p = normalizeTTSProvider(provider || ttsProvider());
   const name = (r && typeof r === 'object') ? String(r.name || '') : '';
   const v = (r && typeof r === 'object') ? r.voice : r;
-  const opts = ttsVoicePool().map(o => {
+  const opts = ttsVoicePool(p).map(o => {
     const oid = typeof o === 'string' ? o : o.id;
     const label = typeof o === 'string' ? o : (o.label + (o.lang && o.lang !== 'en-us' ? ' · ' + o.lang : ''));
     return '<option value="' + oid + '"' + (oid === v ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
@@ -2827,10 +2844,11 @@ function currentVoiceRoles() {
 }
 function renderVoiceRoles(voices) {
   const box = $('voice-roles'); if (!box) return;
-  const list = sanitizeRolesForProvider((voices && voices.length) ? voices : null, ttsProvider());
+  const p = ttsProvider();
+  const list = sanitizeRolesForProvider((voices && voices.length) ? voices : null, p);
   box.innerHTML = list.map((r, i) => {
     if (typeof r === 'string') r = { name: 'Speaker ' + String.fromCharCode(65 + i), voice: r };
-    return roleRowHTML(r);
+    return roleRowHTML(r, p);
   }).join('');
 }
 function addVoiceRole() {
@@ -2846,6 +2864,15 @@ function delVoiceRole(btn) {
   const row = btn.closest('.voice-role-row'); if (!row) return;
   if (currentVoiceRoles().length <= 1) return;
   row.remove();
+}
+async function prewarmTTS(provider, text, rate, exclude, boxSel) {
+  const box = document.querySelector(boxSel); if (!box) return;
+  const voices = [...box.querySelectorAll('.voice-role-row')]
+    .map(r => r.querySelector('select') ? r.querySelector('select').value : '')
+    .filter(v => v && v !== exclude);
+  for (const v of voices.slice(0, 2)) {
+    try { await API.testTTS({ provider, voice: v, speech_rate: rate, style: '', text: text || undefined }); } catch (e) {}
+  }
 }
 async function auditionRole(btn) {
   const row = btn.closest('.voice-role-row'); if (!row) return;
@@ -2867,9 +2894,35 @@ async function auditionRole(btn) {
         aud.onended = () => btn.classList.remove('played');
         aud.play().then(() => btn.classList.add('played')).catch(() => {});
       }
+      /* Pre-synthesize the other roles of this panel in the background so
+         switching roles plays instantly (backend cache serves the repeat). */
+      prewarmTTS($('cfg-tts-provider').value, txt, parseFloat($('cfg-tts-rate').value), voice, '#voice-roles').catch(() => {});
+      prewarmAuditions($('cfg-tts-provider').value, parseFloat($('cfg-tts-rate').value), '', txt, voice, '#voice-roles');
     } else { res.className = 'test-output err'; res.textContent = ttsFriendlyError(r.error_class, r.error); }
   } catch (e) { res.className = 'test-output err'; res.textContent = ttsFriendlyError('other', e.message); }
   btn.classList.remove('loading');
+}
+/* After one role finishes, silently pre-synthesise the same text for the
+   other roles (Kokoro only — local & free) so switching roles feels instant:
+   each follow-up audition hits the backend cache instead of re-synthesising. */
+function prewarmAuditions(provider, rate, style, text, skipVoice, rowsSelector) {
+  if (normalizeTTSProvider(provider) !== 'kokoro') return;
+  const rows = Array.from(document.querySelectorAll(rowsSelector + ' .voice-role-row'));
+  const seen = new Set(), voices = [];
+  rows.forEach(r => {
+    const s = r.querySelector('select'); if (!s) return;
+    const v = s.value;
+    if (v && v !== skipVoice && !seen.has(v)) { seen.add(v); voices.push(v); }
+  });
+  if (!voices.length) return;
+  let i = 0;
+  (function next() {
+    if (i >= voices.length) return;
+    const v = voices[i++];
+    API.testTTS({ provider, voice: v, speech_rate: rate || 1.0, style, text: text || undefined })
+      .catch(() => {})
+      .finally(next);
+  })();
 }
 function toggleTheme() {
   state.theme = state.theme === 'dark' ? 'light' : 'dark';
@@ -3304,7 +3357,8 @@ function transcriptHTML(art) {
   const fs = CONFIG.fontSizes[state.fontIdx];
   return '<div class="transcript">' + art.dialogue.map((s, i) => {
     const c = i % 2 === 0 ? 'var(--primary)' : 'var(--secondary)';
-    return '<div class="trow" data-idx="' + i + '" data-start="' + s.start_ms + '" data-end="' + s.end_ms + '">' +
+    const hasTs = s.start_ms != null && !Number.isNaN(Number(s.start_ms));
+    return '<div class="trow" data-idx="' + i + '" data-start="' + (hasTs ? s.start_ms : '') + '" data-end="' + (hasTs ? s.end_ms : '') + '">' +
       '<div class="trow-head">' +
         '<div class="trow-id">' +
           '<span class="speaker-dot" style="background:' + c + '"></span>' +
@@ -3313,7 +3367,7 @@ function transcriptHTML(art) {
           '<span class="playing-flag" data-flag="1"><span class="dot"></span>Playing</span>' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0">' +
-          '<span class="trow-time">' + fmt(s.start_ms) + ' – ' + fmt(s.end_ms) + '</span>' +
+          (hasTs ? '<span class="trow-time">' + fmt(s.start_ms) + ' – ' + fmt(s.end_ms) + '</span>' : '') +
           '<span class="trow-actions">' +
             '<button data-act="sloop" title="Loop this sentence"><svg class="icon icon-sm"><use href="#i-repeat"/></svg></button>' +
             '<button data-act="bookmark" title="Bookmark phrase"><svg class="icon icon-sm"><use href="#i-bookmark"/></svg></button>' +
@@ -3728,10 +3782,11 @@ function openTTSModal() {
 function closeTTSModal() { closeAdjustModal(); }
 function renderAdjustVoiceRoles(voices) {
   const box = $('adj-voice-roles'); if (!box) return;
-  const list = sanitizeRolesForProvider((voices && voices.length) ? voices : null, adjTTSProvider());
+  const p = adjTTSProvider();
+  const list = sanitizeRolesForProvider((voices && voices.length) ? voices : null, p);
   box.innerHTML = list.map((r, i) => {
     if (typeof r === 'string') r = { name: 'Speaker ' + String.fromCharCode(65 + i), voice: r };
-    return roleRowHTML(r);
+    return roleRowHTML(r, p);
   }).join('');
 }
 function currentAdjustVoiceRoles() {
@@ -3774,6 +3829,9 @@ async function auditionAdjustRole(btn) {
         aud.onended = () => btn.classList.remove('played');
         aud.play().then(() => btn.classList.add('played')).catch(() => {});
       }
+      /* Pre-synthesize the other roles of this panel in the background. */
+      prewarmTTS($('adj-tts-provider').value, txt, parseFloat($('adj-tts-rate').value), voice, '#adj-voice-roles').catch(() => {});
+      prewarmAuditions($('adj-tts-provider').value, parseFloat($('adj-tts-rate').value), $('adj-tts-style').value, txt, voice, '#adj-voice-roles');
     } else { res.className = 'test-output err'; res.textContent = ttsFriendlyError(r.error_class, r.error); }
   } catch (e) { res.className = 'test-output err'; res.textContent = ttsFriendlyError('other', e.message); }
   btn.classList.remove('loading');
@@ -3826,6 +3884,15 @@ function synthesizeAudio() {
       const r = await API.synthesize(art.id, ttsCfg);
       if (r.audio_url) art.meta.audio_url = r.audio_url;
       if (r.total_duration_ms) art.meta.total_duration_ms = r.total_duration_ms;
+      /* Pull the authoritative timeline the backend wrote to the DB (real TTS
+         durations + 300ms gaps). Generation-time timestamps are only word-count
+         estimates; keeping them here is what made highlight/seek drift. */
+      const fresh = await API.getMaterial(art.id).catch(() => null);
+      if (fresh && Array.isArray(fresh.dialogue) && fresh.dialogue.length) {
+        art.dialogue = fresh.dialogue;
+        if (fresh.meta && fresh.meta.audio_url) art.meta.audio_url = fresh.meta.audio_url;
+        if (fresh.meta && fresh.meta.total_duration_ms) art.meta.total_duration_ms = fresh.meta.total_duration_ms;
+      }
       hideSynthError();
       steps.forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
       art.meta.generated = true;           /* synthesis implies a generation pipeline */
@@ -3865,7 +3932,7 @@ function exportMD(art) {
     '## Technical Principle', art.background.technical_principle, '',
     '## Engineering Scenario', art.background.engineering_scenario, '',
     '## Transcript');
-  art.dialogue.forEach(s => L.push('**' + s.speaker + '** (' + fmt(s.start_ms) + '–' + fmt(s.end_ms) + '): ' + s.text_en));
+  art.dialogue.forEach(s => L.push('**' + s.speaker + '** (' + (s.start_ms != null && !Number.isNaN(Number(s.start_ms)) ? fmt(s.start_ms) + '–' + fmt(s.end_ms) : 'no timeline yet') + '): ' + s.text_en));
   L.push('', '## Vocabulary');
   art.vocabulary.forEach(v => L.push('- **' + v.en + '** (' + v.symbol + ') ' + v.zh + ' — ' + v.def));
   L.push('', '## Listening Questions');
@@ -3950,14 +4017,25 @@ function currentSegIndex() {
   const art = currentArtifact();
   let idx = -1;
   for (let i = 0; i < art.dialogue.length; i++) {
-    if (state.time >= art.dialogue[i].start_ms) idx = i;
+    const st = Number(art.dialogue[i].start_ms);
+    if (art.dialogue[i].start_ms != null && !Number.isNaN(st) && state.time >= st) idx = i;
   }
   return idx;
 }
 function tick() {
-  /* Real-audio mode: position comes from the <audio> element via timeupdate;
-     this timer only serves the mock/simulated path. */
-  if (!mockMode()) { syncHighlight(); renderPlayerBar(); return; }
+  /* Real-audio mode: poll the <audio> element at 100ms so sentence highlight
+     tracks the voice tightly (timeupdate alone fires only ~4Hz and visibly
+     lags the spoken word). This timer also drives the mock/simulated path. */
+  if (!mockMode()) {
+    const art = currentArtifact();
+    const audio = $('pb-audio');
+    if (audio && audio.currentTime > 0) {
+      state.time = Math.min(audio.currentTime * 1000, art.meta.total_duration_ms || 0);
+    }
+    syncHighlight();
+    renderPlayerBar();
+    return;
+  }
   const art = currentArtifact(), total = art.meta.total_duration_ms;
   const dt = 100 * CONFIG.speeds[state.speedIdx];
   if (state.loop) {
@@ -4060,7 +4138,12 @@ function seek(ms, autoplay) {
 function seekSentence(idx, autoplay) {
   const art = currentArtifact();
   if (!art.dialogue[idx]) return;
-  seek(art.dialogue[idx].start_ms, autoplay !== false);
+  const st = Number(art.dialogue[idx].start_ms);
+  if (art.dialogue[idx].start_ms == null || Number.isNaN(st)) {
+    /* no real timeline yet (not synthesized) — nothing to seek to */
+    return;
+  }
+  seek(st, autoplay !== false);
 }
 function nextSentence() {
   const art = currentArtifact(), idx = currentSegIndex();
@@ -4614,6 +4697,7 @@ function openModal() {
   overlay.querySelector('.modal-body').scrollTop = 0;
   renderUsage();
   renderStudy();
+  updateEngineBadge();
   $('cfg-lang').value = state.lang;
   const seg = document.querySelector('#cfg-theme-seg [data-theme-opt="' + state.theme + '"]');
   if (seg) setSeg($('cfg-theme-seg'), seg);
@@ -4767,6 +4851,7 @@ function saveModal() {
   renderPlayerBar();
   applyTranscriptLang();
   renderToday();
+  updateEngineBadge();
   showToast(I18N[state.lang]['settings.saved']);
   closeModal();
 }

@@ -7,6 +7,9 @@ backend/telg.db
 backend/storage/*
 !backend/storage/.gitkeep
 
+# Kokoro 离线模型（约 340MB，超过 GitHub 单文件限制，不入库；随工程目录复制共享）
+backend/models/
+
 # 浏览器截图自检产物
 _shots/
 
