@@ -102,6 +102,7 @@ a{color:inherit;text-decoration:none}
 .nav-seg a.active{background:var(--surface-high);color:var(--on-surface);border:1px solid var(--line-strong);font-weight:500;padding:3px 11px}
 .kbd{font-family:var(--font-mono);font-size:10px;color:var(--outline);background:var(--bg-lowest);border:1px solid var(--line);border-radius:4px;padding:1px 4px;line-height:1.4}
 .header-right{display:flex;align-items:center;gap:10px}
+#btn-sidebar{display:none}
 .engine-status{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;background:var(--surface-low);border:1px solid var(--line);font-size:11px;color:var(--on-variant)}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex-shrink:0}
 .dot.pulse{animation:pulse 1.6s infinite}
@@ -257,9 +258,12 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .lib-act{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;color:var(--outline);cursor:pointer;transition:color .12s var(--ease),background .12s var(--ease)}
 .lib-act:hover{color:var(--on-surface);background:var(--surface-highest)}
 .lib-act.del:hover{color:var(--error)}
+.bm-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--surface);transition:border-color .12s var(--ease),background .12s var(--ease)}
+.bm-row:hover{background:var(--surface-highest)}
 .lib-item.confirm-del{border:1px solid var(--error);background:var(--surface-low)}
 .lib-item.confirm-del .lib-act.del{color:var(--error)}
 .lib-draft{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);border:1px solid var(--line-strong);padding:0 4px;border-radius:3px;margin-left:6px;flex-shrink:0}
+.lib-draft.unsynth{color:var(--warning);border-color:rgba(232,179,57,.4)}
 .lib-item.renaming .lib-item-name{display:none}
 .lib-rename-input{font:inherit;font-size:12px;font-weight:500;background:var(--surface-highest);border:1px solid var(--outline);border-radius:4px;color:var(--on-surface);padding:2px 6px;width:100%;min-width:0}
 .lib-item.renaming .lib-item-dur{display:none}
@@ -478,8 +482,15 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
   .lib-sidebar .side-fold,.lib-sidebar.collapsed .side-fold{right:auto;left:2px}
 }
 @media (max-width:720px){
-  .lib-sidebar{display:none}
-  .lib-sidebar .side-fold{display:none}
+  .lib-sidebar{position:fixed;left:0;top:0;bottom:0;z-index:70;width:288px!important;max-width:85vw;display:flex;transform:translateX(-105%);transition:transform .18s var(--ease);border-right:1px solid var(--line);box-shadow:none}
+  .lib-sidebar.open{transform:none;box-shadow:0 8px 40px rgba(0,0,0,.4)}
+  .lib-sidebar .side-fold,.lib-sidebar.collapsed .side-fold{display:flex;right:auto;left:2px}
+  .lib-sidebar .lib-resize{display:none}
+  .lib-sidebar.collapsed{width:288px!important;border-right:1px solid var(--line);transform:translateX(-105%)}
+  .lib-sidebar.collapsed>*:not(.side-fold){visibility:visible}
+  #btn-sidebar{display:flex}
+  #sidebar-backdrop{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .18s var(--ease)}
+  #sidebar-backdrop.show{opacity:1;pointer-events:auto}
   .param-grid,.two-col,.panel-grid-2{grid-template-columns:1fr}
   .engine-status .sts-extra{display:none}
   .material-head{flex-direction:column;align-items:flex-start}
@@ -626,6 +637,10 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
   <symbol id="i-bookmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-queue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></symbol>
   <symbol id="i-bookmark-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="9" y1="10" x2="15" y2="10"/></symbol>
   <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
   <symbol id="i-folder-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14l1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></symbol>
@@ -677,6 +692,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
     </button>
   </div>
   <div class="header-right">
+    <button class="btn-icon" id="btn-sidebar" title="Materials"><svg class="icon"><use href="#i-menu"/></svg></button>
     <div class="engine-status" id="engine-status" title="Pipeline mode">
       <span class="dot pulse" id="eng-dot"></span>
       <span class="nowrap" id="eng-label">DeepSeek-V3 · edge-tts</span>
@@ -707,12 +723,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <input class="input input-sm" id="search-input" placeholder="Search technical topics, terms..." data-i18n-ph="sidebar.search" style="padding-left:32px;padding-right:42px"/>
         <span class="kbd" style="position:absolute;right:9px;top:50%;transform:translateY(-50%)">/</span>
       </div>
-      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-        <button class="preset-tag" data-filter="Automotive">Automotive</button>
-        <button class="preset-tag" data-filter="Controls">Controls</button>
-        <button class="preset-tag" data-filter="Software">Software</button>
-        <button class="preset-tag" data-filter="Drivetrain">Drivetrain</button>
-      </div>
+      <div id="filter-tags" style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap"></div>
     </div>
     <div class="lib-scroll">
       <div class="lib-section">
@@ -735,16 +746,18 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
       <div class="widget" style="margin-top:4px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <span class="t-10 uc faint bold" data-i18n="sidebar.today">Today's Ear Training</span>
-          <span class="t-10 accent mono">18m / 30m</span>
+          <span class="t-10 accent mono today-time">0m / 30m</span>
         </div>
-        <div class="progress-track"><div class="progress-fill" style="width:60%"></div></div>
+        <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
         <div style="display:flex;justify-content:space-between;margin-top:8px" class="t-10 faint">
-          <span>Accuracy 94.2%</span>
-          <span>Speed 1.0x</span>
+          <span class="today-acc">Accuracy —</span>
+          <span class="today-speed">Speed 1.0x</span>
         </div>
       </div>
     </div>
   </aside>
+
+  <div id="sidebar-backdrop" style="display:none"></div>
 
   <div class="player-main">
     <section class="material-head">
@@ -898,6 +911,10 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
     </div>
   </div>
   <div class="pb-right">
+    <button class="btn btn-sm" id="btn-pb-queue" title="Playlist continuous playback" disabled>
+      <svg class="icon icon-sm"><use href="#i-queue"/></svg>
+      <span class="nowrap" data-i18n="pb.queue">Queue</span>
+    </button>
     <div class="speed-wrap">
       <button class="btn btn-sm" id="btn-pb-speed" title="Playback speed"><span class="mono t-11" id="pb-speed-label">1.0x</span></button>
       <div class="speed-menu hidden" id="speed-menu">
@@ -1356,6 +1373,28 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   </div>
 </div>
 
+<!-- ===================== BOOKMARKS MODAL ===================== -->
+<div class="modal-overlay hidden" id="bookmark-modal">
+  <div class="modal modal-settings">
+    <div class="modal-head">
+      <div>
+        <div class="t-15" data-i18n="bm.title">Phrase Bookmarks</div>
+        <div class="t-11 dim" style="margin-top:2px" data-i18n="bm.sub">Saved phrases across materials — click to jump.</div>
+      </div>
+      <button class="btn-icon" id="btn-bm-close" title="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="m-panel active">
+        <div id="bm-list" style="display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="btn-bm-clear" data-i18n="bm.clear">Clear all</button>
+      <button class="btn" id="btn-bm-done" data-i18n="bm.done">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== SETTINGS MODAL (General / LLM / TTS) ===================== -->
 <div class="modal-overlay hidden" id="engine-modal">
   <div class="modal modal-settings">
@@ -1372,6 +1411,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <button class="s-nav-item" data-mtab="tts"><svg class="icon icon-sm"><use href="#i-waveform"/></svg><span data-i18n="settings.tab.tts">TTS</span></button>
         <button class="s-nav-item" data-mtab="shortcuts"><svg class="icon icon-sm"><use href="#i-type"/></svg><span data-i18n="settings.tab.shortcuts">Shortcuts</span></button>
         <button class="s-nav-item" data-mtab="developer"><svg class="icon icon-sm"><use href="#i-terminal"/></svg><span data-i18n="settings.tab.developer">Developer</span></button>
+        <button class="s-nav-item" data-mtab="study"><svg class="icon icon-sm"><use href="#i-clock"/></svg><span data-i18n="settings.tab.study">Study</span></button>
         <button class="s-nav-item" data-mtab="usage"><svg class="icon icon-sm"><use href="#i-chart"/></svg><span data-i18n="settings.tab.usage">Usage</span></button>
         <button class="s-nav-item" data-mtab="about"><svg class="icon icon-sm"><use href="#i-book"/></svg><span data-i18n="settings.tab.about">About</span></button>
       </nav>
@@ -1690,6 +1730,34 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         </div>
       </div>
       <!-- ABOUT -->
+      <div class="m-panel" id="mp-study">
+        <div class="m-section-head">
+          <div class="t-12 bold" data-i18n="settings.tab.study">Study</div>
+          <div class="t-11 dim" data-i18n="settings.study.sub">Listening time tracked per day — seconds actually played.</div>
+        </div>
+        <div class="s-sec-title" data-i18n="settings.study.secGoal">Training Goal</div>
+        <div class="s-row">
+          <div class="s-info">
+            <div class="s-name" data-i18n="settings.goal.daily">Daily Listening Target</div>
+            <div class="s-desc" data-i18n="settings.goal.hint">Minutes of listening per day — tracked in the stats below.</div>
+          </div>
+          <div class="s-ctrl">
+            <div class="select-wrap">
+              <select class="select" id="cfg-goal-min">
+                <option value="15">15 min</option>
+                <option value="30" selected>30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">60 min</option>
+                <option value="90">90 min</option>
+              </select>
+              <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+            </div>
+          </div>
+        </div>
+        <div id="study-body">
+          <div class="t-11 dim" data-i18n="settings.usage.loading">Loading…</div>
+        </div>
+      </div>
       <div class="m-panel" id="mp-usage">
         <div class="m-section-head">
           <div class="t-12 bold" data-i18n="settings.tab.usage">Usage</div>
@@ -2172,8 +2240,12 @@ const state = {
   time: 0,
   speedIdx: 1,              /* 1.0x */
   seekStep: 10,             /* player rewind/forward seconds */
+  goalMin: 30,              /* daily listening target in minutes */
   volume: 0.75,
   loop: false,
+  queuePlay: true,          /* continuous playback inside an active playlist */
+  bookmarks: [],            /* [{mid, title, idx, speaker, text, time, ts}] persisted to localStorage */
+  stats: { date: '', playSec: 0, quizTotal: 0, quizCorrect: 0 },
   listenMode: 'normal',
   ttsVoicesByProvider: {},
   fontIdx: 0,
@@ -2209,7 +2281,11 @@ const I18N = {
   en: {
     'nav.generate': 'New material…', 'nav.engine': 'Settings', 'nav.new': 'New Material',
     'sidebar.search': 'Search technical topics, terms...', 'sidebar.materials': 'My Materials', 'sidebar.playlists': 'Playlists', 'sidebar.today': "Today's Ear Training",
-    'mode.normal': 'Normal', 'mode.blind': 'Blind', 'mode.repeat': 'Repeat', 'mode.loop': 'Loop', 'mode.export': 'MD Export',
+    'mode.normal': 'Normal', 'mode.blind': 'Blind', 'mode.export': 'MD Export',
+    'pb.queue': 'Queue',
+    'pl.queueOn': 'Queue playback on', 'pl.queueOff': 'Queue playback off', 'pl.remove': 'Remove from playlist',
+    'bm.title': 'Phrase Bookmarks', 'bm.sub': 'Saved phrases across materials — click to jump.', 'bm.empty': 'No bookmarks yet',
+    'bm.added': 'Bookmarked · ', 'bm.exists': 'Already bookmarked', 'bm.cleared': 'Bookmarks cleared', 'bm.clear': 'Clear all', 'bm.done': 'Done',
     'tab.grounding': 'Grounding', 'tab.vocab': 'Vocabulary', 'tab.quiz': 'Quiz', 'tab.patterns': 'Patterns',
     'tr.header': 'Synchronized Technical Dialogue', 'tr.zh': 'CN',
     'tr.synth': 'Corpus generated — audio not synthesized yet.',
@@ -2225,7 +2301,10 @@ const I18N = {
     'pb.details': 'Details',
     'settings.title': 'Settings',
     
-    'settings.tab.general': 'General', 'settings.tab.llm': 'LLM', 'settings.tab.tts': 'TTS', 'settings.tab.shortcuts': 'Shortcuts', 'settings.tab.usage': 'Usage', 'settings.tab.developer': 'Developer', 'settings.tab.about': 'About',
+    'settings.tab.general': 'General', 'settings.tab.llm': 'LLM', 'settings.tab.tts': 'TTS', 'settings.tab.shortcuts': 'Shortcuts', 'settings.tab.usage': 'Usage', 'settings.tab.developer': 'Developer', 'settings.tab.study': 'Study', 'settings.tab.about': 'About',
+    'settings.study.sub': 'Listening time tracked per day — seconds actually played.',
+    'settings.study.total': 'Total', 'settings.study.today': 'Today',
+    'settings.study.secGoal': 'Training Goal', 'settings.goal.daily': 'Daily Listening Target', 'settings.goal.hint': 'Minutes of listening per day — tracked in the stats below.',
     'settings.developer.sub': 'LLM link debugging and corpus take-over for the TTS pipeline.',
     'settings.developer.llmDiag': 'LLM Diagnostics',
     'settings.developer.llmMock': 'LLM Mock', 'settings.developer.llmMockHint': 'LLM link debugging — real call with the configured key; intermediate steps shown on the main page. No key → real failure reported.',
@@ -2341,7 +2420,7 @@ const I18N = {
     'refine.dirAngle': 'Re-angle — different engineering perspective',
     'refine.apply': 'Refine & Regenerate',
     'save.title': 'Save', 'save.saved': 'Saved', 'save.done': 'Saved to My Materials — ',
-    'lib.rename': 'Rename', 'lib.delete': 'Delete', 'lib.draft': 'Draft',
+    'lib.rename': 'Rename', 'lib.delete': 'Delete', 'lib.draft': 'Draft', 'lib.unsynth': 'No audio', 'lib.clearFilters': 'Clear filters',
     'lib.renamed': 'Renamed — ', 'lib.deleted': 'Deleted — ', 'lib.empty': 'Library empty — generate a new material to start.',
     'gen.tone': 'Tone & Mood', 'refine.tone': 'Tone & Mood',
     'tone.neutral': 'Neutral professional', 'tone.urgent': 'Urgent · deadline pressure', 'tone.interview': 'Interview · high-pressure Q&A',
@@ -2354,6 +2433,7 @@ const I18N = {
     'pl.created': 'Playlist created — ', 'pl.renamed': 'Playlist renamed — ', 'pl.deleted': 'Playlist deleted — ', 'pl.added': 'Added to ', 'pl.removed': 'Removed from ',
     'del.title': 'Delete?', 'del.cancel': 'Cancel', 'del.delete': 'Delete',
     'del.materialText': 'This will permanently delete the material from My Materials, and remove it from all playlists. This cannot be undone.',
+    'del.materialInPl': 'This will permanently delete the material from My Materials and from all playlists (including this one). This cannot be undone.',
     'del.playlistText': 'This will delete the playlist. The materials inside are kept in My Materials.',
     'gen.stepC0': 'Parsing parameters & building prompt', 'gen.stepC1': 'LLM generating technical corpus', 'gen.stepC2': 'Validating structure & technical grounding',
     'gen.stepA0': 'Synthesizing sentences via TTS', 'gen.stepA1': 'Stitching audio segments', 'gen.stepA2': 'Aligning sentence-level timeline',
@@ -2366,7 +2446,11 @@ const I18N = {
   zh: {
     'nav.generate': '新建素材…', 'nav.engine': '设置', 'nav.new': '新建素材',
     'sidebar.search': '搜索技术主题、术语…', 'sidebar.materials': '我的素材', 'sidebar.playlists': '播放列表', 'sidebar.today': '今日听力训练',
-    'mode.normal': '常规', 'mode.blind': '盲听', 'mode.repeat': '重复', 'mode.loop': '循环', 'mode.export': '导出 MD',
+    'mode.normal': '常规', 'mode.blind': '盲听', 'mode.export': '导出 MD',
+    'pb.queue': '队列',
+    'pl.queueOn': '队列播放已开启', 'pl.queueOff': '队列播放已关闭', 'pl.remove': '移出列表',
+    'bm.title': '短语收藏', 'bm.sub': '跨素材收藏的短语 — 点击跳转。', 'bm.empty': '暂无收藏',
+    'bm.added': '已收藏 · ', 'bm.exists': '该句已收藏', 'bm.cleared': '已清空收藏', 'bm.clear': '清空', 'bm.done': '完成',
     'tab.grounding': '技术接地', 'tab.vocab': '词汇', 'tab.quiz': '测验', 'tab.patterns': '句型',
     'tr.header': '同步技术对话', 'tr.zh': '中文',
     'tr.synth': '语料已生成 — 音频尚未合成。',
@@ -2382,7 +2466,10 @@ const I18N = {
     'pb.details': '详情',
     'settings.title': '设置',
     
-    'settings.tab.general': '通用', 'settings.tab.llm': 'LLM', 'settings.tab.tts': 'TTS', 'settings.tab.shortcuts': '快捷键', 'settings.tab.usage': '用量', 'settings.tab.developer': '开发者', 'settings.tab.about': '关于',
+    'settings.tab.general': '通用', 'settings.tab.llm': 'LLM', 'settings.tab.tts': 'TTS', 'settings.tab.shortcuts': '快捷键', 'settings.tab.usage': '用量', 'settings.tab.developer': '开发者', 'settings.tab.study': '学习', 'settings.tab.about': '关于',
+    'settings.study.sub': '每日学习时长统计——按实际播放秒数记录。',
+    'settings.study.total': '累计', 'settings.study.today': '今日',
+    'settings.study.secGoal': '训练目标', 'settings.goal.daily': '每日听力目标', 'settings.goal.hint': '每日学习时长目标（分钟），由下方统计跟踪进度。',
     'settings.developer.sub': 'LLM 链路调试与 TTS 语料接管。',
     'settings.developer.llmDiag': 'LLM 诊断',
     'settings.developer.reqResp': 'LLM 请求与响应',
@@ -2498,7 +2585,7 @@ const I18N = {
     'refine.dirAngle': '换角度 — 不同的工程视角',
     'refine.apply': '改进并重新生成',
     'save.title': '保存', 'save.saved': '已保存', 'save.done': '已保存到我的素材 — ',
-    'lib.rename': '重命名', 'lib.delete': '删除', 'lib.draft': '草稿',
+    'lib.rename': '重命名', 'lib.delete': '删除', 'lib.draft': '草稿', 'lib.unsynth': '未合成', 'lib.clearFilters': '清除筛选',
     'lib.renamed': '已重命名 — ', 'lib.deleted': '已删除 — ', 'lib.empty': '素材库为空 — 生成一个新素材开始吧。',
     'gen.tone': '语气与情绪', 'refine.tone': '语气与情绪',
     'tone.neutral': '中性专业', 'tone.urgent': '紧急 · 时间压力', 'tone.interview': '面试 · 高压问答',
@@ -2511,6 +2598,7 @@ const I18N = {
     'pl.created': '已创建播放列表 — ', 'pl.renamed': '已重命名播放列表 — ', 'pl.deleted': '已删除播放列表 — ', 'pl.added': '已加入 ', 'pl.removed': '已移出 ',
     'del.title': '确认删除？', 'del.cancel': '取消', 'del.delete': '删除',
     'del.materialText': '该素材将从「我的素材」中永久删除，并从所有播放列表中移除。此操作无法撤销。',
+    'del.materialInPl': '该素材将从「我的素材」中永久删除，并从所有播放列表（含当前列表）中移除。此操作无法撤销。',
     'del.playlistText': '将删除该播放列表。列表内的素材会保留在「我的素材」中。',
     'gen.stepC0': '解析参数并构建提示词', 'gen.stepC1': 'LLM 生成技术语料', 'gen.stepC2': '校验结构与技术锚定',
     'gen.stepA0': '逐句 TTS 语音合成', 'gen.stepA1': '拼接音频片段', 'gen.stepA2': '对齐句级时间轴',
@@ -2545,6 +2633,8 @@ function loadSettings() {
     if (si >= 0) state.speedIdx = si;
     const ss = parseInt(s.seekStep, 10);
     if ([5, 10, 15, 30].includes(ss)) state.seekStep = ss;
+    const gm = parseInt(s.goalMin, 10);
+    if ([15, 30, 45, 60, 90].includes(gm)) state.goalMin = gm;
     state.zhVisible = s.zhDefault !== 'off';
   } catch (e) {}
 }
@@ -2806,6 +2896,143 @@ function confirmDelete() {
   else if (c.type === 'playlist') doDeletePlaylist(c.id);
 }
 
+/* ---------------- SIDEBAR STATS / FILTERS / DRAWER ---------------- */
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function loadStats() {
+  try {
+    const s = JSON.parse(localStorage.getItem('telg-stats') || 'null');
+    if (s && s.date === todayKey()) return { date: s.date, playSec: +s.playSec || 0, quizTotal: +s.quizTotal || 0, quizCorrect: +s.quizCorrect || 0 };
+  } catch (e) {}
+  return { date: todayKey(), playSec: 0, quizTotal: 0, quizCorrect: 0 };
+}
+function saveStats() {
+  try { localStorage.setItem('telg-stats', JSON.stringify(state.stats)); } catch (e) {}
+  /* daily history: telg-stats-daily = { 'YYYY-MM-DD': { sec, hours: {'HH': sec} } } */
+  try {
+    const d = JSON.parse(localStorage.getItem('telg-stats-daily') || '{}');
+    const k = todayKey();
+    const h = String(new Date().getHours()).padStart(2, '0');
+    d[k] = d[k] || { sec: 0, hours: {} };
+    const total = Math.min(86400, Math.round(state.stats.playSec));
+    d[k].sec = total;
+    /* current hour = total minus other hours, so it self-corrects across saves */
+    const others = Object.keys(d[k].hours).filter(x => x !== h).reduce((a, x) => a + (d[k].hours[x] || 0), 0);
+    d[k].hours[h] = Math.max(0, total - others);
+    localStorage.setItem('telg-stats-daily', JSON.stringify(d));
+  } catch (e) {}
+}
+function renderToday() {
+  const w = document.querySelector('.widget');
+  if (!w) return;
+  const s = state.stats;
+  const t = w.querySelector('.today-time'), a = w.querySelector('.today-acc'), sp = w.querySelector('.today-speed'), f = w.querySelector('.progress-fill');
+  const mins = Math.floor(s.playSec / 60);
+  if (t) t.textContent = mins + 'm / ' + state.goalMin + 'm';
+  if (a) a.textContent = 'Accuracy ' + (s.quizTotal ? (Math.round(s.quizCorrect / s.quizTotal * 1000) / 10) + '%' : '—');
+  const rate = CONFIG.speeds[state.speedIdx];
+  if (sp) sp.textContent = 'Speed ' + (rate === 1 ? '1.0x' : rate + 'x');
+  if (f) f.style.width = Math.min(100, s.playSec / (state.goalMin * 60) * 100) + '%';
+}
+function renderFilters() {
+  const box = $('filter-tags');
+  if (!box) return;
+  const domains = [];
+  state.library.forEach(m => {
+    const d = m.meta.domain;
+    if (d && !domains.includes(d)) domains.push(d);
+  });
+  box.innerHTML = domains.map(d =>
+    '<button class="preset-tag' + (state.filters.includes(d) ? ' active-filter' : '') + '" data-filter="' + escapeHtml(d) + '">' + escapeHtml(d) + '</button>'
+  ).join('');
+}
+function toggleSidebar(force) {
+  const lib = $('lib-sidebar'), bd = $('sidebar-backdrop');
+  const open = force !== undefined ? force : !lib.classList.contains('open');
+  lib.classList.toggle('open', open);
+  if (bd) bd.classList.toggle('show', open);
+}
+
+/* ---------------- BOOKMARKS ---------------- */
+function persistBookmarks() {
+  try { localStorage.setItem('telg-bookmarks', JSON.stringify(state.bookmarks)); } catch (e) {}
+}
+function addBookmark(idx) {
+  const art = currentArtifact();
+  if (!art || !art.dialogue[idx]) return;
+  const s = art.dialogue[idx];
+  const bm = { mid: art.id, title: art.meta.title, idx: idx, speaker: s.speaker, text: s.text_en, time: s.start_ms, ts: Date.now() };
+  const dup = state.bookmarks.find(x => x.mid === bm.mid && x.idx === bm.idx);
+  if (dup) { showToast(I18N[state.lang]['bm.exists']); return; }
+  state.bookmarks.unshift(bm);
+  persistBookmarks();
+  showToast(I18N[state.lang]['bm.added'] + (s.speaker || ''));
+}
+function removeBookmark(ts) {
+  state.bookmarks = state.bookmarks.filter(x => x.ts !== ts);
+  persistBookmarks();
+  renderBookmarks();
+}
+function clearBookmarks() {
+  state.bookmarks = [];
+  persistBookmarks();
+  renderBookmarks();
+  showToast(I18N[state.lang]['bm.cleared']);
+}
+function renderBookmarks() {
+  const L = I18N[state.lang];
+  const box = $('bm-list');
+  if (!box) return;
+  if (!state.bookmarks.length) {
+    box.innerHTML = '<div class="t-11 dim" style="padding:24px 10px;text-align:center">' + (L['bm.empty'] || 'No bookmarks yet') + '</div>';
+    return;
+  }
+  box.innerHTML = state.bookmarks.map(b => {
+    const on = state.current && state.current.id === b.mid && currentSegIndex() === b.idx;
+    return '<div class="bm-row" data-ts="' + b.ts + '" data-mid="' + b.mid + '" data-idx="' + b.idx + '" style="' + (on ? 'border-color:var(--primary)' : '') + '">' +
+      '<div style="min-width:0;flex:1">' +
+        '<div style="display:flex;align-items:center;gap:8px;min-width:0">' +
+          '<span class="speaker-dot" style="background:var(--primary)"></span>' +
+          '<span class="t-11 bold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(b.speaker || '') + '</span>' +
+          '<span class="t-10 faint" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(b.title || '') + '</span>' +
+          '<span class="mono t-10 faint" style="flex-shrink:0">' + fmt(b.time) + '</span>' +
+        '</div>' +
+        '<div class="t-11 dim" style="margin-top:3px;line-height:16px">' + escapeHtml(b.text) + '</div>' +
+      '</div>' +
+      '<button class="btn-icon" data-bm-del="' + b.ts + '" title="Remove"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></button>' +
+    '</div>';
+  }).join('');
+}
+function openBookmarkModal() {
+  renderBookmarks();
+  $('bookmark-modal').classList.remove('hidden');
+}
+function closeBookmarkModal() { $('bookmark-modal').classList.add('hidden'); }
+function jumpToBookmark(mid, idx) {
+  const local = state.library.find(m => m.id === mid);
+  const go = (m) => { playArtifact(m); seekSentence(idx, true); };
+  if (local) go(local);
+  else API.getMaterial(mid).then(m => { const i = state.library.findIndex(x => x.id === mid); if (i >= 0) state.library[i] = m; else state.library.unshift(m); go(m); }).catch(() => showToast('Load failed'));
+}
+
+/* ---------------- PLAYLIST QUEUE / REMOVE ---------------- */
+function toggleQueuePlay() {
+  state.queuePlay = !state.queuePlay;
+  renderPlayerBar();
+  showToast(state.queuePlay ? I18N[state.lang]['pl.queueOn'] : I18N[state.lang]['pl.queueOff']);
+}
+function removeFromActivePlaylist(id) {
+  const pl = state.playlists.find(x => x.id === state.activePlaylist);
+  if (!pl) return;
+  const i = pl.materialIds.indexOf(id);
+  if (i >= 0) pl.materialIds.splice(i, 1);
+  API.removeFromPlaylist(pl.id, id).catch(() => {});
+  renderPlaylists(); renderLibrary();
+  showToast(I18N[state.lang]['pl.removed'] + pl.name);
+}
+
 /* ---------------- RENDER: library ---------------- */
 function openPublishModal() {
   const art = currentArtifact();
@@ -2850,7 +3077,8 @@ function commitRename(id, val) {
 function deleteLibItem(id) {
   const m = state.library.find(x => x.id === id);
   if (!m) return;
-  openConfirmModal('material', id, m.meta.title, I18N[state.lang]['del.materialText']);
+  const inPl = state.activePlaylist ? I18N[state.lang]['del.materialInPl'] : I18N[state.lang]['del.materialText'];
+  openConfirmModal('material', id, m.meta.title, inPl);
 }
 function doDeleteMaterial(id) {
   const m = state.library.find(x => x.id === id);
@@ -2877,6 +3105,7 @@ function doDeleteMaterial(id) {
   showToast(I18N[state.lang]['lib.deleted'] + name);
 }
 function renderLibrary() {
+  renderFilters();
   const q = state.query.toLowerCase();
   let items = state.library.filter(m => {
     const hay = (m.meta.title + ' ' + m.meta.domain + ' ' + (m.meta.tag || '') + ' ' + m.meta.role).toLowerCase();
@@ -2889,13 +3118,13 @@ function renderLibrary() {
   $('lib-head-title').textContent = head;
   $('lib-head-title').title = head;
   $('lib-head-clear').style.display = pl ? '' : 'none';
-  $('lib-count').textContent = items.length + (pl ? ' / ' + pl.materialIds.length : ' total');
+  $('lib-count').textContent = items.length + (pl ? ' / ' + pl.materialIds.filter(id => state.library.some(m => m.id === id)).length : ' total');
   $('lib-list').innerHTML = items.map(m => {
     const active = state.current && state.current.id === m.id;
     const cls = 'lib-item' + (active ? ' active' : '') + (state.renamingId === m.id ? ' renaming' : '');
     const nameCell = state.renamingId === m.id
       ? '<input class="lib-rename-input" value="' + escapeHtml(m.meta.title) + '" data-rid="' + m.id + '"/>'
-      : '<span class="lib-item-name">' + escapeHtml(m.meta.title) + '</span>' + (m.meta.saved === false ? '<span class="lib-draft">' + I18N[state.lang]['lib.draft'] + '</span>' : '');
+      : '<span class="lib-item-name">' + escapeHtml(m.meta.title) + '</span>' + (m.meta.saved === false ? '<span class="lib-draft">' + I18N[state.lang]['lib.draft'] + '</span>' : '') + (m.meta.generated && m.meta.audioReady === false ? '<span class="lib-draft unsynth">' + I18N[state.lang]['lib.unsynth'] + '</span>' : '');
     return '<div class="' + cls + '" data-id="' + m.id + '" title="' + escapeHtml(m.meta.title) + '">' +
       '<div class="lib-ic"><svg class="icon"><use href="#i-waveform"/></svg></div>' +
       '<div class="lib-item-body">' +
@@ -2903,22 +3132,34 @@ function renderLibrary() {
         '<div class="lib-item-meta"><span>' + escapeHtml(String(m.meta.domain).split(' ')[0]) + '</span><span>·</span><span>Lvl ' + m.meta.difficulty.replace('Level ', '') + '</span></div>' +
       '</div>' +
       '<div class="lib-item-actions">' +
+        '<span class="lib-act" data-act="pl-add" title="' + escapeHtml(I18N[state.lang]['pl.addTo']) + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-folder"/></svg></span>' +
+        (pl ? '<span class="lib-act" data-act="pl-remove" title="' + escapeHtml(I18N[state.lang]['pl.remove']) + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-minus"/></svg></span>' : '') +
         '<span class="lib-act" data-act="rename" title="Rename"><svg class="icon" style="width:13px;height:13px"><use href="#i-edit"/></svg></span>' +
         '<span class="lib-act del" data-act="delete" title="Delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></span>' +
       '</div></div>';
   }).join('');
   if (!items.length) {
-    $('lib-list').innerHTML = '<div class="t-11 dim" style="padding:14px 10px;text-align:center">' + (pl ? I18N[state.lang]['pl.empty'] : I18N[state.lang]['lib.empty']) + '</div>';
+    const msg = pl ? (I18N[state.lang]['pl.empty']) : (I18N[state.lang]['lib.empty']);
+    const clearBtn = !pl && (state.query || state.filters.length)
+      ? '<button class="btn btn-sm" id="btn-clear-filter" style="margin:10px auto 0">' + escapeHtml(I18N[state.lang]['lib.clearFilters']) + '</button>'
+      : '';
+    $('lib-list').innerHTML = '<div class="t-11 dim" style="padding:14px 10px;text-align:center">' + msg + '</div>' + clearBtn;
   }
+}
+function clearFilters() {
+  state.query = '';
+  state.filters = [];
+  const si = $('search-input'); if (si) si.value = '';
+  renderFilters(); renderLibrary();
 }
 function setActivePlaylist(id) {
   state.activePlaylist = state.activePlaylist === id ? null : id;
   state.plRenamingId = null;
-  renderPlaylists(); renderLibrary();
+  renderPlaylists(); renderLibrary(); renderPlayerBar();
 }
 function clearActivePlaylist() {
   state.activePlaylist = null;
-  renderPlaylists(); renderLibrary();
+  renderPlaylists(); renderLibrary(); renderPlayerBar();
 }
 function startPlCreate() {
   if (state.plCreating) return;
@@ -2980,8 +3221,9 @@ function doDeletePlaylist(id) {
   if (state.plModalTarget) renderPlList();
   showToast(I18N[state.lang]['pl.deleted'] + name);
 }
-function openPlModal() {
-  const art = currentArtifact();
+function openPlModal() { openPlModalFor(currentArtifact() ? currentArtifact().id : null); }
+function openPlModalFor(id) {
+  const art = state.library.find(x => x.id === id) || (state.current && state.current.id === id ? state.current : null);
   if (!art) return;
   state.plModalTarget = art;
   $('pl-material-name').textContent = art.meta.title;
@@ -3045,7 +3287,7 @@ function renderPlaylists() {
     rows.push('<div class="' + cls + '" data-plid="' + p.id + '" title="' + escapeHtml(p.name) + '">' +
       nameCell +
       '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">' +
-        '<span class="pill mono">' + p.materialIds.length + '</span>' +
+        '<span class="pill mono">' + p.materialIds.filter(id => state.library.some(m => m.id === id)).length + '</span>' +
         '<div class="pl-acts">' +
           '<span class="lib-act" data-act="pl-rename" title="Rename"><svg class="icon" style="width:13px;height:13px"><use href="#i-edit"/></svg></span>' +
           '<span class="lib-act del" data-act="pl-delete" title="Delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></span>' +
@@ -3693,7 +3935,16 @@ function playArtifact(art) {
   renderMaterial();
 }
 function loadMaterial(id) {
-  API.getMaterial(id).then(m => playArtifact(m)).catch(e => showToast('Load failed: ' + e.message));
+  /* Local-first: play instantly from the in-memory library, then refresh in
+     the background so the list and the detail stay consistent. */
+  if (window.innerWidth <= 720) toggleSidebar(false);   /* close the drawer after picking */
+  const local = state.library.find(m => m.id === id);
+  if (local) playArtifact(local);
+  API.getMaterial(id).then(m => {
+    const i = state.library.findIndex(x => x.id === id);
+    if (i >= 0) state.library[i] = m; else state.library.unshift(m);
+    if (state.current && state.current.id === id) { playArtifact(m); renderLibrary(); }
+  }).catch(e => { if (!local) showToast('Load failed: ' + e.message); });
 }
 function currentSegIndex() {
   const art = currentArtifact();
@@ -3729,7 +3980,15 @@ function setPlayIcon(playing) {
 (function initPbAudio() {
   const audio = document.getElementById('pb-audio');
   if (!audio) return;
+  let lastT = null;
   audio.addEventListener('timeupdate', () => {
+    /* today's listening stats: accumulate real playback seconds */
+    if (state.playing && lastT != null && audio.currentTime > lastT && audio.currentTime - lastT < 2) {
+      state.stats.playSec += audio.currentTime - lastT;
+      if (state.stats.playSec > 86400) state.stats.playSec = 86400;
+      saveStats();
+    }
+    lastT = state.playing ? audio.currentTime : null;
     if (!state.playing) return;
     const art = currentArtifact();
     state.time = Math.min(audio.currentTime * 1000, art.meta.total_duration_ms || 0);
@@ -3749,6 +4008,20 @@ function setPlayIcon(playing) {
     const art = currentArtifact();
     state.time = art.meta.total_duration_ms || 0;
     pause();
+    /* playlist queue: auto-advance to the next material in the active playlist */
+    if (state.queuePlay && state.activePlaylist) {
+      const pl = state.playlists.find(x => x.id === state.activePlaylist);
+      if (pl && pl.materialIds.length > 1) {
+        const i = pl.materialIds.indexOf(art.id);
+        const nextId = pl.materialIds[(i + 1) % pl.materialIds.length];
+        if (nextId && nextId !== art.id) {
+          const next = state.library.find(m => m.id === nextId);
+          const go = (m) => { playArtifact(m); play(); };
+          if (next) go(next);
+          else API.getMaterial(nextId).then(m => { const k = state.library.findIndex(x => x.id === nextId); if (k >= 0) state.library[k] = m; else state.library.unshift(m); go(m); }).catch(() => {});
+        }
+      }
+    }
   });
 })();
 function play() {
@@ -3838,8 +4111,17 @@ function renderPlayerBar() {
   $('pb-thumb').style.left = pct + '%';
   const sp = CONFIG.speeds[state.speedIdx];
   $('pb-speed-label').textContent = sp === 1 ? '1.0x' : (sp + 'x');
+  $('pb-back-num').textContent = state.seekStep;
+  $('pb-fwd-num').textContent = state.seekStep;
   $('btn-pb-play').classList.toggle('disabled', art.meta.audioReady === false);
   $('btn-pb-subs').disabled = art.meta.audioReady === false;
+  const q = $('btn-pb-queue');
+  if (q) {
+    q.disabled = !state.activePlaylist;
+    q.classList.toggle('on', !!(state.activePlaylist && state.queuePlay));
+  }
+  const vf = $('vol-fill');
+  if (vf) vf.style.width = (state.volume * 100) + '%';
 }
 function setSpeedMenu() {
   const m = $('speed-menu');
@@ -3860,10 +4142,43 @@ function closeSpeedMenu() { $('speed-menu').classList.add('hidden'); }
     state.volume = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
     document.getElementById('vol-fill').style.width = (state.volume * 100) + '%';
     try { document.getElementById('pb-audio').volume = state.volume; } catch (e) {}
+    try { localStorage.setItem('telg-volume', String(state.volume)); } catch (e) {}
   };
   track.addEventListener('pointerdown', (e) => { dragging = true; e.preventDefault(); setVol(e.clientX); });
   window.addEventListener('pointermove', (e) => { if (dragging) setVol(e.clientX); });
   window.addEventListener('pointerup', () => { dragging = false; });
+})();
+/* --- seek bar: click to jump, drag the thumb for precise seeking --- */
+(function initSeekDrag() {
+  const bar = document.getElementById('pb-seek');
+  if (!bar) return;
+  let dragging = false, moved = false, downX = 0;
+  const seekTo = (clientX, autoplay) => {
+    const art = currentArtifact();
+    if (!art || !art.meta.total_duration_ms) return;
+    const r = bar.getBoundingClientRect();
+    seek(Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * art.meta.total_duration_ms, autoplay);
+  };
+  bar.addEventListener('pointerdown', (e) => {
+    if (!state.current) return;
+    dragging = true; moved = false; downX = e.clientX;
+    e.preventDefault();
+    try { bar.setPointerCapture(e.pointerId); } catch (err) {}
+    seekTo(e.clientX, false);
+  });
+  bar.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    if (Math.abs(e.clientX - downX) > 4) moved = true;
+    seekTo(e.clientX, false);
+  });
+  const up = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    try { bar.releasePointerCapture(e.pointerId); } catch (err) {}
+    if (!moved) seekTo(e.clientX, true);   /* plain click keeps autoplay behaviour */
+  };
+  bar.addEventListener('pointerup', up);
+  bar.addEventListener('pointercancel', () => { dragging = false; });
 })();
 function setSpeed(sp) {
   const i = CONFIG.speeds.indexOf(sp);
@@ -3886,7 +4201,9 @@ function pickAnswer(opt) {
   card.querySelectorAll('[data-ok]').forEach(el => el.style.display = 'none');
   card.querySelector('[data-expl]').style.display = 'none';
   opt.querySelector('input').checked = true;
+  state.stats.quizTotal++;
   if (oi === qt.answer) {
+    state.stats.quizCorrect++;
     opt.classList.add('correct');
     opt.querySelector('[data-ok]').style.display = '';
     card.querySelector('[data-expl]').style.display = '';
@@ -3898,6 +4215,8 @@ function pickAnswer(opt) {
     okOpt.querySelector('[data-ok]').style.display = '';
     card.querySelector('[data-expl]').style.display = '';
   }
+  saveStats();
+  renderToday();
 }
 
 /* ---------------- MODAL / TOAST ---------------- */
@@ -4033,6 +4352,140 @@ function usageChartSVG(buckets, sel, w) {
     '<g id="usage-pan">' + bars + labels + '</g></svg>';
 }
 
+/* ---------------- STUDY STATS (daily listening time) ---------------- */
+let studyGran = 'week', studyOffset = 0, studySel = -1;
+function loadStudyDaily() {
+  try { return JSON.parse(localStorage.getItem('telg-stats-daily') || '{}'); } catch (e) { return {}; }
+}
+function fmtMins(sec) {
+  const m = Math.round((sec || 0) / 60);
+  if (m < 60) return m + 'm';
+  return (m / 60).toFixed(1).replace(/\.0$/, '') + 'h';
+}
+function studyBucketLabel(k, gran) {
+  if (gran === 'day') { const h = parseInt(k, 10); return pad2(h) + ':00'; }
+  if (gran === 'week') {
+    const d = new Date(k + 'T00:00:00');
+    return (d.getMonth() + 1) + '/' + d.getDate();
+  }
+  if (gran === 'month') { const p = k.split('-'); return p[1] + '月'; }
+  return k; /* year */
+}
+function studyBuckets(gran, offset) {
+  const daily = loadStudyDaily();
+  const now = new Date();
+  const buckets = [];
+  if (gran === 'day') {
+    /* one day: current hour bars from today's hours map */
+    const today = todayKey();
+    const d = daily[today] || { hours: {} };
+    const cur = new Date().getHours();
+    for (let h = 0; h <= cur; h++) buckets.push({ key: pad2(h), sec: d.hours[pad2(h)] || 0 });
+  } else if (gran === 'week') {
+    /* window of 14 weeks, one bar per week (aggregate by ISO week) */
+    const wk = (d) => { const t = new Date(d + 'T00:00:00'); const day = (t.getDay() + 6) % 7; t.setDate(t.getDate() - day); return t.toISOString().slice(0, 10); };
+    const map = {};
+    Object.keys(daily).forEach(k => { const w = wk(k); map[w] = (map[w] || 0) + daily[k].sec; });
+    const endWk = new Date(now); endWk.setDate(endWk.getDate() - ((endWk.getDay() + 6) % 7) - offset * 7);
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(endWk); d.setDate(d.getDate() - i * 7);
+      const key = d.toISOString().slice(0, 10);
+      buckets.push({ key, sec: map[key] || 0 });
+    }
+  } else if (gran === 'month') {
+    const map = {};
+    Object.keys(daily).forEach(k => { const m = k.slice(0, 7); map[m] = (map[m] || 0) + daily[k].sec; });
+    const base = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+      const key = d.getFullYear() + '-' + pad2(d.getMonth() + 1);
+      buckets.push({ key, sec: map[key] || 0 });
+    }
+  } else { /* year */
+    const map = {};
+    Object.keys(daily).forEach(k => { const y = k.slice(0, 4); map[y] = (map[y] || 0) + daily[k].sec; });
+    const base = now.getFullYear() - offset;
+    for (let i = 9; i >= 0; i--) {
+      const y = base - i;
+      buckets.push({ key: String(y), sec: map[String(y)] || 0 });
+    }
+  }
+  return buckets.map((b, i) => ({ ...b, label: studyBucketLabel(b.key, gran), total_tokens: Math.round(b.sec / 60), calls: 0 }));
+}
+function renderStudyChart() {
+  const chart = $('study-chart');
+  if (!chart) return;
+  const w = Math.max(320, chart.clientWidth);
+  const buckets = studyBuckets(studyGran, studyOffset);
+  chart.innerHTML = usageChartSVG(buckets, studySel, w);
+  chart.querySelectorAll('.usage-bar').forEach(bar => {
+    bar.addEventListener('click', () => {
+      studySel = +bar.dataset.idx;
+      renderStudyChart();
+      const b = buckets[+bar.dataset.idx];
+      const s = $('study-sel');
+      if (s) s.textContent = b ? (studyGran === 'day' ? (parseInt(b.key, 10) + ':00–' + (parseInt(b.key, 10) + 1) + ':00') : b.key) + ' · ' + b.total_tokens + ' min' : '—';
+    });
+  });
+  /* restore selection text if a bar is selected */
+  if (studySel >= 0 && buckets[studySel]) {
+    const b = buckets[studySel];
+    const s = $('study-sel');
+    if (s) s.textContent = (studyGran === 'day' ? (parseInt(b.key, 10) + ':00–' + (parseInt(b.key, 10) + 1) + ':00') : b.key) + ' · ' + b.total_tokens + ' min';
+  }
+}
+function renderStudy() {
+  const box = $('study-body');
+  if (!box) return;
+  const daily = loadStudyDaily();
+  let totalSec = 0, todaySec = 0;
+  Object.keys(daily).forEach(k => { totalSec += daily[k].sec || 0; if (k === todayKey()) todaySec = daily[k].sec || 0; });
+  box.innerHTML = '<div class="usage-grid" id="study-cards"></div>' +
+    '<div class="s-sec-title" data-i18n="settings.usage.trend">Trend</div>' +
+    '<div class="usage-chart-head">' +
+    '<div class="seg" id="study-gran" style="grid-template-columns:repeat(4,1fr);max-width:220px">' +
+    '<button class="seg-item" data-gran="day" data-i18n="settings.usage.viewDay">Day</button>' +
+    '<button class="seg-item" data-gran="week" data-i18n="settings.usage.viewWeek">Week</button>' +
+    '<button class="seg-item" data-gran="month" data-i18n="settings.usage.viewMonth">Month</button>' +
+    '<button class="seg-item" data-gran="year" data-i18n="settings.usage.viewYear">Year</button>' +
+    '</div>' +
+    '<span class="t-10 dim" id="study-sel" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span>' +
+    '<span style="display:flex;align-items:center;gap:4px;flex-shrink:0">' +
+    '<button class="btn btn-ghost" id="study-now" style="display:none;padding:2px 8px;font-size:11px" data-i18n="settings.usage.now">Now</button>' +
+    '<button class="icon-btn" id="study-prev" title="Earlier" style="width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center"><svg class="icon icon-sm"><use href="#i-chevron-left"/></svg></button>' +
+    '<button class="icon-btn" id="study-next" title="Later" style="width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center"><svg class="icon icon-sm"><use href="#i-chevron-right"/></svg></button>' +
+    '</span>' +
+    '</div>' +
+    '<div class="usage-chart" id="study-chart" title="Click a bar to inspect"></div>';
+  applyLang();
+  box.querySelectorAll('#study-gran .seg-item').forEach(b => b.classList.toggle('active', b.dataset.gran === studyGran));
+  const cards = $('study-cards');
+  if (cards) cards.innerHTML =
+    '<div class="usage-cell"><span class="t-10 uc faint" data-i18n="settings.study.total">Total</span>' +
+    '<span class="t-15 mono">' + fmtMins(totalSec) + '</span>' +
+    '<span class="t-10 dim">' + Object.keys(daily).length + ' days</span></div>' +
+    '<div class="usage-cell"><span class="t-10 uc faint" data-i18n="settings.usage.today">Today</span>' +
+    '<span class="t-15 mono">' + fmtMins(todaySec) + '</span>' +
+    '<span class="t-10 dim">' + fmtMins(state.goalMin * 60) + ' target</span></div>';
+  box.addEventListener('click', e => {
+    const g = e.target.closest('#study-gran .seg-item');
+    if (g && g.dataset.gran !== studyGran) {
+      studyGran = g.dataset.gran; studyOffset = 0; studySel = -1;
+      box.querySelectorAll('#study-gran .seg-item').forEach(b => b.classList.toggle('active', b.dataset.gran === studyGran));
+      renderStudyChart();
+    }
+    if (e.target.closest('#study-now')) { studyOffset = 0; studySel = -1; renderStudyChart(); }
+    if (e.target.closest('#study-prev') || e.target.closest('#study-next')) {
+      const dir = e.target.closest('#study-prev') ? 1 : -1;
+      studyOffset = Math.max(0, studyOffset + dir);
+      studySel = -1;
+      const ns = $('study-sel'); if (ns) ns.textContent = '—';
+      renderStudyChart();
+    }
+  });
+  renderStudyChart();
+}
+
 async function renderUsage() {
   const box = $('usage-body');
   if (!box) return;
@@ -4147,7 +4600,7 @@ function switchMTab(tab, smooth) {
 function watchMTab() {
   const modal = document.querySelector('#engine-modal .modal-body');
   if (!modal) return;
-  const secs = ['general', 'llm', 'tts', 'shortcuts', 'developer', 'usage', 'about'].map(t => $('mp-' + t)).filter(Boolean);
+  const secs = ['general', 'llm', 'tts', 'shortcuts', 'developer', 'study', 'usage', 'about'].map(t => $('mp-' + t)).filter(Boolean);
   modal.addEventListener('scroll', () => {
     const top = modal.getBoundingClientRect().top + modal.clientHeight * 0.5;
     let cur = 'general';
@@ -4160,11 +4613,13 @@ function openModal() {
   overlay.classList.remove('hidden');
   overlay.querySelector('.modal-body').scrollTop = 0;
   renderUsage();
+  renderStudy();
   $('cfg-lang').value = state.lang;
   const seg = document.querySelector('#cfg-theme-seg [data-theme-opt="' + state.theme + '"]');
   if (seg) setSeg($('cfg-theme-seg'), seg);
   $('cfg-def-speed').value = String(CONFIG.speeds[state.speedIdx]);
   const ssk = $('cfg-seek-step'); if (ssk) ssk.value = String(state.seekStep);
+  const gmS = $('cfg-goal-min'); if (gmS) gmS.value = String(state.goalMin);
   const zhSeg = document.querySelector('#cfg-zh-seg [data-zh-opt="' + (state.zhVisible ? 'on' : 'off') + '"]');
   if (zhSeg) setSeg($('cfg-zh-seg'), zhSeg);
   try {
@@ -4289,6 +4744,7 @@ function saveModal() {
     theme: document.querySelector('#cfg-theme-seg .seg-item.active').dataset.themeOpt,
     defSpeed: $('cfg-def-speed').value,
     seekStep: $('cfg-seek-step').value,
+    goalMin: $('cfg-goal-min').value,
     zhDefault: (document.querySelector('#cfg-zh-seg .seg-item.active') || {}).dataset.zhOpt || 'on',
     llm: { provider: $('cfg-llm-provider').value, model: $('cfg-llm-model').value, baseUrl: $('cfg-llm-base').value, apiKey: $('cfg-llm-key').value, temperature: $('cfg-llm-temp').value },
     tts: { provider: $('cfg-tts-provider').value, voices: currentVoiceRoles(), voice: currentVoiceRoles().map(x => x.voice).filter(Boolean).join(' + '), speechRate: $('cfg-tts-rate').value }
@@ -4302,12 +4758,15 @@ function saveModal() {
   if (si >= 0) state.speedIdx = si;
   const ss = parseInt(cfg.seekStep, 10);
   if ([5, 10, 15, 30].includes(ss)) state.seekStep = ss;
+  const gm = parseInt(cfg.goalMin, 10);
+  if ([15, 30, 45, 60, 90].includes(gm)) state.goalMin = gm;
   state.zhVisible = cfg.zhDefault !== 'off';
   updateSeekStep();
   applyLang();
   applyTheme();
   renderPlayerBar();
   applyTranscriptLang();
+  renderToday();
   showToast(I18N[state.lang]['settings.saved']);
   closeModal();
 }
@@ -4353,10 +4812,17 @@ function toggleFilter(f, btn) {
   btn.classList.toggle('active-filter', i < 0);
   renderLibrary();
 }
+function clearFiltersFromClick() { clearFilters(); }
 
 /* ---------------- GLOBAL DELEGATED CLICK ---------------- */
 function onClick(e) {
-  if (e.target.closest && e.target.closest('#lib-fold')) { toggleFold('lib'); return; }
+  if (e.target.closest && e.target.closest('#btn-sidebar')) { toggleSidebar(); return; }
+  if (e.target.closest('#sidebar-backdrop')) { toggleSidebar(false); return; }
+  if (e.target.closest('#btn-clear-filter')) { clearFilters(); return; }
+  if (e.target.closest && e.target.closest('#lib-fold')) {
+    if (window.innerWidth <= 720) { toggleSidebar(false); return; }
+    toggleFold('lib'); return;
+  }
   if (e.target.closest && e.target.closest('#ins-fold')) { toggleFold('ins'); return; }
   if (e.target.closest('#btn-rename')) { startRenameHead(); return; }
   if (e.target.closest('#adj-role-add')) { addAdjustRole(); return; }
@@ -4437,6 +4903,17 @@ function onClick(e) {
   if (e.target.closest('#btn-pub-close') || e.target.closest('#btn-pub-cancel')) { closePublishModal(); return; }
   if (e.target.closest('#btn-pub-ok')) { publishCurrent(); return; }
   if (e.target.id === 'publish-modal') { closePublishModal(); return; }
+  if (e.target.closest('#btn-bm-close') || e.target.closest('#btn-bm-done')) { closeBookmarkModal(); return; }
+  if (e.target.closest('#btn-bm-clear')) { clearBookmarks(); return; }
+  if (e.target.id === 'bookmark-modal') { closeBookmarkModal(); return; }
+  const bmRow = e.target.closest('.bm-row');
+  if (bmRow) {
+    const delBtn = e.target.closest('[data-bm-del]');
+    if (delBtn) { removeBookmark(+delBtn.dataset.bmDel); return; }
+    jumpToBookmark(bmRow.dataset.mid, +bmRow.dataset.idx);
+    closeBookmarkModal();
+    return;
+  }
   if (e.target.closest('#btn-add-pl')) { openPlModal(); return; }
   if (e.target.closest('#btn-pl-close') || e.target.closest('#btn-pl-done')) { closePlModal(); return; }
   if (e.target.id === 'pl-modal') { closePlModal(); return; }
@@ -4457,6 +4934,8 @@ function onClick(e) {
     const id = libAct.closest('.lib-item').dataset.id;
     if (libAct.dataset.act === 'rename') renameLibItem(id);
     else if (libAct.dataset.act === 'delete') deleteLibItem(id);
+    else if (libAct.dataset.act === 'pl-remove' && state.activePlaylist) removeFromActivePlaylist(id);
+    else if (libAct.dataset.act === 'pl-add') openPlModalFor(id);
     return;
   }
   if (e.target.closest('.lib-rename-input')) return;
@@ -4483,7 +4962,8 @@ function onClick(e) {
   if (e.target.closest('#btn-pb-back10')) { seek(state.time - state.seekStep * 1000, true); return; }
   if (e.target.closest('#btn-pb-fwd10')) { seek(state.time + state.seekStep * 1000, true); return; }
   if (e.target.closest('#btn-pb-loop')) { toggleLoop(); return; }
-  if (e.target.closest('#btn-pb-bookmark')) { showToast('Phrase bookmarked (demo)'); return; }
+  if (e.target.closest('#btn-pb-bookmark')) { openBookmarkModal(); return; }
+  if (e.target.closest('#btn-pb-queue')) { toggleQueuePlay(); return; }
   const spItem = e.target.closest('#speed-menu [data-speed]');
   if (spItem) { setSpeed(parseFloat(spItem.dataset.speed)); return; }
   if (e.target.closest('#btn-pb-speed')) { toggleSpeedMenu(); return; }
@@ -4496,12 +4976,6 @@ function onClick(e) {
     try { $('pb-audio').volume = state.volume; } catch (e) {}
     return;
   }
-  const sk = e.target.closest('#pb-seek');
-  if (sk) {
-    const art = currentArtifact(), r = sk.getBoundingClientRect();
-    seek((e.clientX - r.left) / r.width * art.meta.total_duration_ms, true);
-    return;
-  }
   const act = e.target.closest('[data-act]');
   if (act) {
     const row = act.closest('.trow'), idx = +row.dataset.idx;
@@ -4512,7 +4986,7 @@ function onClick(e) {
       seekSentence(idx, true);
       return;
     }
-    if (act.dataset.act === 'bookmark') { showToast('Phrase bookmarked (demo)'); return; }
+    if (act.dataset.act === 'bookmark') { addBookmark(idx); return; }
     seekSentence(idx, true);
     return;
   }
@@ -4527,6 +5001,11 @@ function onClick(e) {
 
 /* ---------------- KEYBOARD ---------------- */
 function onKey(e) {
+  if (e.key === 'Escape') {
+    if (state.renamingId) { state.renamingId = null; renderLibrary(); return; }
+    if (state.plRenamingId) { state.plRenamingId = null; renderPlaylists(); return; }
+    if (state.plCreating) { state.plCreating = false; renderPlaylists(); if (state.plModalTarget) renderPlList(); return; }
+  }
   if (e.key === 'Enter' && e.target && e.target.classList && e.target.classList.contains('lib-rename-input')) {
     e.target.dataset.done = '1';
     commitRename(e.target.dataset.rid, e.target.value);
@@ -4574,6 +5053,15 @@ function onKey(e) {
 
 /* ---------------- INIT ---------------- */
 function init() {
+  /* restore persisted volume, phrase bookmarks and today's stats */
+  try {
+    const sv = parseFloat(localStorage.getItem('telg-volume'));
+    if (sv >= 0 && sv <= 1) state.volume = sv;
+    const sb = JSON.parse(localStorage.getItem('telg-bookmarks') || '[]');
+    if (Array.isArray(sb)) state.bookmarks = sb;
+    state.stats = loadStats();
+  } catch (e) {}
+  renderToday();
   const pbAudio = document.getElementById('pb-audio');
   if (pbAudio) {
     pbAudio.addEventListener('error', () => {
@@ -4585,7 +5073,7 @@ function init() {
   }
   const extra = document.createElement('style');
   extra.textContent = '.preset-tag.active-filter{background:var(--surface-high);color:var(--on-surface);border:1px solid var(--line-strong)}' +
-    '.btn.on{background:var(--primary);color:var(--on-primary);border-color:transparent}' +
+    '.pb-loop-btn.on{background:color-mix(in srgb, var(--primary) 12%, transparent)}' +
     '.pb-seek:hover #pb-thumb{opacity:1}' +
     '.trow.active .trow-en{color:var(--on-surface)}' +
     '.q-opt.correct{outline:1px solid var(--primary-dim)}';
@@ -4665,7 +5153,7 @@ async function bootLive() {
       const pls = await API.listPlaylists();
       if (pls && pls.length) state.playlists = pls;
     } catch (e) {}
-    renderMaterial(); renderLibrary(); renderPlaylists(); renderPlayerBar();
+    renderMaterial(); renderLibrary(); renderPlaylists(); renderPlayerBar(); renderToday();
   } catch (err) {
     console.warn('TELG live backend unavailable:', err);
     showToast('Backend unavailable at ' + CONFIG.apiBase + ' — start uvicorn and reload, or enable Test Data in Developer settings');

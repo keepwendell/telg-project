@@ -913,6 +913,7 @@ def patch_material(mid: str, p: PatchMaterialIn):
 @app.delete("/api/v1/materials/{mid}")
 def delete_material(mid: str):
     conn = db()
+    conn.execute("DELETE FROM playlist_materials WHERE material_id = ?", (mid,))
     conn.execute("DELETE FROM materials WHERE id = ?", (mid,))
     conn.commit()
     conn.close()
@@ -1242,7 +1243,9 @@ def list_playlists():
         mids = [
             m["material_id"]
             for m in conn.execute(
-                "SELECT material_id FROM playlist_materials WHERE playlist_id = ? ORDER BY position",
+                "SELECT pm.material_id FROM playlist_materials pm "
+                "JOIN materials m ON m.id = pm.material_id "
+                "WHERE pm.playlist_id = ? ORDER BY pm.position",
                 (r["id"],),
             )
         ]
