@@ -370,7 +370,44 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .gen-total-fill{height:100%;width:0%;background:var(--primary);border-radius:2px;transition:width .35s var(--ease)}
 .gen-total-pct{font-size:10px;font-family:var(--mono);color:var(--outline);min-width:36px;text-align:right}
 .modal-overlay{backdrop-filter:blur(3px)}
+#welcome-modal{z-index:300;background:rgba(6,10,18,.82);backdrop-filter:blur(10px)}
+.welcome-card{width:min(400px,92vw);background:var(--surface);border:1px solid var(--line-strong);border-radius:16px;padding:32px 30px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:genIn .25s var(--ease)}
+.welcome-logo{font-size:26px;font-weight:800;letter-spacing:.14em;color:var(--primary);margin-bottom:4px}
+#welcome-auth{text-align:left}
+.btn-link{background:none;border:none;color:var(--primary);font-size:12px;cursor:pointer;font-family:var(--font-body);padding:2px}
+.btn-link.dim{color:var(--on-variant)}
+.btn-link:hover{text-decoration:underline}
+#onboard-modal{z-index:300}
+.onboard-card{width:min(620px,94vw);background:var(--surface);border:1px solid var(--line-strong);border-radius:16px;padding:30px 34px 26px;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:genIn .25s var(--ease);max-height:90vh;overflow:auto;min-height:min(640px,80vh);display:flex;flex-direction:column}
+#onboard-modal .ob-body-wrap{flex:1;display:flex;flex-direction:column}
+.onboard-card .ob-q{flex:1;display:flex;flex-direction:column;gap:14px}
+.onboard-card .ob-field{display:flex;flex-direction:column;gap:6px}
+.onboard-card .ob-field .ob-label{font-size:12.5px;font-weight:600}
+.onboard-card .ob-row{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:15px 2px;border-bottom:1px solid var(--line)}
+.onboard-card .ob-row:last-child{border-bottom:none}
+.onboard-card .ob-name{font-size:14px;font-weight:600;line-height:1.4}
+.onboard-card .ob-desc{font-size:12px;color:var(--outline);line-height:1.5;margin-top:3px;max-width:300px;overflow-wrap:break-word}
+.onboard-card .ob-ctrl{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center;min-width:0;flex:1;max-width:56%}
+.onboard-card .ob-ctrl .input{width:min(300px,100%)}
+.chip[disabled]{opacity:.42;cursor:not-allowed;border-style:dashed}
+.ob-llm-form{border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--surface-low);display:flex;flex-direction:column;gap:2px;flex:1;justify-content:space-between}
+.ob-llm-form .s-row{gap:14px;padding:8px 0}
+.ob-llm-form .s-name{font-size:13px}
+.ob-llm-form .s-ctrl .input{width:min(300px,100%)}
+.onboard-step{display:flex;gap:6px;margin-bottom:14px}
+.onboard-step .dot{flex:1;height:3px;border-radius:2px;background:var(--line-strong)}
+.onboard-step .dot.on{background:var(--primary)}
+.ob-q{display:flex;flex-direction:column;gap:10px;min-height:150px}
+.ob-q .ob-label{font-size:12.5px;font-weight:600}
+.ob-chip-row{display:flex;flex-wrap:wrap;gap:8px}
+#confirm-modal{z-index:220}
 .confirm-box{width:min(360px,92vw);background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;padding:26px 24px 0;display:flex;flex-direction:column;align-items:stretch;text-align:left;animation:genIn .2s var(--ease);box-shadow:0 16px 44px rgba(0,0,0,.28)}
+.inp{background:var(--surface-low);border:1px solid var(--line);border-radius:6px;color:var(--on-surface);font-family:var(--font-body);font-size:12.5px;padding:7px 10px;transition:border-color .12s var(--ease),background .12s var(--ease)}
+.inp::placeholder{color:var(--outline)}
+.inp:focus{outline:none;background:var(--surface);border-color:var(--primary-dim)}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;font-size:10.5px;color:var(--on-variant);background:var(--surface-low);border:1px solid var(--line);border-radius:99px;white-space:nowrap}
+.s-empty{padding:18px;text-align:center;border:1px dashed var(--line-strong);border-radius:10px;background:var(--surface-low)}
+.btn-ghost.del{color:var(--err)}
 .confirm-title{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--on-surface);line-height:1.4}
 .confirm-name{font-size:14px;font-weight:600;letter-spacing:.005em;color:var(--on-surface);background:var(--surface-high);border:1px solid var(--line);border-radius:6px;padding:7px 12px;margin:14px 0 10px;width:fit-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .confirm-text{font-size:12.5px;line-height:1.7;color:var(--dim);margin:0;max-width:100%}
@@ -496,7 +533,7 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 
 /* ---------- toast ---------- */
 .toast{
-  position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(12px);z-index:120;
+  position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(12px);z-index:500;
   background:var(--surface-high);border:1px solid var(--line-strong);color:var(--on-surface);
   padding:10px 16px;border-radius:9px;font-size:12px;line-height:1.55;
   display:flex;align-items:center;gap:10px;
@@ -1390,7 +1427,133 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   </div>
 </div>
 
+<!-- ===================== PROFILE MODAL ===================== -->
+      <div class="modal-overlay hidden" id="profile-modal">
+        <div class="modal-card" style="width:560px;max-width:94vw">
+          <div class="modal-head">
+            <div class="t-15 bold" data-i18n="settings.profile.editorTitle">Learning Profile</div>
+            <button class="btn-icon" id="btn-profile-close" title="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+          </div>
+          <div class="modal-body" id="profile-editor-body">
+            <div class="t-11 dim" style="margin-bottom:12px" data-i18n="settings.profile.editorHint">Tell us about your role, domain and goals — we will generate a profile that drives default generation settings.</div>
+            <div class="s-row">
+              <div class="s-info">
+                <div class="s-name" data-i18n="settings.profile.role">Your Role / Position</div>
+                <div class="s-desc" data-i18n="settings.profile.roleHint">e.g. Controls Algorithm Engineer, Student</div>
+              </div>
+              <div class="s-ctrl" style="flex:1;max-width:260px">
+                <input class="inp" id="pf-role" style="width:100%" placeholder="Controls Algorithm Engineer"/>
+              </div>
+            </div>
+            <div class="s-row">
+              <div class="s-info">
+                <div class="s-name" data-i18n="settings.profile.domain">Primary Practice Domain</div>
+                <div class="s-desc" data-i18n="settings.profile.domainHint">Pick a preset or type your own.</div>
+              </div>
+              <div class="s-ctrl" style="flex:1;max-width:260px">
+                <input class="inp" id="pf-domain" style="width:100%" placeholder="Semiconductor" list="pf-domain-list"/>
+                <datalist id="pf-domain-list"></datalist>
+              </div>
+            </div>
+            <div class="s-row">
+              <div class="s-info">
+                <div class="s-name" data-i18n="settings.profile.lang">Language Direction</div>
+                <div class="s-desc" data-i18n="settings.profile.langHint">Learning language + translation.</div>
+              </div>
+              <div class="s-ctrl">
+                <div class="seg" id="pf-lang" style="grid-template-columns:repeat(3,1fr);max-width:300px">
+                  <button class="seg-item active" data-lang="en-zh" data-i18n="settings.profile.langEnZh">EN ↔ ZH</button>
+                  <button class="seg-item" data-lang="ja-zh" data-i18n="settings.profile.langJaZh">JA ↔ ZH</button>
+                  <button class="seg-item" data-lang="other" data-i18n="settings.profile.langOther">Other</button>
+                </div>
+              </div>
+            </div>
+            <div class="s-row" style="align-items:flex-start">
+              <div class="s-info">
+                <div class="s-name" data-i18n="settings.profile.scenario">Practice Scenarios</div>
+                <div class="s-desc" data-i18n="settings.profile.scenarioHint">Multiple select.</div>
+              </div>
+              <div class="s-ctrl" style="flex-wrap:wrap;justify-content:flex-end;gap:6px;max-width:340px">
+                <button class="chip" data-sc="interview" data-i18n="settings.profile.scInterview">Interview</button>
+                <button class="chip" data-sc="meeting" data-i18n="settings.profile.scMeeting">Meeting</button>
+                <button class="chip" data-sc="collab" data-i18n="settings.profile.scCollab">Collaboration</button>
+                <button class="chip" data-sc="supplier" data-i18n="settings.profile.scSupplier">Supplier</button>
+                <button class="chip" data-sc="class" data-i18n="settings.profile.scClass">Classroom</button>
+              </div>
+            </div>
+            <div class="s-row">
+              <div class="s-info">
+                <div class="s-name" data-i18n="settings.profile.focus">Focus Areas</div>
+                <div class="s-desc" data-i18n="settings.profile.focusHint">Optional — what you want to improve.</div>
+              </div>
+              <div class="s-ctrl" style="flex:1;max-width:260px">
+                <input class="inp" id="pf-focus" style="width:100%" placeholder="Technical vocabulary, interview fluency"/>
+              </div>
+            </div>
+            <div class="s-row" style="margin-top:4px">
+              <div class="s-info">
+                <div class="s-name" data-i18n="settings.profile.genResult">LLM Generated Profile</div>
+                <div class="s-desc" data-i18n="settings.profile.genResultHint">AI drafts role portrait, domain profile, focus &amp; tone — editable below.</div>
+              </div>
+            </div>
+            <div id="pf-gen-result" style="display:none">
+              <div class="m-panel" style="padding:12px;margin-bottom:10px">
+                <div class="flabel" style="margin-bottom:6px" data-i18n="settings.profile.rolePortrait">Role Portrait</div>
+                <textarea class="inp" id="pf-out-role" rows="2" style="width:100%;resize:vertical"></textarea>
+                <div class="flabel" style="margin:10px 0 6px" data-i18n="settings.profile.domainProfile">Domain Profile</div>
+                <textarea class="inp" id="pf-out-domain" rows="3" style="width:100%;resize:vertical"></textarea>
+                <div class="flabel" style="margin:10px 0 6px" data-i18n="settings.profile.focusTone">Focus &amp; Tone</div>
+                <textarea class="inp" id="pf-out-focus" rows="2" style="width:100%;resize:vertical"></textarea>
+              </div>
+            </div>
+            <div id="pf-gen-status" class="t-10 dim" style="margin:8px 0"></div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+              <button class="btn btn-ghost" id="btn-pf-generate" data-i18n="settings.profile.genBtn">Generate with LLM</button>
+              <button class="btn btn-ghost" id="btn-pf-clear" data-i18n="settings.profile.clearBtn">Clear</button>
+              <button class="btn btn-primary" id="btn-pf-save" data-i18n="settings.profile.saveBtn">Save Profile</button>
+            </div>
+          </div>
+        </div>
+      </div>
 <!-- ===================== BOOKMARKS MODAL ===================== -->
+<!-- ===================== WELCOME / ONBOARDING ===================== -->
+      <div class="modal-overlay hidden" id="welcome-modal">
+        <div class="welcome-card">
+          <div class="welcome-logo">TELG</div>
+          <div class="t-15 bold" id="welcome-title">Technical Listening</div>
+          <div class="t-11 dim" style="margin:6px 0 18px" id="welcome-sub">Real engineering dialogues · sentence-level listening training.</div>
+          <div id="welcome-auth">
+            <div class="flabel" style="margin-bottom:6px">Username</div>
+            <input class="input" id="wl-username" style="width:100%" autocomplete="username"/>
+            <div class="flabel" style="margin:10px 0 6px">Password</div>
+            <input class="input" id="wl-password" type="password" style="width:100%" autocomplete="current-password"/>
+            <div class="flabel" style="margin:10px 0 6px" id="wl-pass2-label">Confirm Password</div>
+            <input class="input" id="wl-pass2" type="password" style="width:100%" autocomplete="new-password"/>
+            <div class="t-10 dim err" id="wl-err" style="min-height:16px;margin-top:6px"></div>
+            <div style="display:flex;gap:8px;margin-top:6px">
+              <button class="btn btn-primary" style="flex:1" id="btn-wl-primary" data-i18n="welcome.create">Create &amp; Start</button>
+            </div>
+            <div style="display:flex;justify-content:center;gap:12px;margin-top:12px">
+              <button class="btn-link" id="btn-wl-switch" data-i18n="welcome.switch">Already have an account? Log in</button>
+            </div>
+            <div style="display:flex;justify-content:center;margin-top:8px">
+              <button class="btn-link dim" id="btn-wl-guest" data-i18n="welcome.guest">Continue as guest</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-overlay hidden" id="onboard-modal">
+        <div class="onboard-card">
+          <div class="onboard-step" id="ob-step-dots"></div>
+          <div class="t-13 bold" id="ob-title">Setup</div>
+          <div class="t-11 dim" id="ob-sub" style="margin:4px 0 12px"></div>
+          <div id="ob-body" class="ob-body-wrap"></div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+            <button class="btn btn-ghost hidden" id="ob-back" data-i18n="welcome.back">Back</button>
+            <button class="btn btn-primary" id="ob-next" data-i18n="welcome.next">Next</button>
+          </div>
+        </div>
+      </div>
 <div class="modal-overlay hidden" id="bookmark-modal">
   <div class="modal modal-settings">
     <div class="modal-head">
@@ -1784,6 +1947,14 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <div id="study-body">
           <div class="t-11 dim" data-i18n="settings.usage.loading">Loading…</div>
         </div>
+        <div class="s-sec-title" data-i18n="settings.profile.secProfile">Learning Profile</div>
+        <div id="profile-box">
+          <div class="t-11 dim" data-i18n="settings.profile.empty">No profile yet — create one to personalize generation.</div>
+        </div>
+        <div class="s-sec-title" data-i18n="settings.profile.secDomain">Domain Profiles</div>
+        <div id="domain-box">
+          <div class="t-11 dim" data-i18n="settings.profile.empty">No domains yet.</div>
+        </div>
       </div>
       <div class="m-panel" id="mp-usage">
         <div class="m-section-head">
@@ -1798,6 +1969,17 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <div class="m-section-head">
           <div class="t-12 bold" data-i18n="settings.tab.about">About</div>
           <div class="t-11 dim" data-i18n="settings.about.sub">Technical English Listening Generator — research-grade listening materials for engineers.</div>
+        </div>
+        <div class="s-sec-title" data-i18n="settings.about.account">Account</div>
+        <div class="s-row">
+          <div class="s-info">
+            <div class="s-name" data-i18n="settings.about.accountName">Local Account</div>
+            <div class="s-desc" id="about-account-desc">Guest — no local account.</div>
+          </div>
+          <div class="s-ctrl">
+            <button class="btn btn-ghost btn-sm" id="btn-account-login" data-i18n="settings.about.login">Log in</button>
+            <button class="btn btn-ghost btn-sm hidden" id="btn-account-logout" data-i18n="settings.about.logout">Log out</button>
+          </div>
         </div>
         <div class="s-sec-title" data-i18n="settings.about.product">Product</div>
         <div class="s-row">
@@ -1859,9 +2041,20 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
        listening_questions[{q,options,answer,explain}],
        core_sentence_patterns[{title,pattern,example}] }
    ============================================================ */
+/* Backend origin — absolute by default so the page works whether it is
+   served by FastAPI (same-origin) or opened directly / via a static server
+   (cross-origin fetch is allowed by the backend CORS). Override with
+   settings.backendBase (e.g. http://127.0.0.1:8000). */
+const API_ORIGIN = (function () {
+  try {
+    const ov = JSON.parse(localStorage.getItem('telg-settings') || 'null');
+    if (ov && ov.backendBase) return String(ov.backendBase).replace(/\/+$/, '');
+  } catch (e) {}
+  return 'http://127.0.0.1:8000';
+})();
 const CONFIG = {
   devMode: true,                    /* release builds set this to false (Developer settings hidden; unlock with key) */
-  apiBase: '/api/v1',
+  apiBase: API_ORIGIN + '/api/v1',
   speeds: [0.8, 1.0, 1.25, 1.5],
   fontSizes: ['13px', '15px', '17px'],
   diffHints: {
@@ -2195,6 +2388,14 @@ function validateLLMCfg(cfg) {
   return null;
 }
 
+/* Normalize backend-relative URLs (audio etc.) to absolute against API_ORIGIN. */
+function absUrl(u) {
+  if (!u) return u;
+  if (/^https?:\/\//i.test(u)) return u;
+  if (u.charAt(0) === '/') return API_ORIGIN + u;
+  return API_ORIGIN + '/' + u;
+}
+
 /* Robust fetch wrapper: turns network errors and non-JSON (HTML) responses
    into actionable messages instead of "Unexpected token '<'". */
 async function apiFetch(path, opts, timeoutMs) {
@@ -2212,7 +2413,7 @@ async function apiFetch(path, opts, timeoutMs) {
   if (!ct.includes('application/json')) {
     let body = '';
     try { body = (await res.text()).slice(0, 100).replace(/\s+/g, ' '); } catch (_) {}
-    throw new Error('Backend returned HTML instead of JSON (' + res.status + ') — /api/v1 is not served here. Start FastAPI and open http://localhost:8000 (not a static file server)' + (body ? ' · got: ' + body.slice(0, 60) : ''));
+    throw new Error('Backend returned HTML instead of JSON (' + res.status + ') — the page was opened without FastAPI. Start backend/main.py and open http://127.0.0.1:8000 (not a static server)' + (body ? ' · got: ' + body.slice(0, 60) : ''));
   }
   const data = await res.json();
   if (!res.ok) {
@@ -2447,6 +2648,36 @@ const I18N = {
     'settings.study.sub': 'Listening time tracked per day — seconds actually played.',
     'settings.study.total': 'Total', 'settings.study.today': 'Today',
     'settings.study.secGoal': 'Training Goal', 'settings.goal.daily': 'Daily Listening Target', 'settings.goal.hint': 'Minutes of listening per day — tracked in the stats below.',
+    'settings.profile.secProfile': 'Learning Profile', 'settings.profile.secDomain': 'Domain Profiles',
+    'settings.profile.empty': 'Nothing here yet.', 'settings.profile.emptyTitle': 'Build your learning profile', 'settings.profile.emptyDesc': 'Tell us your role, domain and goals — generation defaults follow automatically.',
+    'settings.profile.createBtn': 'Create Profile', 'settings.profile.editBtn': 'Edit', 'settings.profile.regenBtn': 'Re-generate', 'settings.profile.clearBtn': 'Clear',
+    'settings.profile.editorTitle': 'Learning Profile', 'settings.profile.editorHint': 'Tell us about your role, domain and goals — AI drafts a profile that drives default generation settings.',
+    'settings.profile.role': 'Your Role / Position', 'settings.profile.roleHint': 'e.g. Controls Algorithm Engineer, Student',
+    'settings.profile.domain': 'Primary Practice Domain', 'settings.profile.domainHint': 'Pick a preset or type your own.',
+    'settings.profile.lang': 'Language Direction', 'settings.profile.langHint': 'Learning language + translation.',
+    'settings.profile.langEnZh': 'EN ↔ ZH', 'settings.profile.langJaZh': 'JA ↔ ZH', 'settings.profile.langOther': 'Other',
+    'settings.profile.scenario': 'Practice Scenarios', 'settings.profile.scenarioHint': 'Multiple select.',
+    'settings.profile.scInterview': 'Interview', 'settings.profile.scMeeting': 'Meeting', 'settings.profile.scCollab': 'Collaboration', 'settings.profile.scSupplier': 'Supplier', 'settings.profile.scClass': 'Classroom',
+    'settings.profile.focus': 'Focus Areas', 'settings.profile.focusHint': 'Optional — what you want to improve.',
+    'settings.profile.genResult': 'LLM Generated Profile', 'settings.profile.genResultHint': 'AI drafts role portrait, domain profile, focus & tone — editable below.',
+    'settings.profile.rolePortrait': 'Role Portrait', 'settings.profile.domainProfile': 'Domain Profile', 'settings.profile.focusTone': 'Focus & Tone',
+    'settings.profile.genBtn': 'Generate with LLM', 'settings.profile.generating': 'Generating profile…', 'settings.profile.needInput': 'Enter role or domain first.', 'settings.profile.saveBtn': 'Save Profile',
+    'settings.profile.builtin': 'builtin', 'settings.profile.newDomainName': 'Domain name', 'settings.profile.newDomainDesc': 'Short description (optional)', 'settings.profile.addDomain': 'Add', 'settings.profile.delDomain': 'Remove', 'settings.profile.domainAdded': 'Domain added', 'settings.profile.needDomainName': 'Enter a domain name', 'settings.profile.cleared': 'Profile cleared',
+    'welcome.create': 'Create & Start', 'welcome.login': 'Log in', 'welcome.switch': 'Already have an account? Log in', 'welcome.switchLogin': 'New here? Create an account',
+    'welcome.guest': 'Continue as guest', 'welcome.sub': 'Create a local account to start.', 'welcome.subLogin': 'Sign in to continue.',
+    'welcome.needUser': 'Enter a username', 'welcome.pwShort': 'Password too short (min 4)', 'welcome.hasAccount': 'An account already exists on this device', 'welcome.noAccount': 'No local account — create one first',
+    'welcome.wrongUser': 'Unknown username', 'welcome.wrongPw': 'Wrong password', 'welcome.pwMismatch': 'Passwords do not match', 'welcome.back': 'Back', 'welcome.next': 'Next', 'welcome.ready': 'Welcome! Your workspace is ready.',
+    'ob.llmTitle': 'Set up your LLM', 'ob.llmSub': 'Materials are generated by an LLM. Fill in the provider below and pass a connection test to continue.', 'ob.llmProvider': 'LLM Provider', 'ob.llmModel': 'Model', 'ob.llmBase': 'Base URL', 'ob.llmKey': 'API Key',
+    'ob.llmTest': 'Test Connection', 'ob.llmTesting': 'Testing…', 'ob.llmTestOk': 'Connection OK — you can continue.', 'ob.llmTestFail': 'Connection test failed', 'ob.llmNextHint': '“Next” unlocks once the connection test passes.',
+    'ob.llmSkip': 'Skip — use test data for now',
+    'ob.surveyTitle': 'Personalization', 'ob.surveySub': 'Tell us a little about yourself — review and save at the end.', 'ob.confirm': 'Review & Save', 'ob.qRole': 'Your role / position', 'ob.qRoleHint': 'e.g. Controls Algorithm Engineer, Student',
+    'ob.qDomain': 'Primary practice domain', 'ob.qDomainHint': 'Type the domain you work in, e.g. Semiconductor.', 'ob.qLang': 'Language direction', 'ob.qLangHint': 'Learning language + translation. EN ↔ ZH is available now.',
+    'ob.qMin': 'Daily listening target', 'ob.qMinHint': 'Minutes per day — becomes your Training Goal.',
+    'ob.chipEnZh': 'EN ↔ ZH', 'ob.chipJaZh': 'JA ↔ ZH', 'ob.chipDeZh': 'DE ↔ ZH', 'ob.chipFrZh': 'FR ↔ ZH', 'ob.langWip': 'Coming soon',
+    'ob.toProfile': 'Generate Profile', 'ob.profileTitle': 'Confirm your profile', 'ob.profileSub': 'Review the summary, generate a detailed profile with LLM (optional), then finish.',
+    'ob.role': 'Role', 'ob.domain': 'Domain', 'ob.lang': 'Language', 'ob.min': 'Daily minutes',
+    'ob.profileHint': 'Generate a detailed role portrait, domain profile and tone with the LLM — editable, or finish with raw answers.', 'ob.genProfile': 'Generate with LLM', 'ob.finish': 'Finish & Enter', 'ob.needDomain': 'Enter a domain first', 'ob.needMin': 'Enter a daily minute target',
+    'settings.about.account': 'Account', 'settings.about.accountName': 'Local Account', 'settings.about.login': 'Log in', 'settings.about.logout': 'Log out', 'settings.about.signedOut': 'Signed out', 'settings.about.guest': 'Guest — no local account.',
     'settings.developer.sub': 'LLM link debugging and corpus take-over for the TTS pipeline.',
     'settings.developer.llmDiag': 'LLM Diagnostics',
     'settings.developer.llmMock': 'LLM Mock', 'settings.developer.llmMockHint': 'LLM link debugging — real call with the configured key; intermediate steps shown on the main page. No key → real failure reported.',
@@ -2617,6 +2848,36 @@ const I18N = {
     'settings.study.sub': '每日学习时长统计——按实际播放秒数记录。',
     'settings.study.total': '累计', 'settings.study.today': '今日',
     'settings.study.secGoal': '训练目标', 'settings.goal.daily': '每日听力目标', 'settings.goal.hint': '每日学习时长目标（分钟），由下方统计跟踪进度。',
+    'settings.profile.secProfile': '学习档案', 'settings.profile.secDomain': '领域档案',
+    'settings.profile.empty': '这里还没有内容。', 'settings.profile.emptyTitle': '建立你的学习档案', 'settings.profile.emptyDesc': '告诉我们你的职位、领域与目标，生成默认值将自动跟随。',
+    'settings.profile.createBtn': '建立档案', 'settings.profile.editBtn': '编辑', 'settings.profile.regenBtn': '重新生成', 'settings.profile.clearBtn': '清除',
+    'settings.profile.editorTitle': '学习档案', 'settings.profile.editorHint': '告诉我们你的职位、领域与目标，AI 将生成驱动默认生成设置的档案。',
+    'settings.profile.role': '你的角色 / 职位', 'settings.profile.roleHint': '例如：控制算法工程师、学生',
+    'settings.profile.domain': '主要练习领域', 'settings.profile.domainHint': '选择预设或自行输入。',
+    'settings.profile.lang': '语言方向', 'settings.profile.langHint': '学习语言 + 翻译语言。',
+    'settings.profile.langEnZh': '中英', 'settings.profile.langJaZh': '日英', 'settings.profile.langOther': '其他',
+    'settings.profile.scenario': '练习场景', 'settings.profile.scenarioHint': '可多选。',
+    'settings.profile.scInterview': '技术面试', 'settings.profile.scMeeting': '会议汇报', 'settings.profile.scCollab': '团队协作', 'settings.profile.scSupplier': '供应商沟通', 'settings.profile.scClass': '课堂教学',
+    'settings.profile.focus': '专注方向', 'settings.profile.focusHint': '可选——想提升的方向。',
+    'settings.profile.genResult': 'LLM 生成档案', 'settings.profile.genResultHint': 'AI 草拟角色画像、领域档案、专注与语气——下方可编辑。',
+    'settings.profile.rolePortrait': '角色画像', 'settings.profile.domainProfile': '领域档案', 'settings.profile.focusTone': '专注与语气',
+    'settings.profile.genBtn': '由 LLM 生成', 'settings.profile.generating': '正在生成档案…', 'settings.profile.needInput': '请先填写角色或领域。', 'settings.profile.saveBtn': '保存档案',
+    'settings.profile.builtin': '内置', 'settings.profile.newDomainName': '领域名称', 'settings.profile.newDomainDesc': '简短描述（可选）', 'settings.profile.addDomain': '添加', 'settings.profile.delDomain': '删除', 'settings.profile.domainAdded': '领域已添加', 'settings.profile.needDomainName': '请输入领域名称', 'settings.profile.cleared': '档案已清除',
+    'welcome.create': '创建并开始', 'welcome.login': '登录', 'welcome.switch': '已有账号？登录', 'welcome.switchLogin': '新用户？创建账号',
+    'welcome.guest': '以游客身份继续', 'welcome.sub': '创建本地账号开始使用。', 'welcome.subLogin': '登录以继续。',
+    'welcome.needUser': '请输入用户名', 'welcome.pwShort': '密码太短（至少 4 位）', 'welcome.hasAccount': '本机已存在账号', 'welcome.noAccount': '本机无账号——请先创建',
+    'welcome.wrongUser': '用户名不存在', 'welcome.wrongPw': '密码错误', 'welcome.pwMismatch': '两次密码不一致', 'welcome.back': '上一步', 'welcome.next': '下一步', 'welcome.ready': '欢迎！你的工作台已就绪。',
+    'ob.llmTitle': '设置 LLM', 'ob.llmSub': '素材由 LLM 生成。请填写下方提供商信息并通过连接测试后继续。', 'ob.llmProvider': 'LLM 提供商', 'ob.llmModel': '模型', 'ob.llmBase': '接口地址', 'ob.llmKey': 'API 密钥',
+    'ob.llmTest': '测试连接', 'ob.llmTesting': '正在测试…', 'ob.llmTestOk': '连接成功 — 可以继续。', 'ob.llmTestFail': '连接测试失败', 'ob.llmNextHint': '连接测试通过后解锁“下一步”。',
+    'ob.llmSkip': '跳过 — 暂用测试数据',
+    'ob.surveyTitle': '个性化设置', 'ob.surveySub': '简单介绍下自己，填写完成后统一确认并保存。', 'ob.confirm': '确认并保存', 'ob.qRole': '你的角色 / 职位', 'ob.qRoleHint': '例如：控制算法工程师、学生',
+    'ob.qDomain': '主要练习领域', 'ob.qDomainHint': '填写你工作的领域，例如：半导体。', 'ob.qLang': '语言方向', 'ob.qLangHint': '学习语言 + 翻译语言。目前支持中英。',
+    'ob.qMin': '每日听力目标', 'ob.qMinHint': '每天分钟数——将写入训练目标。',
+    'ob.chipEnZh': '中英', 'ob.chipJaZh': '中日', 'ob.chipDeZh': '中德', 'ob.chipFrZh': '中法', 'ob.langWip': '开发中，敬请期待',
+    'ob.toProfile': '生成档案', 'ob.profileTitle': '确认你的档案', 'ob.profileSub': '核对摘要，可让 LLM 生成详细档案（可选），然后完成。',
+    'ob.role': '角色', 'ob.domain': '领域', 'ob.lang': '语言', 'ob.min': '每日分钟',
+    'ob.profileHint': '用 LLM 生成角色画像、领域档案与语气——可编辑；也可直接用原始回答完成。', 'ob.genProfile': '由 LLM 生成', 'ob.finish': '完成并进入', 'ob.needDomain': '请先填写领域', 'ob.needMin': '请输入每日分钟数',
+    'settings.about.account': '账号', 'settings.about.accountName': '本地账号', 'settings.about.login': '登录', 'settings.about.logout': '登出', 'settings.about.signedOut': '已登出', 'settings.about.guest': '游客——未绑定本地账号。',
     'settings.developer.sub': 'LLM 链路调试与 TTS 语料接管。',
     'settings.developer.llmDiag': 'LLM 诊断',
     'settings.developer.reqResp': 'LLM 请求与响应',
@@ -3067,6 +3328,472 @@ function toggleTheme() {
   applyTheme();
 }
 
+/* ---------------- LOCAL ACCOUNT (AuthAPI) & WELCOME / ONBOARDING ---------------- */
+const AuthAPI = {
+  _key: 'telg-auth',
+  _read() { try { return JSON.parse(localStorage.getItem(this._key) || 'null') || null; } catch (e) { return null; } },
+  _write(a) { try { localStorage.setItem(this._key, JSON.stringify(a)); } catch (e) {} },
+  async _hash(salt, pw) {
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + '::' + pw));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) {
+      let h = 0; const t = salt + '::' + pw;
+      for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
+      return 'f' + h.toString(16);
+    }
+  },
+  async register(_a) {
+    const username = (_a && _a.username || '').trim();
+    const password = _a && _a.password || '';
+    if (!username) return { ok: false, error: I18N[state.lang]['welcome.needUser'] };
+    if (password.length < 4) return { ok: false, error: I18N[state.lang]['welcome.pwShort'] };
+    if (this._read()) return { ok: false, error: I18N[state.lang]['welcome.hasAccount'] };
+    const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const acc = { username, salt, passHash: await this._hash(salt, password), created_at: Date.now(), session: true };
+    this._write(acc);
+    return { ok: true, user: { username } };
+  },
+  async login(_a) {
+    const username = (_a && _a.username || '').trim();
+    const password = _a && _a.password || '';
+    const acc = this._read();
+    if (!acc) return { ok: false, error: I18N[state.lang]['welcome.noAccount'] };
+    if (acc.username !== username) return { ok: false, error: I18N[state.lang]['welcome.wrongUser'] };
+    if ((await this._hash(acc.salt, password)) !== acc.passHash) return { ok: false, error: I18N[state.lang]['welcome.wrongPw'] };
+    acc.session = true; this._write(acc);
+    return { ok: true, user: { username: acc.username } };
+  },
+  async logout() { const a = this._read(); if (a) { a.session = false; this._write(a); } return { ok: true }; },
+  current() { const a = this._read(); return (a && a.session) ? { username: a.username } : null; },
+  exists() { return !!this._read(); }
+};
+let wlMode = 'register';
+function showWelcome() {
+  wlMode = AuthAPI.exists() ? 'login' : 'register';
+  renderWelcome();
+  $('welcome-modal').classList.remove('hidden');
+  $('wl-username').focus();
+}
+function renderWelcome() {
+  const L = I18N[state.lang];
+  const isReg = wlMode === 'register';
+  $('welcome-title').textContent = 'Technical Listening';
+  $('welcome-sub').textContent = isReg ? L['welcome.sub'] : L['welcome.subLogin'];
+  $('wl-pass2-label').style.display = isReg ? '' : 'none';
+  $('wl-pass2').style.display = isReg ? '' : 'none';
+  $('btn-wl-primary').textContent = isReg ? L['welcome.create'] : L['welcome.login'];
+  $('btn-wl-switch').textContent = isReg ? L['welcome.switch'] : L['welcome.switchLogin'];
+  $('wl-err').textContent = '';
+  $('wl-password').value = ''; $('wl-pass2').value = '';
+}
+async function welcomePrimary() {
+  const u = $('wl-username').value.trim(), p = $('wl-password').value, p2 = $('wl-pass2').value;
+  if (wlMode === 'register' && p !== p2) { $('wl-err').textContent = I18N[state.lang]['welcome.pwMismatch']; return; }
+  const r = wlMode === 'register' ? await AuthAPI.register({ username: u, password: p }) : await AuthAPI.login({ username: u, password: p });
+  if (!r.ok) { $('wl-err').textContent = r.error; return; }
+  state.user = r.user;
+  $('welcome-modal').classList.add('hidden');
+  refreshAboutAccount();
+  const ob = readOnboarding();
+  if (!ob.done) enterOnboarding();
+}
+function welcomeGuest() {
+  state.user = null;
+  $('welcome-modal').classList.add('hidden');
+  refreshAboutAccount();
+  const ob = readOnboarding();
+  if (!ob.done) enterOnboarding();
+}
+function readOnboarding() { try { return JSON.parse(localStorage.getItem('telg-onboarding') || 'null') || {}; } catch (e) { return {}; } }
+function writeOnboarding(o) { try { localStorage.setItem('telg-onboarding', JSON.stringify(o)); } catch (e) {} }
+/* ---- onboarding state machine: [llm] -> [survey x5] -> [profile] ---- */
+const OB_STEPS = ['llm', 'survey', 'profile'];
+let obIdx = 0, obSub = 0;
+let obSurvey = { role: '', domain: '', language: 'en-zh', minutes: 30 };
+function enterOnboarding() {
+  obIdx = 0; obSub = 0;
+  obSurvey = { role: '', domain: '', language: 'en-zh', minutes: 30 };
+  $('onboard-modal').classList.remove('hidden');
+  renderObStep();
+}
+function closeOnboarding(done) {
+  $('onboard-modal').classList.add('hidden');
+  if (done) { writeOnboarding({ done: true, at: Date.now() }); showToast(I18N[state.lang]['welcome.ready']); }
+}
+function renderObStep() {
+  $('ob-step-dots').innerHTML = OB_STEPS.map((_, i) => '<div class="dot' + (i <= obIdx ? ' on' : '') + '"></div>').join('');
+  $('ob-back').classList.toggle('hidden', obIdx === 0 && obSub === 0);
+  if (obIdx === 0) renderObLLM();
+  else if (obIdx === 1) renderObSurvey();
+  else renderObProfile();
+}
+function llmReadyState() {
+  const s = readStoredCfg().llm || {};
+  const base = (s.baseUrl || '').trim(), key = (s.apiKey || '').trim();
+  return { ready: !!(base && key), label: (s.provider || 'LLM') + ' · ' + (s.model || '') };
+}
+function obLlmStored() {
+  const s = readStoredCfg().llm || {};
+  return { provider: s.provider || 'deepseek', base_url: s.baseUrl || '', api_key: s.apiKey || '', model: s.model || '' };
+}
+const OB_PROVIDER_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi (Moonshot)', ark: '豆包 · Volcengine Ark', openai: 'OpenAI', qwen: 'Qwen (DashScope)', ollama: 'Ollama (Local)' };
+function renderObLLM() {
+  const L = I18N[state.lang];
+  state.obLlmOk = false;
+  $('ob-title').textContent = L['ob.llmTitle'];
+  $('ob-sub').textContent = L['ob.llmSub'];
+  const llm = obLlmStored();
+  const pr = LLM_PRESETS[llm.provider] || {};
+  const baseVal = llm.base_url || pr.base || '', modelVal = llm.model || pr.model || '';
+  const opts = Object.keys(LLM_PRESETS).map(k => '<option value="' + k + '"' + (k === llm.provider ? ' selected' : '') + '>' + escapeHtml(OB_PROVIDER_LABELS[k] || k) + '</option>').join('');
+  $('ob-body').innerHTML =
+    '<div class="ob-llm-form">' +
+      '<div class="s-row"><div class="s-info"><div class="s-name">' + L['ob.llmProvider'] + '</div></div>' +
+        '<div class="s-ctrl"><div class="select-wrap"><select class="select" id="ob-llm-provider">' + opts + '</select><svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg></div></div></div>' +
+      '<div class="s-row"><div class="s-info"><div class="s-name">' + L['ob.llmModel'] + '</div></div>' +
+        '<div class="s-ctrl"><input class="input" id="ob-llm-model" value="' + escapeHtml(modelVal) + '" placeholder="model"/></div></div>' +
+      '<div class="s-row"><div class="s-info"><div class="s-name">' + L['ob.llmBase'] + '</div></div>' +
+        '<div class="s-ctrl"><input class="input" id="ob-llm-base" value="' + escapeHtml(baseVal) + '" placeholder="base_url"/></div></div>' +
+      '<div class="s-row"><div class="s-info"><div class="s-name">' + L['ob.llmKey'] + '</div></div>' +
+        '<div class="s-ctrl"><div class="input-group"><input class="input" id="ob-llm-key" type="password" value="' + escapeHtml(llm.api_key || '') + '" placeholder="api_key"/><button type="button" class="eye-btn" id="ob-key-eye"><svg class="icon icon-sm"><use href="#i-eye"/></svg></button></div></div></div>' +
+      '<div class="s-row"><div class="s-info"><div class="s-name">' + L['ob.llmTest'] + '</div></div>' +
+        '<div class="s-ctrl"><button class="btn btn-sm" id="ob-test-llm">' + L['ob.llmTest'] + '</button></div></div>' +
+      '<div class="test-output" id="ob-llm-result"></div>' +
+      '<div class="t-10 dim" style="line-height:1.6">' + L['ob.llmNextHint'] + '</div>' +
+    '</div>' +
+    '<div style="margin-top:12px;text-align:center"><button class="btn btn-ghost btn-sm" id="ob-skip-llm">' + L['ob.llmSkip'] + '</button></div>';
+  $('ob-next').disabled = true;
+  $('ob-next').classList.remove('hidden');
+}
+async function obTestLlm() {
+  const L = I18N[state.lang];
+  const btn = $('ob-test-llm'), res = $('ob-llm-result');
+  btn.disabled = true; btn.textContent = L['ob.llmTesting'];
+  res.className = 'test-output'; res.textContent = '…';
+  let cfg = { provider: $('ob-llm-provider').value, base_url: $('ob-llm-base').value.trim(), api_key: $('ob-llm-key').value, model: $('ob-llm-model').value.trim(), temperature: 0.7 };
+  const prf = LLM_PRESETS[cfg.provider] || {};
+  if (!cfg.base_url) { cfg.base_url = prf.base || ''; $('ob-llm-base').value = cfg.base_url; }
+  if (!cfg.model) { cfg.model = prf.model || ''; $('ob-llm-model').value = cfg.model; }
+  try {
+    const r = await API.testLLM(cfg);
+    if (!r || r.ok !== true) throw new Error((r && r.error) || L['ob.llmTestFail']);
+    state.obLlmOk = true;
+    try { const st = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; st.llm = { provider: cfg.provider, baseUrl: cfg.base_url, apiKey: cfg.api_key, model: cfg.model, temperature: 0.7 }; localStorage.setItem('telg-settings', JSON.stringify(st)); } catch (e) {}
+    res.className = 'test-output ok'; res.textContent = L['ob.llmTestOk'];
+    $('ob-next').disabled = false;
+    updateEngineBadge();
+    showToast(L['ob.llmTestOk'], 'ok');
+  } catch (e) {
+    state.obLlmOk = false;
+    res.className = 'test-output err'; res.textContent = L['ob.llmTestFail'] + ': ' + e.message;
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = L['ob.llmTest'];
+  }
+}
+const OB_CHIP_DEFS = {
+  language: [['en-zh', 'ob.chipEnZh', ''], ['ja-zh', 'ob.chipJaZh', '1'], ['de-zh', 'ob.chipDeZh', '1'], ['fr-zh', 'ob.chipFrZh', '1']]
+};
+const OB_QS = [
+  { key: 'role', label: 'ob.qRole', hint: 'ob.qRoleHint', id: 'ob-role' },
+  { key: 'domain', label: 'ob.qDomain', hint: 'ob.qDomainHint', id: 'ob-domain' },
+  { key: 'language', label: 'ob.qLang', hint: 'ob.qLangHint', seg: true },
+  { key: 'minutes', label: 'ob.qMin', hint: 'ob.qMinHint', id: 'ob-min', min: true }
+];
+function renderObSurvey() {
+  const L = I18N[state.lang];
+  $('ob-title').textContent = L['ob.surveyTitle'];
+  $('ob-sub').textContent = L['ob.surveySub'];
+  const langDefs = OB_CHIP_DEFS.language || [];
+  const chips = langDefs.map(d => {
+    const val = d[0], wip = d[2];
+    const active = obSurvey.language === val;
+    const label = escapeHtml(L[d[1]] || d[1]) + (wip ? ' · ' + escapeHtml(L['ob.langWip']) : '');
+    return '<button class="chip' + (active ? ' active' : '') + '"' + (wip ? ' disabled' : '') + ' data-val="' + escapeHtml(val) + '"' + (wip ? ' title="' + escapeHtml(L['ob.langWip']) + '"' : '') + '>' + label + '</button>';
+  }).join('');
+  $('ob-body').innerHTML = '<div class="ob-q">' +
+    '<div class="ob-row"><div class="ob-lbl"><div class="ob-name">' + L['ob.qRole'] + '</div><div class="ob-desc">' + escapeHtml(L['ob.qRoleHint']) + '</div></div>' +
+      '<div class="ob-ctrl"><input class="input" id="ob-role" placeholder="' + escapeHtml(L['ob.qRoleHint']) + '" value="' + escapeHtml(obSurvey.role || '') + '"/></div></div>' +
+    '<div class="ob-row"><div class="ob-lbl"><div class="ob-name">' + L['ob.qDomain'] + '</div><div class="ob-desc">' + escapeHtml(L['ob.qDomainHint']) + '</div></div>' +
+      '<div class="ob-ctrl"><input class="input" id="ob-domain" placeholder="' + escapeHtml(L['ob.qDomainHint']) + '" value="' + escapeHtml(obSurvey.domain || '') + '"/></div></div>' +
+    '<div class="ob-row"><div class="ob-lbl"><div class="ob-name">' + L['ob.qLang'] + '</div><div class="ob-desc">' + escapeHtml(L['ob.qLangHint']) + '</div></div>' +
+      '<div class="ob-ctrl"><div class="ob-chip-row" data-q="language" data-seg="1">' + chips + '</div></div></div>' +
+    '<div class="ob-row"><div class="ob-lbl"><div class="ob-name">' + L['ob.qMin'] + '</div><div class="ob-desc">' + escapeHtml(L['ob.qMinHint']) + '</div></div>' +
+      '<div class="ob-ctrl"><input class="input" id="ob-min" type="number" min="5" max="480" step="5" style="width:140px" placeholder="min" value="' + (obSurvey.minutes || '') + '"/></div></div>' +
+    '</div>';
+  $('ob-next').disabled = false;
+  $('ob-next').classList.remove('hidden');
+  $('ob-next').textContent = L['ob.confirm'];
+  $('ob-back').classList.toggle('hidden', obIdx === 0);
+  $('ob-back').textContent = L['welcome.back'];
+}
+function renderObProfile() {
+  const L = I18N[state.lang];
+  $('ob-title').textContent = L['ob.profileTitle'];
+  $('ob-sub').textContent = L['ob.profileSub'];
+  const s = obSurvey;
+  const langLabel = { 'en-zh': L['ob.chipEnZh'], 'ja-zh': L['ob.chipJaZh'], 'de-zh': L['ob.chipDeZh'], 'fr-zh': L['ob.chipFrZh'] }[s.language] || s.language;
+  $('ob-body').innerHTML = '<div class="ob-q">' +
+    '<div class="t-12" style="line-height:1.7">' +
+      '<b>' + L['ob.role'] + ':</b> ' + escapeHtml(s.role || '—') + '<br/>' +
+      '<b>' + L['ob.domain'] + ':</b> ' + escapeHtml(s.domain || '—') + '<br/>' +
+      '<b>' + L['ob.lang'] + ':</b> ' + escapeHtml(langLabel) + ' · <b>' + L['ob.min'] + ':</b> ' + s.minutes + ' min' +
+    '</div>' +
+    '<div class="t-11 dim">' + L['ob.profileHint'] + '</div>' +
+    '<div id="ob-gen-result"></div>' +
+    '<div class="t-10 dim" id="ob-gen-status" style="min-height:16px"></div>' +
+    '<div style="display:flex;gap:8px">' +
+      '<button class="btn btn-ghost btn-sm" id="ob-gen-profile">' + L['ob.genProfile'] + '</button>' +
+    '</div></div>';
+  $('ob-next').textContent = L['ob.finish'];
+  $('ob-next').classList.add('hidden');
+}
+async function obGenProfile() {
+  const L = I18N[state.lang];
+  const st = $('ob-gen-status'); if (st) st.textContent = L['settings.profile.generating'];
+  const payload = { role: obSurvey.role, domain: obSurvey.domain, language: obSurvey.language, scenarios: obSurvey.scenarios, focus: '', llm_config: buildLLMConfig() };
+  try {
+    const r = await apiFetch('/config/profile/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }, 120000);
+    const box = $('ob-gen-result');
+    box.innerHTML = '<div class="m-panel" style="padding:10px;margin-top:6px">' +
+      '<div class="flabel" style="margin-bottom:4px">' + L['settings.profile.rolePortrait'] + '</div><textarea class="inp" id="ob-out-role" rows="2" style="width:100%">' + escapeHtml(r.role_portrait || '') + '</textarea>' +
+      '<div class="flabel" style="margin:8px 0 4px">' + L['settings.profile.domainProfile'] + '</div><textarea class="inp" id="ob-out-domain" rows="3" style="width:100%">' + escapeHtml(r.domain_profile || '') + '</textarea>' +
+      '<div class="flabel" style="margin:8px 0 4px">' + L['settings.profile.focusTone'] + '</div><textarea class="inp" id="ob-out-focus" rows="2" style="width:100%">' + escapeHtml(r.focus_tone || '') + '</textarea></div>';
+    if (st) st.textContent = '';
+    $('ob-next').classList.remove('hidden');
+    $('ob-gen-profile').classList.add('hidden');
+  } catch (e) {
+    if (st) st.textContent = e.message;
+    showToast(e.message, 'error');
+  }
+}
+function obFinish() {
+  const L = I18N[state.lang];
+  /* persist survey answers */
+  try { localStorage.setItem('telg-profile-answers', JSON.stringify(obSurvey)); } catch (e) {}
+  /* daily minutes -> single source cfg-goal-min */
+  try {
+    const cfg = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {};
+    cfg.goalMin = String(obSurvey.minutes);
+    localStorage.setItem('telg-settings', JSON.stringify(cfg));
+    state.goalMin = parseInt(obSurvey.minutes, 10);
+  } catch (e) {}
+  /* profile */
+  const genShown = !!(document.querySelector('#ob-out-role') || {}).value || false;
+  const profile = {
+    role: obSurvey.role, primaryDomain: obSurvey.domain, language: obSurvey.language,
+    scenarios: [], focus: '',
+    generated: genShown, rolePortrait: (document.querySelector('#ob-out-role') || {}).value || '',
+    domainProfile: (document.querySelector('#ob-out-domain') || {}).value || '',
+    focusTone: (document.querySelector('#ob-out-focus') || {}).value || ''
+  };
+  writeProfile(profile);
+  renderProfileBox(); renderToday(); updateEngineBadge();
+  closeOnboarding(true);
+  showToast(L['welcome.ready']);
+}
+function obNext() {
+  const L = I18N[state.lang];
+  if (obIdx === 0) { if (state.obLlmOk) { obIdx = 1; obSub = 0; renderObStep(); } return; }
+  if (obIdx === 1) {
+    const role = $('ob-role').value.trim(), domain = $('ob-domain').value.trim(), minutes = parseInt($('ob-min').value, 10);
+    if (!domain) { showToast(L['ob.needDomain'], 'warn'); return; }
+    if (!(minutes > 0)) { showToast(L['ob.needMin'], 'warn'); return; }
+    obSurvey.role = role; obSurvey.domain = domain; obSurvey.minutes = minutes;
+    obIdx = 2; renderObProfile();
+    return;
+  }
+  if (obIdx === 2) { obFinish(); }
+}
+function obBack() {
+  if (obIdx === 2) { obIdx = 1; renderObSurvey(); return; }
+  if (obIdx === 1) { obIdx = 0; renderObStep(); return; }
+}
+function refreshAboutAccount() {
+  const desc = $('about-account-desc'), lg = $('btn-account-login'), lo = $('btn-account-logout');
+  if (!desc) return;
+  const u = AuthAPI.current();
+  if (u) { desc.textContent = u.username + ' · signed in'; lg.classList.add('hidden'); lo.classList.remove('hidden'); }
+  else if (AuthAPI.exists()) { desc.textContent = I18N[state.lang]['settings.about.signedOut']; lg.classList.remove('hidden'); lo.classList.add('hidden'); }
+  else { desc.textContent = I18N[state.lang]['settings.about.guest']; lg.classList.remove('hidden'); lo.classList.add('hidden'); }
+}
+function initGate() {
+  state.user = AuthAPI.current();
+  refreshAboutAccount();
+  if (!state.user) { showWelcome(); return; }
+  const ob = readOnboarding();
+  if (!ob.done) enterOnboarding();
+}
+/* ---------------- LEARNING PROFILE & DOMAIN PROFILES ---------------- */
+const BUILTIN_DOMAINS = [
+  { id: 'automotive', name: 'Automotive', builtin: true, desc: 'Vehicle dynamics · chassis control · ADAS / 车辆动力学、底盘控制、智能驾驶', inject: 'Terms: yaw rate, ESC, HIL bench, calibration…; Scenes: design review, failure analysis, road-test sign-off; Roles: System Lead, Controls, Calibration' },
+  { id: 'semiconductor', name: 'Semiconductor', builtin: true, desc: 'Wafer fab · yield · process & equipment / 晶圆制造、良率、工艺与设备', inject: 'Terms: lithography, yield, etch, CMP, OOC…; Scenes: process review, failure analysis, equipment acceptance; Roles: Process Engineer, Yield Engineer, Equipment Vendor' },
+  { id: 'energy', name: 'New Energy', builtin: true, desc: 'PV · storage · battery · power electronics / 光伏、储能、电池、电力电子', inject: 'Terms: SOC, BMS, inverter, DER, thermal runaway…; Scenes: grid interconnection review, battery testing, O&M; Roles: System Engineer, BMS Engineer, Grid Operator' },
+  { id: 'ai-software', name: 'AI / Software', builtin: true, desc: 'Algorithms · architecture · MLOps / 算法、系统架构、MLOps', inject: 'Terms: inference, latency, drift, CI/CD, A/B test…; Scenes: code review, architecture discussion, incident response; Roles: Backend, MLE, SRE' },
+  { id: 'medical', name: 'Medical Devices', builtin: true, desc: 'Active device R&D · validation · regulation / 有源医疗器械研发、验证与法规', inject: 'Terms: 510(k), ISO 14971, biocompatibility, sterilization…; Scenes: design validation, audit, compliance meeting; Roles: R&D Engineer, QA/RA, Clinical' },
+  { id: 'fintech', name: 'FinTech', builtin: true, desc: 'Payments · risk · quant · core systems / 支付、风控、量化、金融系统', inject: 'Terms: settlement, fraud, VaR, reconciliation, clearing…; Scenes: risk review, go-live, audit; Roles: Platform Engineer, Risk Analyst, Quant' },
+  { id: 'aerospace', name: 'Aerospace', builtin: true, desc: 'Flight control · avionics · airworthiness / 飞控、航电、适航与测试', inject: 'Terms: FCC, DO-178C, actuator, flight envelope…; Scenes: airworthiness review, flight test, integration; Roles: FCS Engineer, Avionics, Test Pilot' },
+  { id: 'general', name: 'General Engineering', builtin: true, desc: 'Generic technical discussion / 通用工程与技术沟通', inject: '' }
+];
+function readProfile() { const s = readStoredCfg(); return (s && s.profile) || null; }
+function writeProfile(p) {
+  try { const s = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; if (p) s.profile = p; else delete s.profile; localStorage.setItem('telg-settings', JSON.stringify(s)); } catch (e) {}
+}
+function readDomains() { const s = readStoredCfg(); return (s && s.domains && s.domains.length) ? s.domains : BUILTIN_DOMAINS; }
+function writeDomains(d) {
+  try { const s = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; s.domains = d; localStorage.setItem('telg-settings', JSON.stringify(s)); } catch (e) {}
+}
+function renderProfileBox() {
+  const box = $('profile-box'); if (!box) return;
+  const L = I18N[state.lang];
+  const p = readProfile();
+  if (!p || (!p.role && !p.primaryDomain)) {
+    box.innerHTML = '<div class="s-empty">' +
+      '<div class="t-12" style="font-weight:600">' + L['settings.profile.emptyTitle'] + '</div>' +
+      '<div class="t-11 dim" style="margin:4px 0 10px">' + L['settings.profile.emptyDesc'] + '</div>' +
+      '<button class="btn btn-primary btn-sm" id="btn-create-profile">' + L['settings.profile.createBtn'] + '</button></div>';
+    return;
+  }
+  const langs = { 'en-zh': 'EN ↔ ZH', 'ja-zh': 'JA ↔ ZH', other: L['settings.profile.langOther'] };
+  const scMap = { interview: L['settings.profile.scInterview'], meeting: L['settings.profile.scMeeting'], collab: L['settings.profile.scCollab'], supplier: L['settings.profile.scSupplier'], class: L['settings.profile.scClass'] };
+  const chips = (p.scenarios || []).map(sc => '<span class="tag">' + escapeHtml(scMap[sc] || sc) + '</span>').join('');
+  box.innerHTML = '<div class="m-panel" style="padding:12px">' +
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">' +
+      '<div style="min-width:0">' +
+        '<div class="t-13 bold">' + escapeHtml(p.role || '—') + '</div>' +
+        '<div class="t-11 dim" style="margin-top:3px">' + escapeHtml(p.primaryDomain || '') + (p.focus ? ' · ' + escapeHtml(p.focus) : '') + '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">' +
+          '<span class="tag">' + escapeHtml(langs[p.language] || p.language || 'EN ↔ ZH') + '</span>' + chips +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;flex-shrink:0">' +
+        '<button class="btn btn-ghost btn-sm" id="btn-edit-profile">' + L['settings.profile.editBtn'] + '</button>' +
+        '<button class="btn btn-ghost btn-sm" id="btn-regen-profile">' + L['settings.profile.regenBtn'] + '</button>' +
+        '<button class="btn btn-ghost btn-sm del" id="btn-clear-profile">' + L['settings.profile.clearBtn'] + '</button>' +
+      '</div>' +
+    '</div></div>';
+}
+function renderDomainBox() {
+  const box = $('domain-box'); if (!box) return;
+  const L = I18N[state.lang];
+  const ds = readDomains();
+  const rows = ds.map(d => '<div class="s-row" style="border-bottom:1px solid var(--line);padding:8px 0">' +
+    '<div class="s-info" style="flex:1;min-width:0">' +
+      '<div class="s-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + escapeHtml(d.name) + (d.builtin ? '<span class="tag">' + L['settings.profile.builtin'] + '</span>' : '') + '</div>' +
+      '<div class="s-desc">' + escapeHtml(d.desc || '') + '</div>' +
+    '</div>' +
+    (!d.builtin ? '<button class="btn btn-ghost btn-sm del" data-act="del-domain" data-id="' + escapeHtml(d.id) + '">' + L['settings.profile.delDomain'] + '</button>' : '') +
+  '</div>').join('');
+  box.innerHTML = '<div style="margin-bottom:6px">' + rows + '</div>' +
+    '<div class="s-row" style="align-items:flex-end;gap:8px;flex-wrap:wrap">' +
+      '<div style="flex:1 1 120px;min-width:0"><input class="input" id="new-domain-name" style="width:100%" placeholder="' + L['settings.profile.newDomainName'] + '"/></div>' +
+      '<div style="flex:2 1 200px;min-width:0"><input class="input" id="new-domain-desc" style="width:100%" placeholder="' + L['settings.profile.newDomainDesc'] + '"/></div>' +
+      '<button class="btn btn-primary btn-sm" id="btn-add-domain">' + L['settings.profile.addDomain'] + '</button>' +
+    '</div>';
+}
+function openProfileEditor(regenerate) {
+  const eng = $('engine-modal');
+  if (eng && !eng.classList.contains('hidden')) { eng.classList.add('hidden'); state.settingsWasOpen = true; }
+  const p = readProfile() || {};
+  $('pf-role').value = p.role || '';
+  $('pf-domain').value = p.primaryDomain || '';
+  $('pf-domain-list').innerHTML = BUILTIN_DOMAINS.map(d => '<option value="' + escapeHtml(d.name) + '"></option>').join('');
+  const lang = p.language || 'en-zh';
+  document.querySelectorAll('#pf-lang .seg-item').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  const sc = p.scenarios || [];
+  document.querySelectorAll('#profile-modal .chip[data-sc]').forEach(c => c.classList.toggle('active', sc.includes(c.dataset.sc)));
+  $('pf-focus').value = p.focus || '';
+  if (p.generated && p.rolePortrait) {
+    $('pf-gen-result').style.display = '';
+    $('pf-out-role').value = p.rolePortrait || '';
+    $('pf-out-domain').value = p.domainProfile || '';
+    $('pf-out-focus').value = p.focusTone || '';
+  } else { $('pf-gen-result').style.display = 'none'; }
+  $('pf-gen-status').textContent = '';
+  const ov = $('profile-modal');
+  ov.classList.remove('hidden');
+  ov.querySelector('.modal-body').scrollTop = 0;
+  if (regenerate) generateProfile();
+}
+function closeProfileModal() {
+  $('profile-modal').classList.add('hidden');
+  if (state.settingsWasOpen) { const eng = $('engine-modal'); if (eng) eng.classList.remove('hidden'); state.settingsWasOpen = false; }
+}
+function collectProfileForm() {
+  return {
+    role: $('pf-role').value.trim(),
+    primaryDomain: $('pf-domain').value.trim(),
+    language: (document.querySelector('#pf-lang .seg-item.active') || {}).dataset ? document.querySelector('#pf-lang .seg-item.active').dataset.lang : 'en-zh',
+    scenarios: Array.from(document.querySelectorAll('#profile-modal .chip.active')).map(c => c.dataset.sc),
+    focus: $('pf-focus').value.trim()
+  };
+}
+async function generateProfile() {
+  const st = $('pf-gen-status');
+  if (st) st.textContent = I18N[state.lang]['settings.profile.generating'];
+  const payload = collectProfileForm();
+  payload.llm_config = buildLLMConfig();
+  if (!payload.role && !payload.primaryDomain) { if (st) st.textContent = I18N[state.lang]['settings.profile.needInput']; return; }
+  try {
+    const r = await apiFetch('/config/profile/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }, 120000);
+    $('pf-gen-result').style.display = '';
+    $('pf-out-role').value = r.role_portrait || '';
+    $('pf-out-domain').value = r.domain_profile || '';
+    $('pf-out-focus').value = r.focus_tone || '';
+    if (st) st.textContent = '';
+    return r;
+  } catch (e) {
+    if (st) st.textContent = e.message;
+    showToast(e.message, 'error');
+    return null;
+  }
+}
+function saveProfile() {
+  const p = collectProfileForm();
+  if (!p.role && !p.primaryDomain) { showToast(I18N[state.lang]['settings.profile.needInput'], 'warn'); return; }
+  const genShown = $('pf-gen-result').style.display !== 'none';
+  p.generated = genShown;
+  p.rolePortrait = $('pf-out-role').value.trim();
+  p.domainProfile = $('pf-out-domain').value.trim();
+  p.focusTone = $('pf-out-focus').value.trim();
+  writeProfile(p);
+  closeProfileModal();
+  renderProfileBox();
+  renderGenLlmTag();
+  showToast(I18N[state.lang]['settings.saved']);
+}
+function clearProfileForm() {
+  $('pf-role').value = ''; $('pf-domain').value = ''; $('pf-focus').value = '';
+  document.querySelectorAll('#profile-modal .chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#pf-lang .seg-item').forEach(b => b.classList.remove('active'));
+  const first = document.querySelector('#pf-lang .seg-item[data-lang="en-zh"]');
+  if (first) first.classList.add('active');
+  $('pf-gen-result').style.display = 'none';
+  $('pf-gen-status').textContent = '';
+}
+function doClearProfile() {
+  writeProfile(null);
+  renderProfileBox();
+  showToast(I18N[state.lang]['settings.profile.cleared']);
+}
+function addCustomDomain() {
+  const name = $('new-domain-name').value.trim();
+  const desc = $('new-domain-desc').value.trim();
+  if (!name) { showToast(I18N[state.lang]['settings.profile.needDomainName'], 'warn'); return; }
+  const ds = readDomains().filter(d => !d.builtin);
+  const id = 'custom-' + Date.now();
+  ds.push({ id: id, name: name, builtin: false, desc: desc, inject: 'Custom domain: ' + name + (desc ? ' — ' + desc : '') });
+  const all = readDomains().filter(d => d.builtin).concat(ds);
+  writeDomains(all);
+  $('new-domain-name').value = ''; $('new-domain-desc').value = '';
+  renderDomainBox();
+  showToast(I18N[state.lang]['settings.profile.domainAdded']);
+}
+function delCustomDomain(id) {
+  writeDomains(readDomains().filter(d => d.id !== id));
+  renderDomainBox();
+}
 /* ---------------- CONFIRM MODAL (delete) ---------------- */
 function openConfirmModal(type, id, title, text) {
   state.confirm = { type: type, id: id };
@@ -3085,6 +3812,7 @@ function confirmDelete() {
   closeConfirmModal();
   if (c.type === 'material') doDeleteMaterial(c.id);
   else if (c.type === 'playlist') doDeletePlaylist(c.id);
+  else if (c.type === 'profile') doClearProfile();
 }
 
 /* ---------------- SIDEBAR STATS / FILTERS / DRAWER ---------------- */
@@ -4400,7 +5128,7 @@ function play() {
   const audio = $('pb-audio');
   const url = art.meta.audio_url;
   if (!url) { state.playing = false; setPlayIcon(false); showToast('No audio file for this material', 'warn'); return; }
-  if (audio.dataset.src !== url) { audio.dataset.src = url; audio.src = url; audio.load(); }
+  if (audio.dataset.src !== url) { const au = absUrl(url); audio.dataset.src = au; audio.src = au; audio.load(); }
   audio.playbackRate = CONFIG.speeds[state.speedIdx];
   audio.currentTime = state.time / 1000;
   audio.play().then(() => {}).catch(() => { state.playing = false; setPlayIcon(false); });
@@ -5032,6 +5760,9 @@ function openModal() {
   overlay.querySelector('.modal-body').scrollTop = 0;
   renderUsage();
   renderStudy();
+  renderProfileBox();
+  renderDomainBox();
+  refreshAboutAccount();
   updateEngineBadge();
   $('cfg-lang').value = state.lang;
   const seg = document.querySelector('#cfg-theme-seg [data-theme-opt="' + state.theme + '"]');
@@ -5052,7 +5783,11 @@ function openModal() {
   } catch (e) { renderVoiceRoles(null); }
   applyDebugStates();
 }
-function closeModal() { stopAuditions(); $('engine-modal').classList.add('hidden'); }
+function closeModal() {
+  stopAuditions();
+  $('engine-modal').classList.add('hidden');
+  if (state.onboardResume) { state.onboardResume = false; const om = $('onboard-modal'); if (om) { om.classList.remove('hidden'); renderObStep(); } }
+}
 async function testLLM() {
   const btn = $('btn-test-llm'), res = $('llm-test-result');
   btn.disabled = true; btn.textContent = I18N[state.lang]['settings.llm.testing'];
@@ -5191,6 +5926,7 @@ function saveModal() {
     llm: { provider: $('cfg-llm-provider').value, model: $('cfg-llm-model').value, baseUrl: $('cfg-llm-base').value, apiKey: $('cfg-llm-key').value, temperature: $('cfg-llm-temp').value },
     tts: { provider: $('cfg-tts-provider').value, voices: currentVoiceRoles(), voice: currentVoiceRoles().map(x => x.voice).filter(Boolean).join(' + '), speechRate: $('cfg-tts-rate').value }
   };
+  try { const prev = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; if (prev.profile) cfg.profile = prev.profile; if (prev.domains && prev.domains.length) cfg.domains = prev.domains; } catch (e) {}
   try { localStorage.setItem('telg-settings', JSON.stringify(cfg)); } catch (e) {}
   try { localStorage.setItem('telg-theme', cfg.theme); } catch (e) {}
   try { localStorage.setItem('telg-lang', cfg.lang); } catch (e) {}
@@ -5413,6 +6149,44 @@ function onClick(e) {
   if (e.target.closest('#btn-pb-fwd10')) { if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; } seek(state.time + state.seekStep * 1000, true); return; }
   if (e.target.closest('#btn-pb-loop')) { toggleLoop(); return; }
   if (e.target.closest('#btn-pb-bookmark')) { if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; } openBookmarkModal(); return; }
+  if (e.target.closest('#btn-create-profile')) { openProfileEditor(false); return; }
+  if (e.target.closest('#btn-edit-profile')) { openProfileEditor(false); return; }
+  if (e.target.closest('#btn-regen-profile')) { openProfileEditor(true); return; }
+  if (e.target.closest('#btn-clear-profile')) { openConfirmModal('profile', null, I18N[state.lang]['settings.profile.clearBtn'], I18N[state.lang]['settings.profile.cleared']); return; }
+  if (e.target.closest('#btn-add-domain')) { addCustomDomain(); return; }
+  const delDom = e.target.closest('[data-act="del-domain"]');
+  if (delDom) { delCustomDomain(delDom.dataset.id); return; }
+  if (e.target.closest('#welcome-modal') && e.target.id === 'welcome-modal') { return; }
+  if (e.target.closest('#btn-wl-primary')) { welcomePrimary(); return; }
+  if (e.target.closest('#btn-wl-switch')) { wlMode = wlMode === 'register' ? 'login' : 'register'; renderWelcome(); return; }
+  if (e.target.closest('#btn-wl-guest')) { welcomeGuest(); return; }
+  if (e.target.closest('#ob-next')) { obNext(); return; }
+  if (e.target.closest('#ob-back')) { obBack(); return; }
+  if (e.target.closest('#ob-test-llm')) { obTestLlm(); return; }
+  if (e.target.closest('#ob-key-eye')) { const k = $('ob-llm-key'); k.type = k.type === 'password' ? 'text' : 'password'; return; }
+  if (e.target.closest('#ob-skip-llm')) { obIdx = 1; obSub = 0; renderObStep(); return; }
+  if (e.target.closest('#ob-gen-profile')) { obGenProfile(); return; }
+  if (e.type === 'change' && e.target.id === 'ob-llm-provider') {
+    const pr = LLM_PRESETS[$('ob-llm-provider').value];
+    if (pr) { $('ob-llm-base').value = pr.base; $('ob-llm-model').value = pr.model; }
+  }
+  if (obIdx === 0 && (e.target.id === 'ob-llm-provider' || e.target.id === 'ob-llm-model' || e.target.id === 'ob-llm-base' || e.target.id === 'ob-llm-key') && state.obLlmOk) {
+    state.obLlmOk = false; const nx = $('ob-next'); if (nx) nx.disabled = true;
+    const rr = $('ob-llm-result'); if (rr) { rr.className = 'test-output'; rr.textContent = ''; }
+    return;
+  }
+  const obChip = e.target.closest('#onboard-modal .ob-chip-row .chip');
+  if (obChip) {
+    const row = obChip.closest('.ob-chip-row'); const q = row.dataset.q; const val = obChip.dataset.val;
+    if (row.dataset.seg) { obSurvey[q] = val; row.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c === obChip)); }
+    else if (row.dataset.multi) { const arr = obSurvey[q] || []; const i = arr.indexOf(val); if (i >= 0) arr.splice(i, 1); else arr.push(val); obSurvey[q] = arr; obChip.classList.toggle('active'); }
+    return;
+  }
+  if (e.target.closest('#btn-account-login')) { showWelcome(); return; }
+  if (e.target.closest('#btn-account-logout')) { AuthAPI.logout(); state.user = null; refreshAboutAccount(); $('engine-modal').classList.add('hidden'); showWelcome(); return; }
+  if (e.target.closest('#profile-modal') && e.target.id === 'profile-modal') { closeProfileModal(); return; }
+  if (e.target.closest('#profile-modal .chip[data-sc]')) { const c = e.target.closest('#profile-modal .chip[data-sc]'); c.classList.toggle('active'); return; }
+  if (e.target.closest('#pf-lang .seg-item')) { const b = e.target.closest('#pf-lang .seg-item'); document.querySelectorAll('#pf-lang .seg-item').forEach(x => x.classList.remove('active')); b.classList.add('active'); return; }
   if (e.target.closest('#btn-pb-queue')) { toggleQueuePlay(); return; }
   const spItem = e.target.closest('#speed-menu [data-speed]');
   if (spItem) { setSpeed(parseFloat(spItem.dataset.speed)); return; }
@@ -5508,6 +6282,8 @@ function onKey(e) {
 
 /* ---------------- INIT ---------------- */
 function init() {
+  /* first-run gate: welcome -> local account -> onboarding -> main UI */
+  initGate();
   /* restore persisted volume, phrase bookmarks and today's stats */
   try {
     const sv = parseFloat(localStorage.getItem('telg-volume'));

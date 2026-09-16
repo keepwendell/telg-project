@@ -1344,6 +1344,98 @@ def remove_from_playlist(pid: str, mid: str):
     return {"ok": True}
 
 
+# --- Learning profile generation (LLM-assisted; config travels in the request) ---
+class ProfileGenIn(_BM):
+    role: str = ""
+    domain: str = ""
+    language: str = "en-zh"
+    scenarios: list[str] = []
+    focus: str = ""
+    llm_config: dict = {}
+
+
+class LLMProfileOut(_BM):
+    role_portrait: str
+    domain_profile: str
+    focus_tone: str
+
+
+PROFILE_SYSTEM_PROMPT = """你是 TELG 学习档案生成器，根据用户提供的画像信息，生成一份结构化学习档案。
+
+## 输出契约（硬约束）
+- 只输出合法 JSON 对象：{"role_portrait": "…", "domain_profile": "…", "focus_tone": "…"}，禁止任何其他内容。
+- role_portrait：基于用户职位/角色，扩写为 2-3 句的专业画像（该角色的工作语境、常用沟通对象、典型英文表达需求），英文。
+- domain_profile：基于用户练习领域，扩写为 3-4 句领域档案（该领域技术术语惯例、典型工作场景、角色画像；领域术语准确、宁浅勿错），英文。
+- focus_tone：基于用户的专注方向与练习场景，给出 1-2 句训练建议与语气偏好（如 interview 场景偏问答层层深入、meeting 偏汇报陈述），英文。
+- 未提供的字段（如无 focus）对应输出保持简洁，不编造。
+
+请直接输出 JSON。"""
+
+
+@app.post("/api/v1/config/profile/generate")
+def profile_generate(c: ProfileGenIn):
+    if not (c.role.strip() or c.domain.strip()):
+        raise HTTPException(400, "role or domain is required")
+    cfg = c.llm_config or {}
+    base = (cfg.get("base_url") or os.environ.get("TELG_LLM_BASE") or "https://api.deepseek.com/v1").strip().rstrip("/")
+    key = (cfg.get("api_key") or os.environ.get("DEEPSEEK_API_KEY") or "").strip()
+    model = (cfg.get("model") or os.environ.get("TELG_LLM_MODEL") or "deepseek-chat").strip()
+    lang_label = {"en-zh": "English + Chinese", "ja-zh": "Japanese + Chinese", "other": "other"}.get(c.language, c.language)
+    sc_label = {"interview": "technical interview", "meeting": "meeting presentation", "collab": "team collaboration",
+                "supplier": "supplier communication", "class": "classroom teaching"}.get((c.scenarios or [""])[0], ", ".join(c.scenarios or []))
+    user = (
+        "## 用户画像\n"
+        "- 职位/角色：" + (c.role or "—") + "\n"
+        "- 主要练习领域：" + (c.domain or "—") + "\n"
+        "- 语言方向：" + lang_label + "\n"
+        "- 练习场景：" + sc_label + ("\n" if c.scenarios else "") + "\n"
+        "- 专注方向：" + (c.focus or "—")
+    )
+    if not key:
+        raise HTTPException(400, "LLM API key not configured — configure it in Settings (Apply) first")
+    try:
+        key.encode("ascii")
+    except UnicodeEncodeError:
+        raise HTTPException(400, "api_key contains non-ASCII characters (placeholder?) — enter a real key")
+    try:
+        client = OpenAI(base_url=base, api_key=key, timeout=60)
+        errors = []
+        for attempt in range(3):
+            u = user
+            if errors:
+                u += "\n\n## 校验失败反馈\n你上次输出未通过校验：\n" + "\n".join(errors) + "\n请只修正问题并重新输出完整 JSON。"
+            try:
+                resp = client.chat.completions.create(
+                    model=model, temperature=0.4, max_tokens=700,
+                    response_format={"type": "json_object"},
+                    messages=[{"role": "system", "content": PROFILE_SYSTEM_PROMPT}, {"role": "user", "content": u}],
+                )
+                raw = (resp.choices[0].message.content or "").strip()
+                data = json.loads(raw)
+                out = LLMProfileOut.model_validate(data)
+                try:
+                    us = getattr(resp, "usage", None)
+                    if us:
+                        con = db()
+                        con.execute(
+                            "INSERT INTO llm_usage(provider, model, action, prompt_tokens, completion_tokens, total_tokens)"
+                            " VALUES(?,?,?,?,?,?)",
+                            ((cfg.get("provider") or "openai-compatible"), model, "profile-generate",
+                             int(getattr(us, "prompt_tokens", 0) or 0), int(getattr(us, "completion_tokens", 0) or 0),
+                             int(getattr(us, "total_tokens", 0) or 0)),
+                        )
+                        con.commit()
+                        con.close()
+                except Exception:  # noqa: BLE001
+                    pass
+                return out.model_dump()
+            except Exception as e:  # noqa: BLE001
+                errors.append("%s" % e)
+        raise HTTPException(502, "Profile generation failed after 3 attempts: " + " | ".join(errors[-2:]))
+    except LLMGenerationError as e:
+        raise HTTPException(502, str(e)) from e
+
+
 # --- Provider connectivity tests (config stays in the request; never persisted) ---
 @app.post("/api/v1/config/test-llm")
 def test_llm(c: TestLLMIn):
@@ -1374,7 +1466,7 @@ def test_llm(c: TestLLMIn):
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=15) as r:
+        with urllib.request.urlopen(req, timeout=30) as r:
             body = json.loads(r.read().decode("utf-8"))
         # Record usage from the connectivity probe (max_tokens=8, negligible).
         try:
