@@ -852,6 +852,28 @@ def build_artifact(p: GenerateIn, action: str = "generate") -> dict:
     }
 
 
+class ImportIn(BaseModel):
+    artifact: dict
+
+
+@app.post("/api/v1/materials/import")
+def import_material(body: ImportIn):
+    """Import a fully-formed Generation Artifact (used by Test Data mode: the
+    corpus comes from the frontend template, but it must live in the DB so the
+    real TTS/playback pipeline can synthesize and play it)."""
+    art = body.artifact or {}
+    mid = str(art.get("id") or ("gen-" + str(int(time.time() * 1000))))
+    conn = db()
+    for t in ("dialogue_segments", "vocabulary", "listening_questions",
+              "core_sentence_patterns"):
+        conn.execute("DELETE FROM %s WHERE material_id = ?" % t, (mid,))
+    conn.execute("DELETE FROM materials WHERE id = ?", (mid,))
+    insert_artifact(conn, art, status="draft")
+    conn.commit()
+    conn.close()
+    return artifact_of(db(), mid)
+
+
 @app.post("/api/v1/generate")
 def generate(p: GenerateIn):
     art = build_artifact(p)

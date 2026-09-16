@@ -143,6 +143,7 @@ a{color:inherit;text-decoration:none}
 .range{width:150px;accent-color:var(--primary);cursor:pointer;height:4px}
 .temp-val{font-family:var(--font-mono);font-size:12px;color:var(--on-surface);min-width:34px;text-align:right}
 .tts-voice-zone{display:flex;flex-direction:column;gap:8px;width:100%;min-width:0}
+.dev-tts-ctrl .input{width:250px;height:32px;font-size:12px;padding:0 10px}
 .tts-voice-zone .input{width:100%;min-height:100px;font-size:13px;line-height:1.6;padding:10px 12px;resize:vertical;height:auto;box-sizing:border-box}
 .tts-voice-foot{display:flex;align-items:center;gap:10px;min-width:0;align-self:flex-start}
 .voice-roles{display:flex;flex-direction:column;gap:6px;width:100%;min-width:0}
@@ -303,7 +304,13 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .range-row .range-input{width:100%;accent-color:var(--primary)}
 .range-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--outline)}
 /* generation progress */
+/* generation progress */
 .gen-progress{display:flex;flex-direction:column;gap:10px;padding:28px 20px;align-items:center;text-align:center}
+.llm-trace{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:8px 10px;background:var(--surface-low);border:1px solid var(--line);border-radius:7px;text-align:left;font-family:var(--mono);font-size:10.5px;line-height:1.55;color:var(--outline);max-height:150px;overflow-y:auto;width:100%;box-sizing:border-box}
+.llm-trace .tr-line{display:flex;gap:6px;min-width:0}
+.llm-trace .tr-t{color:var(--outline);white-space:nowrap;opacity:.7}
+.llm-trace .tr-ok{color:var(--primary)}
+.llm-trace .tr-err{color:var(--error)}
 .gen-step{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--outline)}
 .gen-step.done{color:var(--on-variant)}
 .gen-step.active{color:var(--on-surface)}
@@ -795,6 +802,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
             <div class="gen-step" data-step="2"><span class="step-ic" style="width:15px;display:inline-flex"></span><span class="gen-step-label">Validating structure &amp; grounding</span></div>
           </div>
           <div class="t-11 dim" id="gen-topic-label" style="text-align:center"></div>
+          <div id="llm-trace" class="llm-trace hidden"></div>
         </div>
         <div id="transcript-body">
           <div class="synth-banner hidden" id="synth-banner">
@@ -1597,7 +1605,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         </div>
       </div>
       <!-- DEVELOPER -->
-      <div class="m-panel" id="mp-developer">
+            <div class="m-panel" id="mp-developer">
         <div class="m-section-head">
           <div class="t-12 bold" data-i18n="settings.tab.developer">Developer</div>
           <div class="t-11 dim" data-i18n="settings.developer.sub">Debug &amp; diagnostics — LLM and TTS pipeline inspection.</div>
@@ -1615,11 +1623,11 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <div class="s-sec-title" data-i18n="settings.developer.llmDiag">LLM Diagnostics</div>
           <div class="s-row">
             <div class="s-info">
-              <div class="s-name" data-i18n="settings.llm.llmDebug">LLM Debug</div>
-              <div class="s-desc" data-i18n="settings.llm.llmDebugHint">Inspect request / response and run the generation pipeline.</div>
+              <div class="s-name" data-i18n="settings.developer.llmMock">LLM Mock</div>
+              <div class="s-desc" data-i18n="settings.developer.llmMockHint">LLM link debugging — real call with the configured key, intermediate steps shown on the main page. No key → real failure reported.</div>
             </div>
             <div class="s-ctrl">
-              <label class="toggle"><input type="checkbox" id="cfg-llm-debug"/><span class="slider"></span></label>
+              <label class="toggle"><input type="checkbox" id="cfg-llm-mock"/><span class="slider"></span></label>
             </div>
           </div>
           <div id="llm-debug-section" class="debug-panel">
@@ -1635,39 +1643,33 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
             <div class="test-output" id="llm-gen-result"></div>
             <pre class="debug-pre" id="llm-debug-detail"></pre>
           </div>
-          <div class="s-sec-title" data-i18n="settings.developer.storedSec">Fixed Test Data</div>
+          <div class="s-sec-title" data-i18n="settings.developer.ttsMockSec">TTS Mock</div>
           <div class="s-row">
             <div class="s-info">
-              <div class="s-name" data-i18n="settings.developer.testData">Test Data</div>
-              <div class="s-desc" data-i18n="settings.developer.testDataHint">Switch between fixed datasets; stored results are reused by TTS tests and the player.</div>
+              <div class="s-name" data-i18n="settings.developer.ttsMock">TTS Mock</div>
+              <div class="s-desc" data-i18n="settings.developer.ttsMockHint">Corpus take-over — generate from the selected dataset. Audio synthesis, audition and playback stay fully real.</div>
             </div>
             <div class="s-ctrl">
-              <div class="select-wrap">
-                <select class="select" id="cfg-test-data">
-                  <option value="">Off · live LLM/TTS</option>
-                  <option value="tire">Tire Burst Stability Control</option>
-                  <option value="canbus">CAN Bus Jitter &amp; Packet Drop</option>
-                  <option value="tv">Torque Vectoring in Turn-In</option>
-                </select>
-                <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+              <label class="toggle"><input type="checkbox" id="cfg-tts-mock"/><span class="slider"></span></label>
+            </div>
+          </div>
+          <div id="tts-mock-section">
+            <div class="s-row">
+              <div class="s-info">
+                <div class="s-name" data-i18n="settings.developer.testData">Test Data</div>
+                <div class="s-desc" data-i18n="settings.developer.testDataHint">Corpus source for take-over — the selected dataset replaces the LLM result.</div>
               </div>
-            </div>
-          </div>
-          <div class="s-row">
-            <div class="s-info">
-              <div class="s-name" data-i18n="settings.developer.llmText">LLM Text Result</div>
-              <div class="s-desc" data-i18n="settings.developer.llmTextHint">Fixed corpus output stored for downstream reuse.</div>
-            </div>
-            <div class="s-ctrl"><span class="test-result" id="stored-llm-status"></span></div>
-          </div>
-          <div class="s-row">
-            <div class="s-info">
-              <div class="s-name" data-i18n="settings.developer.audio">Audio Content</div>
-              <div class="s-desc" data-i18n="settings.developer.audioHint">Synthesize and fix the audio for the selected data.</div>
-            </div>
-            <div class="s-ctrl">
-              <button class="btn btn-sm" id="btn-store-audio" data-i18n="settings.developer.storeBtn">Synthesize &amp; Store</button>
-              <span class="test-result" id="stored-audio-status"></span>
+              <div class="s-ctrl">
+                <div class="select-wrap">
+                  <select class="select" id="cfg-test-data">
+                    <option value="">Off · live LLM</option>
+                    <option value="tire">Tire Burst Stability Control</option>
+                    <option value="canbus">CAN Bus Jitter &amp; Packet Drop</option>
+                    <option value="tv">Torque Vectoring in Turn-In</option>
+                  </select>
+                  <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1762,19 +1764,44 @@ const CONFIG = {
   lenHints: { '60': '~120 words', '90': '~180 words', '120': '~240 words', '180': '~360 words', '240': '~480 words' },
   depthLabels: { 1: 'Overview level', 2: 'Core concepts', 3: 'Mechanism + trade-offs', 4: 'Deep-dive · math & formulas', 5: 'Principal · research-level' }
 };
-/* Mock mode is runtime: ON only when Developer Test Data is enabled.
-   Default (no key / 'off') → live backend for LLM + TTS. */
-function mockMode() {
+/* Phase-scoped mock. Two independent switches, both gated by Developer Mode,
+   each default OFF:
+   - LLM Mock: simulate the LLM corpus-generation stage; the main page shows
+     the intermediate steps (prompt → template match → corpus → validate).
+   - TTS Mock: take over the corpus source (fixed dataset); audio synthesis,
+     audition and playback always run against the real backend.
+   Everything else stays live regardless of these switches. */
+function llmMockOn() {
   if (!CONFIG.devMode) return false;
-  const k = String(localStorage.getItem('telg-test-data') || '').trim();
-  return k !== '' && k !== 'off';
+  return String(localStorage.getItem('telg-llm-mock') || '').trim() === '1';
+}
+function ttsMockOn() {
+  if (!CONFIG.devMode) return false;
+  return String(localStorage.getItem('telg-tts-mock') || '').trim() === '1';
+}
+/* Any LLM-stage mock active? (kept as the umbrella predicate for the
+   generation pipeline: TTS Mock also implies the corpus source is fixed.) */
+function mockMode() { return llmMockOn() || ttsMockOn(); }
+/* ---------- LLM intermediate-step trace (LLM Mock link debugging) ---------- */
+function showLlmTrace(show) {
+  const el = $('llm-trace');
+  if (el) { el.classList.toggle('hidden', !show); if (show) el.innerHTML = ''; }
+}
+function appendLlmTrace(msg, cls) {
+  const el = $('llm-trace');
+  if (!el || el.classList.contains('hidden')) return;
+  const line = document.createElement('div');
+  line.className = 'tr-line';
+  line.innerHTML = '<span class="tr-t">' + new Date().toLocaleTimeString('en-GB', { hour12: false }) + '</span><span class="' + (cls || '') + '"></span>';
+  line.lastChild.textContent = msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
 }
 function updateEngineBadge() {
   const dot = $('eng-dot'), mode = $('eng-mode');
   if (!dot || !mode) return;
-  const k = String(localStorage.getItem('telg-test-data') || '').trim();
-  const on = k !== '' && k !== 'off';
-  mode.textContent = on ? 'test-data' : 'live';
+  const on = llmMockOn() || ttsMockOn();
+  mode.textContent = on ? 'mock' : 'live';
   dot.classList.toggle('pulse', !on);
   dot.style.background = on ? 'var(--tertiary)' : '';
 }
@@ -1981,23 +2008,28 @@ async function apiFetchSoft(path, opts) {
 }
 
 const API = {
-  async generate(params) {
-    if (mockMode()) return mockGenerate(params);
+  async generate(params, replaceId) {
+    /* TTS Mock: corpus take-over (dataset). LLM Mock: still calls the real LLM
+       (link debugging) — force test_mode off so the backend never substitutes
+       its own mock. */
+    if (ttsMockOn()) return datasetGenerate(params, replaceId);
+    if (llmMockOn()) params = Object.assign({}, params, { test_mode: false });
+    if (replaceId) return apiFetch('/materials/' + replaceId + '/regenerate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) });
     return apiFetch('/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) });
+  },
+  async importMaterial(art) {
+    return apiFetch('/materials/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ artifact: art }) });
   },
   async regenerateMaterial(id, params) {
     return apiFetch('/materials/' + id + '/regenerate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) });
   },
   async listMaterials() {
-    if (mockMode()) return MOCK_MATERIALS.map(m => ({ id: m.id, title: m.meta.title, domain: m.meta.domain, role: m.meta.role, difficulty: m.meta.difficulty, duration_ms: m.meta.total_duration_ms, tag: m.meta.tag }));
     return apiFetch('/materials');
   },
   async getMaterial(id) {
-    if (mockMode()) return MOCK_MATERIALS.find(m => m.id === id) || MOCK_MATERIALS[0];
     return apiFetch('/materials/' + id);
   },
   async synthesize(id, cfg) {
-    if (mockMode()) return { audio_url: '/mock/audio/' + id + '.wav', total_duration_ms: 0 };
     return apiFetch('/materials/' + id + '/synthesize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg || {}) }, 300000);
   },
   async health() {
@@ -2039,15 +2071,10 @@ const API = {
     return apiFetchSoft('/config/test-llm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
   },
   async testTTS(cfg) {
-    if (mockMode()) {
-      await new Promise(r => setTimeout(r, 700));
-      if (!cfg || !String(cfg.voice || '').trim()) return { ok: false, error: 'voice is empty' };
-      return { ok: true, audio_url: '', mock: true };
-    }
     return apiFetchSoft('/config/test-tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
   },
   async testGenerate(cfg) {
-    if (mockMode()) { await new Promise(r => setTimeout(r, 800)); return { ok: true, latency_ms: 42, segs: 6, words: 290, total_ms: 120000, title: 'Tire Burst Stability Control' }; }
+    if (llmMockOn()) { await new Promise(r => setTimeout(r, 800)); return { ok: true, latency_ms: 42, segs: 6, words: 290, total_ms: 120000, title: 'Tire Burst Stability Control' }; }
     return apiFetchSoft('/config/test-generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
   },
   async unlockDev(key) {
@@ -2065,10 +2092,18 @@ function parseSec(l) {
   const n = parseInt(l, 10);
   return n > 0 ? n : null;
 }
-function mockGenerate(params) {
+async function datasetGenerate(params, replaceId) {
+  /* TTS Mock — corpus take-over: the selected dataset fixes the corpus source
+     (it takes over the LLM result). Topic only overrides the title; without a
+     dataset selected, fall back to topic-keyword matching. Audio synthesis and
+     playback stay fully real. */
+  const ds = testDataKey();
   const t = (params.topic || '').toLowerCase();
   let base;
-  if (/tire|burst|blowout/.test(t)) base = MOCK_MATERIALS[0];
+  if (ds === 'tire') base = MOCK_MATERIALS[0];
+  else if (ds === 'canbus') base = MOCK_MATERIALS[1];
+  else if (ds === 'tv') base = MOCK_MATERIALS[2];
+  else if (/tire|burst|blowout/.test(t)) base = MOCK_MATERIALS[0];
   else if (/can|bus|jitter|packet/.test(t)) base = MOCK_MATERIALS[1];
   else if (/torque|vectoring|turn|yaw/.test(t)) base = MOCK_MATERIALS[2];
   else base = MOCK_MATERIALS[0];
@@ -2096,8 +2131,15 @@ function mockGenerate(params) {
   art.meta.breadth = (params.advanced && params.advanced.breadth) || 3;
   art.meta.filter = base.meta.filter;
   art.meta.tag = base.meta.tag;
-  art.meta.audio_url = '/mock/audio/' + art.id + '.wav';
-  return art;
+  art.meta.generated = true;
+  art.meta.audioReady = false;
+  art.meta.saved = false;
+  art.meta.audio_url = '';                 /* template carries a fake /mock URL — never import it */
+  if (replaceId) art.id = replaceId;
+  /* The corpus template is fine for Test Data mode, but the material must live
+     in the backend DB so the real TTS/playback pipeline can synthesize and
+     play it (no mock audio — that is why playback was silent). */
+  return await API.importMaterial(art);
 }
 
 /* ---------------- STATE ---------------- */
@@ -2106,7 +2148,7 @@ const state = {
   lang: localStorage.getItem('telg-lang') || 'en',
   zhVisible: true,
   generating: false,
-  library: mockMode() ? JSON.parse(JSON.stringify(MOCK_MATERIALS)) : [],
+  library: [],
   current: null,            /* artifact being played */
   playing: false,
   time: 0,
@@ -2165,8 +2207,14 @@ const I18N = {
     'settings.title': 'Settings',
     
     'settings.tab.general': 'General', 'settings.tab.llm': 'LLM', 'settings.tab.tts': 'TTS', 'settings.tab.shortcuts': 'Shortcuts', 'settings.tab.usage': 'Usage', 'settings.tab.developer': 'Developer', 'settings.tab.about': 'About',
-    'settings.developer.sub': 'LLM request / response inspection and fixed test data for TTS & player reuse.',
-    'settings.developer.llmDiag': 'LLM Diagnostics', 'settings.developer.ttsDiag': 'TTS Diagnostics',
+    'settings.developer.sub': 'LLM link debugging and corpus take-over for the TTS pipeline.',
+    'settings.developer.llmDiag': 'LLM Diagnostics',
+    'settings.developer.llmMock': 'LLM Mock', 'settings.developer.llmMockHint': 'LLM link debugging — real call with the configured key; intermediate steps shown on the main page. No key → real failure reported.',
+    'settings.developer.reqResp': 'LLM Request / Response',
+    'settings.developer.testData': 'Test Data',
+    'settings.developer.ttsMockSec': 'TTS Mock',
+    'settings.developer.ttsMock': 'TTS Mock', 'settings.developer.ttsMockHint': 'Corpus take-over — generate from the selected dataset. Audio synthesis, audition and playback stay fully real.',
+    'settings.developer.testDataHint': 'Corpus source for take-over — the selected dataset replaces the LLM result.',
     'settings.shortcuts.sub': 'Global keyboard shortcuts — work wherever the app is focused.',
     'settings.about.sub': 'Technical English Listening Generator — research-grade listening materials for engineers.',
     'settings.about.product': 'Product', 'settings.about.version': 'Version', 'settings.about.versionDesc': 'v1.0 MVP — single-file frontend, FastAPI backend.',
@@ -2179,7 +2227,7 @@ const I18N = {
     'settings.playback.label': 'Playback Defaults',
     'settings.zh.on': 'On', 'settings.zh.off': 'Off',
     'settings.general.sub': 'Software-wide defaults — language, appearance, playback.',
-    'settings.usage.sub': 'LLM token consumption — successful calls only.',
+    'settings.usage.sub': 'LLM token consumption — successful calls only.', 'settings.usage.loading': 'Loading…',
     'settings.usage.unavailable': 'Usage unavailable — backend not reachable.',
     'settings.usage.total': 'Total',
     'settings.usage.today': 'Today',
@@ -2197,6 +2245,7 @@ const I18N = {
     'settings.llm.params': 'Generation Parameters', 'settings.llm.temphint': 'Lower favors stable JSON; higher favors creativity.',
     'settings.tts.provider': 'TTS Provider', 'settings.tts.engine': 'Engine',
     'settings.tts.rate': 'Speech Rate', 'settings.tts.ratehint': 'Applied at synthesis time; player speed stays independent.',
+    'settings.tts.addRole': 'Add role',
     'settings.shortcuts.label': 'Keyboard Shortcuts',
     'settings.shortcuts.gen': 'Generate panel', 'settings.shortcuts.play': 'Play / Pause', 'settings.shortcuts.sent': 'Prev / Next sentence', 'settings.shortcuts.replay': 'Replay sentence', 'settings.shortcuts.search': 'Search library',
     'settings.tts.enginehint': 'Sentence-by-sentence synthesis is stitched into a single timeline; every segment carries start_ms / end_ms for transcript sync.',
@@ -2308,15 +2357,14 @@ const I18N = {
     'settings.title': '设置',
     
     'settings.tab.general': '通用', 'settings.tab.llm': 'LLM', 'settings.tab.tts': 'TTS', 'settings.tab.shortcuts': '快捷键', 'settings.tab.usage': '用量', 'settings.tab.developer': '开发者', 'settings.tab.about': '关于',
-    'settings.developer.sub': 'LLM 请求/响应展示，以及供 TTS 与播放器复用的固化测试数据。',
+    'settings.developer.sub': 'LLM 链路调试与 TTS 语料接管。',
     'settings.developer.llmDiag': 'LLM 诊断',
     'settings.developer.reqResp': 'LLM 请求与响应',
-    'settings.developer.storedSec': '固化测试数据',
+    'settings.developer.llmMock': 'LLM Mock', 'settings.developer.llmMockHint': 'LLM 链路调试——使用已配置 Key 真实调用，主页面展示中间过程；未配置 Key 时如实反馈未联通。',
+    'settings.developer.ttsMockSec': 'TTS Mock',
+    'settings.developer.ttsMock': 'TTS Mock', 'settings.developer.ttsMockHint': '语料接管——使用所选数据集生成语料；音频合成、试听与播放保持真实。',
     'settings.developer.testData': '测试数据',
-    'settings.developer.testDataHint': '切换固定数据集；固化结果供 TTS 测试与播放器复用。',
-    'settings.developer.llmText': 'LLM 文本结果', 'settings.developer.llmTextHint': '固化语料输出，供下游复用。',
-    'settings.developer.audio': '音频内容', 'settings.developer.audioHint': '合成并固化所选数据的音频。',
-    'settings.developer.storeBtn': '合成并固化',
+    'settings.developer.testDataHint': '语料接管的数据源——所选数据集将替代 LLM 结果。',
     'settings.shortcuts.sub': '全局快捷键——应用聚焦时均生效。',
     'settings.about.sub': '技术英语听力生成器——面向工程师的专业听力素材。',
     'settings.about.product': '产品', 'settings.about.version': '版本', 'settings.about.versionDesc': 'v1.0 MVP——单文件前端 + FastAPI 后端。',
@@ -2329,7 +2377,7 @@ const I18N = {
     'settings.playback.label': '播放默认值',
     'settings.zh.on': '开', 'settings.zh.off': '关',
     'settings.general.sub': '软件全局默认 — 语言、外观、播放。',
-    'settings.usage.sub': 'LLM Token 消耗 — 仅统计成功调用。',
+    'settings.usage.sub': 'LLM Token 消耗 — 仅统计成功调用。', 'settings.usage.loading': '加载中…',
     'settings.usage.unavailable': '用量不可用 — 后端未连接。',
     'settings.usage.total': '总计',
     'settings.usage.today': '今日',
@@ -2549,7 +2597,7 @@ function startRenameHead() {
       art.meta.title = v;
       const m = state.library.find(x => x.id === art.id);
       if (m) m.meta.title = v;
-      if (!mockMode()) API.patchMaterial(art.id, { title: v }).catch(() => {});
+      API.patchMaterial(art.id, { title: v }).catch(() => {});
       showToast(I18N[state.lang]['lib.renamed'] + v);
       restore();
       renderMaterial(); renderLibrary(); renderPlayerBar();
@@ -2669,7 +2717,7 @@ function publishCurrent() {
   art.meta.fileName = name;
   art.meta.title = name;
   art.meta.saved = true;
-  if (!mockMode()) API.patchMaterial(art.id, { saved: true, title: name }).catch(() => {});
+  API.patchMaterial(art.id, { saved: true, title: name }).catch(() => {});
   closePublishModal();
   renderMaterial(); renderLibrary();
   showToast(I18N[state.lang]['pub.done'] + name);
@@ -2685,7 +2733,7 @@ function commitRename(id, val) {
   const m = state.library.find(x => x.id === id);
   if (m && val.trim()) {
     m.meta.title = val.trim();
-    if (!mockMode()) API.patchMaterial(id, { title: m.meta.title }).catch(() => {});
+    API.patchMaterial(id, { title: m.meta.title }).catch(() => {});
     showToast(I18N[state.lang]['lib.renamed'] + m.meta.title);
   }
   state.renamingId = null;
@@ -2704,7 +2752,7 @@ function doDeleteMaterial(id) {
   const name = m.meta.title;
   state.library = state.library.filter(x => x.id !== id);
   state.playlists.forEach(p => { const i = p.materialIds.indexOf(id); if (i >= 0) p.materialIds.splice(i, 1); });
-  if (!mockMode()) API.deleteMaterial(id).catch(() => {});
+  API.deleteMaterial(id).catch(() => {});
   if (state.generated && state.generated.id === id) state.generated = null;
   if (wasCurrent) {
     state.time = 0; state.playing = false;
@@ -2779,16 +2827,14 @@ async function commitPlCreate(name) {
   name = (name || '').trim();
   if (name) {
     let p = { id: 'pl-' + Date.now(), name: name, materialIds: [] };
-    if (!mockMode()) {
-      try {
-        const r = await API.createPlaylist(name);
-        p = { id: r.id, name: r.name, materialIds: [] };
-      } catch (e) {}
-    }
+    try {
+      const r = await API.createPlaylist(name);
+      p = { id: r.id, name: r.name, materialIds: [] };
+    } catch (e) {}
     state.playlists.push(p);
     if (state.plModalTarget) {
       p.materialIds.push(state.plModalTarget.id);
-      if (!mockMode()) API.addToPlaylist(p.id, state.plModalTarget.id).catch(() => {});
+      API.addToPlaylist(p.id, state.plModalTarget.id).catch(() => {});
     }
     showToast(I18N[state.lang]['pl.created'] + name);
   }
@@ -2805,7 +2851,7 @@ function commitPlRename(id, val) {
   const p = state.playlists.find(x => x.id === id);
   if (p && val.trim()) {
     p.name = val.trim();
-    if (!mockMode()) API.renamePlaylist(id, p.name).catch(() => {});
+    API.renamePlaylist(id, p.name).catch(() => {});
     showToast(I18N[state.lang]['pl.renamed'] + p.name);
   }
   state.plRenamingId = null;
@@ -2822,7 +2868,7 @@ function doDeletePlaylist(id) {
   const name = p.name;
   state.playlists = state.playlists.filter(x => x.id !== id);
   if (state.activePlaylist === id) state.activePlaylist = null;
-  if (!mockMode()) API.deletePlaylist(id).catch(() => {});
+  API.deletePlaylist(id).catch(() => {});
   renderPlaylists(); renderLibrary();
   if (state.plModalTarget) renderPlList();
   showToast(I18N[state.lang]['pl.deleted'] + name);
@@ -2867,11 +2913,11 @@ function togglePlMaterial(plid) {
   const idx = p.materialIds.indexOf(art.id);
   if (idx >= 0) {
     p.materialIds.splice(idx, 1);
-    if (!mockMode()) API.removeFromPlaylist(plid, art.id).catch(() => {});
+    API.removeFromPlaylist(plid, art.id).catch(() => {});
     showToast(I18N[state.lang]['pl.removed'] + p.name);
   } else {
     p.materialIds.push(art.id);
-    if (!mockMode()) API.addToPlaylist(plid, art.id).catch(() => {});
+    API.addToPlaylist(plid, art.id).catch(() => {});
     showToast(I18N[state.lang]['pl.added'] + p.name);
   }
   renderPlList(); renderPlaylists();
@@ -3139,15 +3185,39 @@ function runGenerate(params, replaceId) {
   const steps = document.querySelectorAll('#gen-progress-box .gen-step');
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   (async () => {
+    const llmDbg = llmMockOn() && !ttsMockOn();
+    const ttsTake = ttsMockOn();
     try {
-      if (mockMode()) {
-        genPaint(steps, 0); await sleep(480);
-        genPaint(steps, 1); await sleep(480);
-        genPaint(steps, 2); await sleep(480);
+      if (llmDbg) {
+        /* LLM link debugging: show the intermediate steps, then call the real
+           LLM below. No key → the backend reports the real failure. */
+        showLlmTrace(true);
+        genPaint(steps, 0);
+        const dbg = { topic: params.topic, domain: params.domainLabel || params.domain, role: params.role, scenario: params.scenario, difficulty: 'Level ' + params.difficulty, length: params.length, depth: (params.advanced || {}).depth || 3, breadth: (params.advanced || {}).breadth || 2 };
+        appendLlmTrace('Assembling request parameters — ' + JSON.stringify(dbg), 'tr-ok');
+        const lc = params.llm_config || {};
+        appendLlmTrace('Request body — { topic, domain, role, scenario, difficulty, length, llm_config: { provider:' + (lc.provider || '?') + ', model:' + (lc.model || '?') + ', base_url:' + (lc.base_url || '?') + ', api_key:' + (lc.api_key ? '•••' : 'not set') + ', temperature:' + (lc.temperature ?? 0.7) + ' } }');
+        appendLlmTrace('Sending request to LLM…');
+        await sleep(260);
+        genPaint(steps, 1);
+      } else if (ttsTake) {
+        genPaint(steps, 0);
+        showLlmTrace(true);
+        appendLlmTrace('Corpus taken over by TTS Mock — dataset: ' + (testDataKey() || 'topic-matched'), 'tr-ok');
+        appendLlmTrace('Importing dataset corpus to the material library…');
+        await sleep(260);
+        genPaint(steps, 1);
       } else {
         genPaint(steps, 0);            /* corpus step stays active while the LLM generates */
       }
-      const art = await (replaceId && !mockMode() ? API.regenerateMaterial(replaceId, params) : API.generate(params));
+      const art = await (replaceId && !mockMode() ? API.regenerateMaterial(replaceId, params) : API.generate(params, replaceId));
+      if (llmDbg) {
+        appendLlmTrace('LLM responded — ' + art.dialogue.length + ' segments · ' + art.vocabulary.length + ' vocab items · ' + art.listening_questions.length + ' questions', 'tr-ok');
+        appendLlmTrace('Structure validated — dialogue / vocabulary / questions / patterns', 'tr-ok');
+        appendLlmTrace('Material saved → ' + art.id, 'tr-ok');
+      } else if (ttsTake) {
+        appendLlmTrace('Dataset corpus imported → ' + art.id + ' · synthesize audio to listen', 'tr-ok');
+      }
       steps.forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
       art.meta.generated = true;
       setPhases(1);
@@ -3163,6 +3233,15 @@ function runGenerate(params, replaceId) {
       showToast((replaceId ? 'Regenerated — ' : 'Corpus generated — ') + art.meta.title + ' · synthesize audio to listen');
       playArtifact(art);                                /* select in library + render material (no autoplay) */
     } catch (err) {
+      if (llmDbg) {
+        /* Real unconnected result: show the actual error the LLM link returned. */
+        appendLlmTrace('LLM call failed — ' + (err && err.message || err), 'tr-err');
+        appendLlmTrace('No corpus produced (real failure reported)', 'tr-err');
+      } else if (ttsTake) {
+        /* Corpus take-over failed (e.g. backend missing the import endpoint). */
+        appendLlmTrace('Corpus import failed — ' + (err && err.message || err), 'tr-err');
+        appendLlmTrace('No material saved (backend /api/v1/materials/import unavailable)', 'tr-err');
+      }
       $('gen-progress-box').classList.add('hidden');
       $('transcript-body').classList.remove('hidden');
       const offline = !mockMode() && /Failed to fetch|NetworkError|Load failed|ERR_/i.test(String(err && err.message || err));
@@ -3381,23 +3460,17 @@ function synthesizeAudio() {
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   (async () => {
     try {
-      if (!mockMode()) {
-        genPaint(steps, 0);            /* TTS step stays active while the backend synthesizes */
-        let ttsCfg = {};
-        try {
-          const t = JSON.parse(localStorage.getItem('telg-settings') || '{}');
-          let storedVoices = (t.tts && t.tts.voice) || (t.tts && t.tts.voices) || '';
-          if (Array.isArray(storedVoices)) storedVoices = storedVoices.map(x => (x && x.voice) || x).filter(Boolean).join(' + ');
-          ttsCfg = { voices: storedVoices, rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1 };
-        } catch (e) {}
-        const r = await API.synthesize(art.id, ttsCfg);
-        if (r.audio_url) art.meta.audio_url = r.audio_url;
-        if (r.total_duration_ms) art.meta.total_duration_ms = r.total_duration_ms;
-      } else {
-        genPaint(steps, 0); await sleep(520);             /* sentence-by-sentence TTS */
-        genPaint(steps, 1); await sleep(520);             /* timeline stitching */
-        genPaint(steps, 2); await sleep(420);
-      }
+      genPaint(steps, 0);            /* TTS step stays active while the backend synthesizes */
+      let ttsCfg = {};
+      try {
+        const t = JSON.parse(localStorage.getItem('telg-settings') || '{}');
+        let storedVoices = (t.tts && t.tts.voice) || (t.tts && t.tts.voices) || '';
+        if (Array.isArray(storedVoices)) storedVoices = storedVoices.map(x => (x && x.voice) || x).filter(Boolean).join(' + ');
+        ttsCfg = { voices: storedVoices, rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1 };
+      } catch (e) {}
+      const r = await API.synthesize(art.id, ttsCfg);
+      if (r.audio_url) art.meta.audio_url = r.audio_url;
+      if (r.total_duration_ms) art.meta.total_duration_ms = r.total_duration_ms;
       steps.forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
       art.meta.generated = true;           /* synthesis implies a generation pipeline */
       art.meta.audioReady = true;
@@ -3542,7 +3615,7 @@ function setPlayIcon(playing) {
   const audio = document.getElementById('pb-audio');
   if (!audio) return;
   audio.addEventListener('timeupdate', () => {
-    if (!state.playing || mockMode()) return;
+    if (!state.playing) return;
     const art = currentArtifact();
     state.time = Math.min(audio.currentTime * 1000, art.meta.total_duration_ms || 0);
     if (state.loop) {
@@ -3569,24 +3642,21 @@ function play() {
   if (state.time >= art.meta.total_duration_ms) state.time = 0;
   state.playing = true;
   setPlayIcon(true);
-  if (!mockMode()) {
-    const audio = $('pb-audio');
-    const url = art.meta.audio_url;
-    if (!url) { state.playing = false; setPlayIcon(false); showToast('No audio file for this material'); return; }
-    if (audio.dataset.src !== url) { audio.dataset.src = url; audio.src = url; audio.load(); }
-    audio.playbackRate = CONFIG.speeds[state.speedIdx];
-    audio.currentTime = state.time / 1000;
-    audio.play().then(() => {}).catch(() => { state.playing = false; setPlayIcon(false); });
-    syncHighlight();
-    return;
-  }
-  startTimer();
+  /* Playback always uses the real <audio> element — Test Data mode only swaps
+     the corpus generator, never the audio path. */
+  const audio = $('pb-audio');
+  const url = art.meta.audio_url;
+  if (!url) { state.playing = false; setPlayIcon(false); showToast('No audio file for this material'); return; }
+  if (audio.dataset.src !== url) { audio.dataset.src = url; audio.src = url; audio.load(); }
+  audio.playbackRate = CONFIG.speeds[state.speedIdx];
+  audio.currentTime = state.time / 1000;
+  audio.play().then(() => {}).catch(() => { state.playing = false; setPlayIcon(false); });
   syncHighlight();
 }
 function pause() {
   state.playing = false;
   setPlayIcon(false);
-  if (!mockMode()) { try { $('pb-audio').pause(); } catch (e) {} }
+  try { $('pb-audio').pause(); } catch (e) {}
   stopTimer();
   syncHighlight();
 }
@@ -3594,7 +3664,7 @@ function togglePlay() { state.playing ? pause() : play(); }
 function seek(ms, autoplay) {
   const art = currentArtifact();
   state.time = Math.max(0, Math.min(ms, art.meta.total_duration_ms));
-  if (!mockMode()) { try { $('pb-audio').currentTime = state.time / 1000; } catch (e) {} }
+  try { $('pb-audio').currentTime = state.time / 1000; } catch (e) {}
   syncHighlight();
   renderPlayerBar();
   if (autoplay && !state.playing) play();
@@ -3674,7 +3744,7 @@ function closeSpeedMenu() { $('speed-menu').classList.add('hidden'); }
     const r = track.getBoundingClientRect();
     state.volume = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
     document.getElementById('vol-fill').style.width = (state.volume * 100) + '%';
-    if (!mockMode()) { try { document.getElementById('pb-audio').volume = state.volume; } catch (e) {} }
+    try { document.getElementById('pb-audio').volume = state.volume; } catch (e) {}
   };
   track.addEventListener('pointerdown', (e) => { dragging = true; e.preventDefault(); setVol(e.clientX); });
   window.addEventListener('pointermove', (e) => { if (dragging) setVol(e.clientX); });
@@ -3684,7 +3754,7 @@ function setSpeed(sp) {
   const i = CONFIG.speeds.indexOf(sp);
   if (i >= 0) {
     state.speedIdx = i; renderPlayerBar();
-    if (!mockMode()) { try { $('pb-audio').playbackRate = CONFIG.speeds[state.speedIdx]; } catch (e) {} }
+    try { $('pb-audio').playbackRate = CONFIG.speeds[state.speedIdx]; } catch (e) {}
   }
   closeSpeedMenu();
 }
@@ -3898,7 +3968,7 @@ async function loadUsage() {
   const fmt = n => (n || 0).toLocaleString();
   let d;
   try {
-    d = mockMode() ? mockUsage(usageGran, usageOffsetDays) : await API.usage(usageGran, usageOffsetDays);
+    d = llmMockOn() ? mockUsage(usageGran, usageOffsetDays) : await API.usage(usageGran, usageOffsetDays);
   } catch (e) {
     box.innerHTML = '<div class="t-11 dim" data-i18n="settings.usage.unavailable">Usage unavailable — backend not reachable.</div>';
     applyLang(); return;
@@ -4034,60 +4104,28 @@ function devModeOn() {
 }
 function applyDebugStates() {
   const on = devModeOn();
-  const cfg = readStoredCfg();
   const m = $('cfg-dev-mode'); if (m) m.checked = on;
-  const l = $('cfg-llm-debug'); if (l) l.checked = !!(cfg.llm && cfg.llm.debug);
+  const lm = $('cfg-llm-mock'); if (lm) lm.checked = llmMockOn();
+  const tm = $('cfg-tts-mock'); if (tm) tm.checked = ttsMockOn();
   const ds = $('dev-tools-section'); if (ds) ds.style.display = on ? '' : 'none';
-  const ls = $('llm-debug-section'); if (ls) ls.style.display = (l && l.checked) ? '' : 'none';
-  syncStoredStatus();
+  const ls = $('llm-debug-section'); if (ls) ls.style.display = (on && llmMockOn()) ? '' : 'none';
+  const ts = $('tts-mock-section'); if (ts) ts.style.display = (on && ttsMockOn()) ? '' : 'none';
 }
-/* ---------- Fixed test data (stored artifacts) ---------- */
-const TEST_DATA = {
-  tire:   { id: 'tire',   title: 'Tire Burst Stability Control',       segs: 6, words: 290, text: 'The cornering stiffness drops significantly after the tire burst, so we need to compensate for the resulting yaw moment. Our strategy is to correct the tire parameters before the sideslip angle exits the linear region.' },
-  canbus: { id: 'canbus', title: 'CAN Bus Jitter & Packet Drop',        segs: 6, words: 305, text: 'We are seeing phase jitter on the high-speed CAN bus right after the precharge relay closes. We should check the transceiver termination and the wake-up frame timing before blaming the MCU.' },
-  tv:     { id: 'tv',     title: 'Torque Vectoring in Turn-In',        segs: 6, words: 278, text: 'During turn-in we shift the drive torque to the outer rear wheel to build a corrective yaw moment. The key constraint is keeping the inner wheel slip below the traction limit.' }
+/* ---------- TTS Mock corpus library ---------- */
+/* Dataset → corpus template mapping (used by TTS Mock corpus take-over). */
+const TEST_DATA_MATERIAL = {
+  tire: MOCK_MATERIALS[0],
+  canbus: MOCK_MATERIALS[1],
+  tv: MOCK_MATERIALS[2]
 };
-function syncStoredStatus() {
-  const key = (localStorage.getItem('telg-test-data') || '').trim();
-  const d = TEST_DATA[key] || TEST_DATA.tire;
-  const sel = $('cfg-test-data'); if (sel) sel.value = key;
-  const st = $('stored-llm-status');
-  if (st) {
-    if (!key || key === 'off') { st.className = 'test-result'; st.textContent = 'Live pipeline — no fixed data'; }
-    else { st.className = 'test-result ok'; st.textContent = d.title + ' · ' + d.segs + ' segs · ' + d.words + ' words'; }
-  }
-  const au = $('stored-audio-status');
-  if (au) {
-    let has = false;
-    try { const s = JSON.parse(localStorage.getItem('telg-stored-audio') || 'null'); has = !!(s && s.id === key); } catch (e) {}
-    au.className = 'test-result' + (has ? ' ok' : '');
-    au.textContent = (!key || key === 'off') ? 'N/A — live mode' : (has ? 'Stored · ready for TTS / player' : 'Not synthesized yet');
-  }
+function testDataKey() {
+  const k = String(localStorage.getItem('telg-test-data') || '').trim();
+  return (k === 'tire' || k === 'canbus' || k === 'tv') ? k : '';
 }
 function selectTestData(key) {
   localStorage.setItem('telg-test-data', key);
-  syncStoredStatus();
   updateEngineBadge();
-  if (!key || key === 'off') { bootLive(); return; }
-  state.library = JSON.parse(JSON.stringify(MOCK_MATERIALS));
-  state.current = state.library[0] || null;
-  renderMaterial(); renderLibrary(); renderPlaylists(); renderPlayerBar();
-}
-async function storeTestAudio() {
-  const btn = $('btn-store-audio'), st = $('stored-audio-status');
-  const key = localStorage.getItem('telg-test-data') || 'tire';
-  const d = TEST_DATA[key] || TEST_DATA.tire;
-  if (btn) btn.disabled = true;
-  if (st) { st.className = 'test-result'; st.textContent = '…'; }
-  try {
-    const vPair = currentVoiceRoles().map(x => x.voice).filter(Boolean).join(' + ') || undefined;
-    const r = await API.testTTS({ provider: $('cfg-tts-provider').value, voice: vPair, speech_rate: parseFloat($('cfg-tts-rate').value), style: '', text: d.text });
-    if (r.ok) {
-      localStorage.setItem('telg-stored-audio', JSON.stringify({ id: key, audio_url: r.audio_url, ts: Date.now() }));
-    }
-  } catch (e) {}
-  if (btn) btn.disabled = false;
-  syncStoredStatus();
+  bootLive();
 }
 async function toggleDevMode() {
   const cb = $('cfg-dev-mode');
@@ -4103,12 +4141,21 @@ async function toggleDevMode() {
   }
   localStorage.setItem('telg-dev-mode', want ? '1' : '0');
   if (want) {
-    /* Sub-debug switches always start OFF when the master switch is enabled. */
-    const cfg = readStoredCfg();
-    if (cfg.llm) cfg.llm.debug = false;
-    try { localStorage.setItem('telg-settings', JSON.stringify(cfg)); } catch (e) {}
+    /* Sub-switches always start OFF when the master switch is enabled. */
+    localStorage.setItem('telg-llm-mock', '0');
+    localStorage.setItem('telg-tts-mock', '0');
   }
   applyDebugStates();
+}
+function toggleLlmMock() {
+  const cb = $('cfg-llm-mock'); if (!cb) return;
+  localStorage.setItem('telg-llm-mock', cb.checked ? '1' : '0');
+  applyDebugStates(); updateEngineBadge();
+}
+function toggleTtsMock() {
+  const cb = $('cfg-tts-mock'); if (!cb) return;
+  localStorage.setItem('telg-tts-mock', cb.checked ? '1' : '0');
+  applyDebugStates(); updateEngineBadge();
 }
 function toggleKeyVisible() {
   const inp = $('cfg-llm-key'), btn = $('btn-key-eye');
@@ -4117,14 +4164,6 @@ function toggleKeyVisible() {
   inp.type = show ? 'text' : 'password';
   btn.querySelector('use').setAttribute('href', show ? '#i-eye-off' : '#i-eye');
 }
-async function toggleDebugGate(scope) {
-  const cb = $('cfg-' + scope + '-debug');
-  const want = cb.checked;
-  const cfg = readStoredCfg();
-  cfg.llm = cfg.llm || {}; cfg.llm.debug = want;
-  try { localStorage.setItem('telg-settings', JSON.stringify(cfg)); } catch (e) {}
-  applyDebugStates();
-}
 function saveModal() {
   const cfg = {
     lang: $('cfg-lang').value,
@@ -4132,7 +4171,7 @@ function saveModal() {
     defSpeed: $('cfg-def-speed').value,
     seekStep: $('cfg-seek-step').value,
     zhDefault: (document.querySelector('#cfg-zh-seg .seg-item.active') || {}).dataset.zhOpt || 'on',
-    llm: { provider: $('cfg-llm-provider').value, model: $('cfg-llm-model').value, baseUrl: $('cfg-llm-base').value, apiKey: $('cfg-llm-key').value, temperature: $('cfg-llm-temp').value, debug: $('cfg-llm-debug').checked },
+    llm: { provider: $('cfg-llm-provider').value, model: $('cfg-llm-model').value, baseUrl: $('cfg-llm-base').value, apiKey: $('cfg-llm-key').value, temperature: $('cfg-llm-temp').value },
     tts: { provider: $('cfg-tts-provider').value, voices: currentVoiceRoles(), voice: currentVoiceRoles().map(x => x.voice).filter(Boolean).join(' + '), speechRate: $('cfg-tts-rate').value }
   };
   try { localStorage.setItem('telg-settings', JSON.stringify(cfg)); } catch (e) {}
@@ -4199,11 +4238,11 @@ function onClick(e) {
   if (e.target.closest('#btn-test-gen')) { testGen(); return; }
   if (e.target.closest && e.target.closest('#btn-key-eye')) { toggleKeyVisible(); return; }
   if (e.target.id === 'cfg-dev-mode') { toggleDevMode(); return; }
-  if (e.target.id === 'cfg-llm-debug') { toggleDebugGate('llm'); return; }
+  if (e.target.id === 'cfg-llm-mock') { toggleLlmMock(); return; }
+  if (e.target.id === 'cfg-tts-mock') { toggleTtsMock(); return; }
   if (e.target.closest('#cfg-zh-seg .seg-item')) { const opt = e.target.closest('#cfg-zh-seg .seg-item'); setSeg($('cfg-zh-seg'), opt); return; }
   if (e.target.id === 'cfg-llm-temp') { const tv = $('cfg-temp-val'); if (tv) tv.textContent = e.target.value; return; }
   if (e.target.id === 'cfg-test-data') { selectTestData(e.target.value); return; }
-  if (e.target.closest('#btn-store-audio')) { storeTestAudio(); return; }
   if (e.target.id === 'engine-modal') { closeModal(); return; }
   if (e.target.closest('#btn-adjust-close') || e.target.closest('#btn-adjust-cancel')) { closeAdjustModal(); return; }
   if (e.target.closest('#btn-adjust-apply')) {
@@ -4310,7 +4349,7 @@ function onClick(e) {
     const r = vt.getBoundingClientRect();
     state.volume = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
     $('vol-fill').style.width = (state.volume * 100) + '%';
-    if (!mockMode()) { try { $('pb-audio').volume = state.volume; } catch (e) {} }
+    try { $('pb-audio').volume = state.volume; } catch (e) {}
     return;
   }
   const sk = e.target.closest('#pb-seek');
@@ -4455,7 +4494,7 @@ $('search-input').addEventListener('input', e => { state.query = e.target.value;
   });
   $('refine-tone').addEventListener('change', updateRefineToneLabel);
   $('btn-pb-subs').classList.toggle('on', !document.querySelector('.inspector').classList.contains('hidden'));
-  if (!mockMode()) bootLive();
+  bootLive();
 }
 async function bootLive() {
   try {
