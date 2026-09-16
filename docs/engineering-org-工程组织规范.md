@@ -29,6 +29,7 @@ telg-project/
 │   ├── 产品/   (product-brief-产品定义 / requirements-需求规格)
 │   ├── 架构/   (architecture-总体架构 / api-contract-接口契约)
 │   ├── 设计/   (design-system-视觉设计规范 / design-<主题> 专题)
+│   ├── 规划/   (roadmap-待办事项)
 │   └── 运维/   (running-guide-运行指南)
 ├── changelog/                       # 对话要点日志（YYMMDD-会话主题.md）
 ├── reports/                         # 按问题/报告名建文件夹

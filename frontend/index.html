@@ -104,6 +104,8 @@ a{color:inherit;text-decoration:none}
 .header-right{display:flex;align-items:center;gap:10px}
 #btn-sidebar{display:none}
 .engine-status{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;background:var(--surface-low);border:1px solid var(--line);font-size:11px;color:var(--on-variant)}
+.engine-status:hover{border-color:var(--line-strong);cursor:pointer}
+.eng-tip{position:fixed;z-index:1200;max-width:360px;padding:9px 11px;border-radius:8px;background:var(--surface-low);border:1px solid var(--line-strong);box-shadow:0 8px 20px rgba(0,0,0,.28);font-size:11.5px;line-height:1.6;color:var(--on-variant);white-space:pre-wrap;pointer-events:none}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex-shrink:0}
 .dot.warn{background:var(--warning)}
 .dot.pulse{animation:pulse 1.6s infinite}
@@ -694,11 +696,12 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   </div>
   <div class="header-right">
     <button class="btn-icon" id="btn-sidebar" title="Materials"><svg class="icon"><use href="#i-menu"/></svg></button>
-    <div class="engine-status" id="engine-status" title="Pipeline mode">
+    <div class="engine-status" id="engine-status" role="button" title="">
       <span class="dot pulse" id="eng-dot"></span>
       <span class="nowrap" id="eng-label">DeepSeek-V3 · edge-tts</span>
       <span class="sts-extra mono faint" id="eng-mode" style="font-size:10px">live</span>
     </div>
+    <div class="eng-tip hidden" id="eng-tip"></div>
     <button class="btn btn-sm" id="btn-engine-config" title="Settings">
       <svg class="icon icon-sm"><use href="#i-settings"/></svg>
       <span class="nowrap" data-i18n="nav.engine">Settings</span>
@@ -1883,23 +1886,91 @@ function appendLlmTrace(msg, cls) {
 function readSavedSettings() {
   try { return JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; } catch (e) { return {}; }
 }
+const LLM_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi', ark: 'Doubao', openai: 'OpenAI', qwen: 'Qwen', ollama: 'Ollama' };
+/* Latest engine self-check: { ts, llm: {name,ok,detail,ms}, tts: {name,ok,detail,ms} }.
+   Kept in memory + localStorage so a page reload shows the last result
+   immediately instead of blinking "checking" every time. */
+let engineCheck = null;
+const ENG_CHECK_TTL = 30 * 60 * 1000; /* re-run at most every 30 min, or on click / after Apply */
+function fmtCheckTs(ts) {
+  const d = new Date(ts), p = n => String(n).padStart(2, '0');
+  return p(d.getMonth() + 1) + p(d.getDate()) + ' ' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+}
+function renderEngineTip(c) {
+  const tip = $('eng-tip'); if (!tip) return;
+  if (!c || !c.llm || !c.tts) { tip.textContent = 'Self-check in progress…'; return; }
+  const L = (n, ok, extra) => 'LLM（' + n + '）' + (ok ? '可用' : '不可用') + (extra ? ' · ' + extra : '');
+  const T = (n, ok, extra) => 'TTS（' + n + '）' + (ok ? '可用' : '不可用') + (extra ? ' · ' + extra : '');
+  tip.textContent =
+    fmtCheckTs(c.ts) + ' 自检 Self-check\n' +
+    L(c.llm.name, c.llm.ok, c.llm.detail || (c.llm.ok && c.llm.ms ? c.llm.ms + 'ms' : '')) + '\n' +
+    T(c.tts.name, c.tts.ok, c.tts.detail || (c.tts.ok && c.tts.ms ? c.tts.ms + 'ms' : ''));
+}
 function updateEngineBadge() {
   const dot = $('eng-dot'), label = $('eng-label'), mode = $('eng-mode');
   if (!dot || !label) return;
   const s = readSavedSettings();
   const llm = s.llm || {};
-  const LLM_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi', ark: 'Doubao', openai: 'OpenAI', qwen: 'Qwen', ollama: 'Ollama' };
   const llmProv = LLM_PRESETS[llm.provider] ? llm.provider : 'deepseek';
   const llmName = LLM_LABELS[llmProv] || llmProv;
   const ttsProv = normalizeTTSProvider((s.tts || {}).provider || 'edge-tts');
   const ttsName = ttsProv === 'kokoro' ? 'Kokoro' : (ttsProv === 'cosyvoice' ? 'CosyVoice' : 'edge-tts');
-  const llmReady = !!(llm.apiKey || '').trim();
-  const ready = llmReady;
   label.textContent = llmName + ' · ' + ttsName;
   if (mode) mode.textContent = (llmMockOn() || ttsMockOn()) ? 'mock' : 'live';
-  dot.classList.add('pulse');
-  dot.classList.toggle('warn', !ready);
-  dot.style.background = ready ? '' : 'var(--warning)';
+  /* The dot reflects the latest REAL self-check result (test-llm / test-tts
+     against the live backend), not just "has a key been typed". */
+  let c = engineCheck;
+  if (!c) { try { const raw = localStorage.getItem('telg-engine-check'); if (raw) c = JSON.parse(raw); } catch (e) {} }
+  if (!c || !c.llm || !c.tts) {
+    dot.classList.add('pulse'); dot.classList.remove('warn');
+    dot.style.background = 'var(--warning)';
+    renderEngineTip(null);
+    return;
+  }
+  const ok = c.llm.ok && c.tts.ok;
+  dot.classList.add('pulse'); dot.classList.toggle('warn', !ok);
+  dot.style.background = ok ? 'var(--ok)' : 'var(--warning)';
+  renderEngineTip(c);
+}
+/* Run a real connection self-check for LLM and TTS with the applied settings.
+   Clicking the badge forces a fresh run; otherwise a cached result (≤30 min)
+   is reused so the page never auto-fires slow TTS syntheses repeatedly. */
+async function selfCheck(force) {
+  try {
+    if (engineCheck && !force && Date.now() - engineCheck.ts < ENG_CHECK_TTL) { updateEngineBadge(); return; }
+  } catch (e) {}
+  engineCheck = { ts: Date.now(), llm: null, tts: null };
+  updateEngineBadge();
+  const s = readSavedSettings();
+  const llm = s.llm || {};
+  const llmProv = LLM_PRESETS[llm.provider] ? llm.provider : 'deepseek';
+  const llmName = LLM_LABELS[llmProv] || llmProv;
+  let lr; const t0 = performance.now();
+  try {
+    lr = await API.testLLM({ provider: llmProv, base_url: llm.baseUrl || '', api_key: llm.apiKey || '', model: llm.model || '', temperature: parseFloat(llm.temperature) || 0.7 });
+  } catch (e) { lr = { ok: false, error: e.message }; }
+  engineCheck.llm = { name: llmName, ok: !!lr.ok, detail: lr.error || (lr.mock ? 'Mock' : (lr.model || '')), ms: Math.round(performance.now() - t0) };
+  const tts = s.tts || {};
+  const ttsProv = normalizeTTSProvider(tts.provider || 'edge-tts');
+  const ttsName = ttsProv === 'kokoro' ? 'Kokoro' : (ttsProv === 'cosyvoice' ? 'CosyVoice' : 'edge-tts');
+  let tr; const t1 = performance.now();
+  try {
+    tr = await API.testTTS({ provider: ttsProv, voice: '', speech_rate: parseFloat(tts.speechRate) || 1.0, style: '', text: '' });
+  } catch (e) { tr = { ok: false, error: e.message }; }
+  engineCheck.tts = { name: ttsName, ok: !!tr.ok, detail: tr.error || (tr.mock ? 'Mock' : ''), ms: Math.round(performance.now() - t1) };
+  try { localStorage.setItem('telg-engine-check', JSON.stringify(engineCheck)); } catch (e) {}
+  updateEngineBadge();
+}
+/* Pause every audition <audio> (settings page + adjust modal). Called when
+   leaving the audition area so audio never keeps playing behind a closed UI. */
+function stopAuditions() {
+  ['tts-audio', 'adj-audio'].forEach(id => {
+    const a = document.getElementById(id);
+    if (!a) return;
+    try { a.pause(); } catch (e) {}
+    a.onended = null;
+    a.removeAttribute('src');
+  });
 }
 
 /* ---------------- MOCK DATA (Generation Artifacts) ---------------- */
@@ -3716,6 +3787,7 @@ function openAdjustModal(tab) {
   setTimeout(() => { const f = adjustPanel === 'voice' ? $('adj-tts-provider') : $('refine-tone'); if (f) f.focus(); }, 60);
 }
 function closeAdjustModal() {
+  stopAuditions();
   $('adjust-modal').classList.add('hidden');
   const lock = state.current;
   if (lock && lock.meta.saved === true) $('gen-phases').classList.add('hidden');
@@ -3760,6 +3832,27 @@ const LLM_PRESETS = {
 const LLM_PRESET_LEGACY = {
   'DeepSeek (OpenAI-compatible)': 'deepseek', 'OpenAI': 'openai', 'Qwen': 'qwen', 'Ollama (Local)': 'ollama'
 };
+/* Wire the engine-status badge: hover shows the self-check summary, click
+   forces a fresh re-check. Runs after $ and LLM_PRESETS are defined. */
+(function initEngineBadge() {
+  const es = $('engine-status');
+  if (!es) return;
+  const tip = $('eng-tip');
+  es.addEventListener('mouseenter', e => {
+    if (!tip || !tip.textContent) return;
+    tip.classList.remove('hidden');
+    tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 380) + 'px';
+    tip.style.top = (e.clientY + 14) + 'px';
+  });
+  es.addEventListener('mousemove', e => {
+    if (!tip || tip.classList.contains('hidden')) return;
+    tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 380) + 'px';
+    tip.style.top = (e.clientY + 14) + 'px';
+  });
+  es.addEventListener('mouseleave', () => { if (tip) tip.classList.add('hidden'); });
+  es.addEventListener('click', () => selfCheck(true));
+  setTimeout(() => selfCheck(false), 2500);
+})();
 function splitVoice(voice) {
   return String(voice || '').split('+').map(s => s.trim()).filter(Boolean);
 }
@@ -4689,6 +4782,8 @@ function watchMTab() {
     let cur = 'general';
     for (const s of secs) { if (s.getBoundingClientRect().top <= top) cur = s.id.slice(3); }
     document.querySelectorAll('#engine-modal .s-nav-item').forEach(b => b.classList.toggle('active', b.dataset.mtab === cur));
+    /* Leaving the audition section stops any role preview still playing. */
+    if (cur !== 'tts') stopAuditions();
   }, { passive: true });
 }
 function openModal() {
@@ -4717,7 +4812,7 @@ function openModal() {
   } catch (e) { renderVoiceRoles(null); }
   applyDebugStates();
 }
-function closeModal() { $('engine-modal').classList.add('hidden'); }
+function closeModal() { stopAuditions(); $('engine-modal').classList.add('hidden'); }
 async function testLLM() {
   const btn = $('btn-test-llm'), res = $('llm-test-result');
   btn.disabled = true; btn.textContent = I18N[state.lang]['settings.llm.testing'];
@@ -4854,6 +4949,8 @@ function saveModal() {
   updateEngineBadge();
   showToast(I18N[state.lang]['settings.saved']);
   closeModal();
+  /* Settings changed — the badge must reflect the NEW config's real state. */
+  setTimeout(() => selfCheck(true), 400);
 }
 let toastTimer = null;
 /* ---------- TTS failure handling: friendly reason + retry ---------- */

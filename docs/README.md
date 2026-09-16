@@ -31,6 +31,12 @@
 |---|---|---|
 | [running-guide-运行指南](./运维/running-guide-运行指南.md) | running-guide.md | Windows 运行指南（环境/命令/FAQ） |
 
+## 规划 — 下一步做什么
+
+| 文件 | 英文原名 | 内容 |
+|---|---|---|
+| [roadmap-待办事项](./规划/roadmap-待办事项.md) | roadmap.md | 待办/Backlog：词级时间戳与词级同步等 |
+
 ## 状态约定
 
 - 每份文档头部标注 `版本 / 状态 / 关联文档`。
