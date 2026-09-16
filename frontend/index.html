@@ -1264,9 +1264,9 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
             <label class="flabel" style="margin:0 0 8px" data-i18n="settings.tts.provider">Synthesis Engine</label>
             <div class="select-wrap">
               <select class="select" id="adj-tts-provider">
-                <option>edge-tts (Microsoft Neural)</option>
-                <option>Piper (Local offline)</option>
-                <option>CosyVoice (Local GPU)</option>
+                <option value="edge-tts">edge-tts (Microsoft Neural)</option>
+                <option value="kokoro">Kokoro (Local offline)</option>
+                <option value="cosyvoice" disabled>CosyVoice (Local GPU) — coming soon</option>
               </select>
               <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
             </div>
@@ -1550,9 +1550,9 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <div class="s-ctrl">
             <div class="select-wrap">
               <select class="select" id="cfg-tts-provider">
-                <option>edge-tts (Microsoft Neural)</option>
-                <option>Piper (Local offline)</option>
-                <option>CosyVoice (Local GPU)</option>
+                <option value="edge-tts">edge-tts (Microsoft Neural)</option>
+                <option value="kokoro">Kokoro (Local offline)</option>
+                <option value="cosyvoice" disabled>CosyVoice (Local GPU) — coming soon</option>
               </select>
               <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
             </div>
@@ -2047,6 +2047,9 @@ const API = {
   async synthesize(id, cfg) {
     return apiFetch('/materials/' + id + '/synthesize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg || {}) }, 300000);
   },
+  async voices(provider) {
+    return apiFetchSoft('/tts/voices?provider=' + encodeURIComponent(provider || 'edge-tts'));
+  },
   async health() {
     return apiFetch('/health', {}, 8000);
   },
@@ -2172,6 +2175,7 @@ const state = {
   volume: 0.75,
   loop: false,
   listenMode: 'normal',
+  ttsVoicesByProvider: {},
   fontIdx: 0,
   query: '',
   filters: [],
@@ -2291,13 +2295,14 @@ const I18N = {
     'settings.tts.testTextPh': 'Enter text to audition with each role…',
     'settings.tts.ttsDebug': 'TTS Debug', 'settings.tts.ttsDebugHint': 'Lock a fixed input to test the synthesis pipeline.',
     'settings.tts.fixedInput': 'Fixed Input', 'settings.tts.fixedInputHint': 'Sentence used by the dev pipeline — locked input for reproducible debugging.',
-    'settings.tts.providerhint': 'edge-tts: no key · Piper: offline · CosyVoice: GPU.',
+    'settings.tts.providerhint': 'edge-tts: no key · Kokoro: offline · CosyVoice: GPU.',
     'settings.tts.ok': 'Voice OK',
     'settings.test.err': 'Failed',
     'err.tts.timeout': 'TTS connection timeout — the TTS service is unreachable. Check network, proxy or firewall, then retry.',
     'err.tts.unreachable': 'TTS service unreachable — check network, proxy or firewall, then retry.',
     'err.tts.auth': 'TTS service rejected the request (authentication / token).',
     'err.tts.other': 'TTS synthesis failed.',
+    'err.tts.model_missing': 'TTS model not downloaded — see backend console for the download path.',
     'err.audio': 'Audio file unavailable — re-synthesize to restore playback.',
     'err.retry': 'Retry',
     'tts.voice': 'Voice', 'tts.setVoice': 'Set Voice & Synthesize',
@@ -2447,13 +2452,14 @@ const I18N = {
     'settings.tts.testTextPh': '输入文字，在下方角色行试听…',
     'settings.tts.ttsDebug': 'TTS 调试', 'settings.tts.ttsDebugHint': '固化输入文本以测试合成链路。',
     'settings.tts.fixedInput': '固定输入', 'settings.tts.fixedInputHint': '供开发链路使用的固化句子——保证调试可复现。',
-    'settings.tts.providerhint': 'edge-tts 免 Key · Piper 本地 · CosyVoice GPU。',
+    'settings.tts.providerhint': 'edge-tts 免 Key · Kokoro 本地离线 · CosyVoice 需 GPU。',
     'settings.tts.ok': '音色可用',
     'settings.test.err': '失败',
     'err.tts.timeout': 'TTS 连接超时——TTS 服务不可达。请检查网络、代理或防火墙后重试。',
     'err.tts.unreachable': 'TTS 服务不可达——请检查网络、代理或防火墙后重试。',
     'err.tts.auth': 'TTS 服务拒绝了请求（鉴权 / 令牌问题）。',
     'err.tts.other': 'TTS 合成失败。',
+    'err.tts.model_missing': 'TTS 模型未下载——请查看后端控制台提示完成模型下载。',
     'err.audio': '音频文件不可用——请重新合成以恢复播放。',
     'err.retry': '重试',
     'tts.voice': '音色', 'tts.setVoice': '设置音色并合成',
@@ -2638,10 +2644,82 @@ function startRenameHead() {
 }
 /* ---------- TTS voice roles ---------- */
 const TTS_VOICES = ['en-US-GuyNeural','en-US-JennyNeural','en-US-ChristopherNeural','en-US-EricNeural','en-US-AriaNeural','en-US-MichelleNeural','en-US-RogerNeural','en-US-SteffanNeural','en-US-AnaNeural','en-US-BrianNeural','en-GB-SoniaNeural','en-GB-RyanNeural','en-AU-NatashaNeural','en-AU-WilliamNeural'];
+const KOKORO_VOICES_FALLBACK = [
+  { id: 'af_bella', label: 'Bella', lang: 'en-us' }, { id: 'af_heart', label: 'Heart', lang: 'en-us' },
+  { id: 'af_nova', label: 'Nova', lang: 'en-us' }, { id: 'af_sarah', label: 'Sarah', lang: 'en-us' },
+  { id: 'af_nicole', label: 'Nicole', lang: 'en-us' }, { id: 'am_michael', label: 'Michael', lang: 'en-us' },
+  { id: 'am_fenrir', label: 'Fenrir', lang: 'en-us' }, { id: 'am_onyx', label: 'Onyx', lang: 'en-us' },
+  { id: 'bf_emma', label: 'Emma', lang: 'en-gb' }, { id: 'bm_george', label: 'George', lang: 'en-gb' },
+  { id: 'zf_xiaobei', label: 'Xiaobei', lang: 'zh' }, { id: 'zf_xiaoni', label: 'Xiaoni', lang: 'zh' },
+  { id: 'zf_xiaoxiao', label: 'Xiaoxiao', lang: 'zh' }, { id: 'zf_xiaoyi', label: 'Xiaoyi', lang: 'zh' },
+  { id: 'zf_xiaomo', label: 'Xiaomo', lang: 'zh' }
+];
+function normalizeTTSProvider(v) {
+  v = String(v || 'edge-tts');
+  if (/kokoro/i.test(v)) return 'kokoro';
+  if (/cosyvoice/i.test(v)) return 'cosyvoice';
+  return 'edge-tts';
+}
+function ttsProvider() {
+  const el = $('cfg-tts-provider');
+  return normalizeTTSProvider(el ? el.value : 'edge-tts');
+}
+function ttsVoicePool(provider) {
+  const p = normalizeTTSProvider(provider || ttsProvider());
+  const cached = state.ttsVoicesByProvider[p];
+  if (cached && cached.length) return cached;
+  return p === 'kokoro' ? KOKORO_VOICES_FALLBACK : TTS_VOICES;
+}
+function ttsDefaultRoles(provider) {
+  const p = normalizeTTSProvider(provider || ttsProvider());
+  if (p === 'kokoro') return [{ name: 'Speaker A', voice: 'af_bella' }, { name: 'Speaker B', voice: 'af_heart' }];
+  return [{ name: 'Speaker A', voice: 'en-US-GuyNeural' }, { name: 'Speaker B', voice: 'en-US-JennyNeural' }];
+}
+function ttsVoiceLabel(id, provider) {
+  const pool = ttsVoicePool(provider);
+  for (const o of pool) {
+    const oid = typeof o === 'string' ? o : o.id;
+    if (oid === id) return typeof o === 'string' ? o : o.label;
+  }
+  return id;
+}
+function adjTTSProvider() {
+  const el = $('adj-tts-provider');
+  return normalizeTTSProvider(el ? el.value : ttsProvider());
+}
+async function onProviderChange(kind) {
+  const el = kind === 'adj' ? $('adj-tts-provider') : $('cfg-tts-provider');
+  const p = normalizeTTSProvider(el ? el.value : 'edge-tts');
+  await loadTTSVoices(p);
+  if (kind === 'adj') renderAdjustVoiceRoles(sanitizeRolesForProvider(currentAdjustVoiceRoles(), p));
+  else renderVoiceRoles(sanitizeRolesForProvider(currentVoiceRoles(), p));
+}
+async function loadTTSVoices(provider, thenApply) {
+  const p = normalizeTTSProvider(provider);
+  try {
+    const r = await API.voices(p);
+    if (r && r.ok && Array.isArray(r.voices) && r.voices.length) state.ttsVoicesByProvider[p] = r.voices;
+  } catch (e) {}
+  if (thenApply) thenApply();
+}
+function sanitizeRolesForProvider(roles, provider) {
+  const pool = ttsVoicePool(provider);
+  const defs = ttsDefaultRoles(provider);
+  return (Array.isArray(roles) && roles.length ? roles : defs).map((r, i) => {
+    const name = (r && typeof r === 'object' ? r.name : '') || defs[i % defs.length].name;
+    const v = typeof r === 'string' ? r : (r && r.voice);
+    const ok = pool.some(o => (typeof o === 'string' ? o : o.id) === v);
+    return { name: name, voice: ok ? v : defs[i % defs.length].voice };
+  });
+}
 function roleRowHTML(r) {
   const name = (r && typeof r === 'object') ? String(r.name || '') : '';
   const v = (r && typeof r === 'object') ? r.voice : r;
-  const opts = TTS_VOICES.map(o => '<option' + (o === v ? ' selected' : '') + '>' + o + '</option>').join('');
+  const opts = ttsVoicePool().map(o => {
+    const oid = typeof o === 'string' ? o : o.id;
+    const label = typeof o === 'string' ? o : (o.label + (o.lang && o.lang !== 'en-us' ? ' · ' + o.lang : ''));
+    return '<option value="' + oid + '"' + (oid === v ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+  }).join('');
   return '<div class="voice-role-row">' +
     '<input class="role-name" value="' + escapeHtml(name) + '" placeholder="' + I18N[state.lang]['settings.tts.roleName'] + '"/>' +
     '<div class="select-wrap"><select class="select">' + opts + '</select><svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg></div>' +
@@ -2659,7 +2737,7 @@ function currentVoiceRoles() {
 }
 function renderVoiceRoles(voices) {
   const box = $('voice-roles'); if (!box) return;
-  const list = (voices && voices.length) ? voices : [{ name: 'Speaker A', voice: 'en-US-GuyNeural' }, { name: 'Speaker B', voice: 'en-US-JennyNeural' }];
+  const list = sanitizeRolesForProvider((voices && voices.length) ? voices : null, ttsProvider());
   box.innerHTML = list.map((r, i) => {
     if (typeof r === 'string') r = { name: 'Speaker ' + String.fromCharCode(65 + i), voice: r };
     return roleRowHTML(r);
@@ -2668,7 +2746,9 @@ function renderVoiceRoles(voices) {
 function addVoiceRole() {
   const cur = currentVoiceRoles();
   const used = new Set(cur.map(x => x.voice));
-  const next = TTS_VOICES.find(v => !used.has(v)) || 'en-US-GuyNeural';
+  const pool = ttsVoicePool();
+  const found = pool.find(o => !used.has(typeof o === 'string' ? o : o.id));
+  const next = typeof found === 'object' ? found.id : (found || 'af_bella');
   const idx = cur.length;
   renderVoiceRoles(cur.concat([{ name: 'Speaker ' + String.fromCharCode(65 + idx), voice: next }]));
 }
@@ -2691,7 +2771,7 @@ async function auditionRole(btn) {
     const r = await API.testTTS({ provider: $('cfg-tts-provider').value, voice, speech_rate: parseFloat($('cfg-tts-rate').value), style: '', text: txt || undefined });
     if (r.ok) {
       res.className = 'test-output ok';
-      res.textContent = I18N[state.lang]['settings.tts.ok'] + ' · ' + voice + (r.audio_url ? '' : ' · Mock');
+      res.textContent = I18N[state.lang]['settings.tts.ok'] + ' · ' + ttsVoiceLabel(voice) + (r.audio_url ? '' : ' · Mock');
       if (r.audio_url && aud) {
         aud.src = r.audio_url;
         aud.onended = () => btn.classList.remove('played');
@@ -3134,7 +3214,7 @@ function collectParams() {
     scenario: $('scenario-select').value,
     difficulty: +document.querySelector('#diff-seg .seg-item.active').dataset.level,
     length: document.querySelector('#len-seg .seg-item.active').dataset.length,
-    llm: 'DeepSeek-V3', tts: 'edge-tts', voice: 'en-US-GuyNeural + en-US-JennyNeural',
+    llm: 'DeepSeek-V3', tts: normalizeTTSProvider((readStoredCfg().tts || {}).provider) || 'edge-tts', voice: 'en-US-GuyNeural + en-US-JennyNeural',
     llm_config: buildLLMConfig(),
     test_mode: buildTestMode(),
     advanced: {
@@ -3393,11 +3473,12 @@ function openTTSModal() {
   let st = {};
   try { st = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; } catch (e) {}
   const tts = st.tts || {};
-  $('adj-tts-provider').value = tts.provider || 'edge-tts (Microsoft Neural)';
+  const prov = normalizeTTSProvider(tts.provider || art.meta.tts_provider || 'edge-tts');
+  $('adj-tts-provider').value = prov;
   $('adj-tts-rate').value = tts.speechRate || '1';
   $('adj-tts-style').value = art.meta.ttsStyle || tts.style || 'neutral';
   const cur = splitVoice(art.meta.voice);
-  renderAdjustVoiceRoles(cur.length ? cur : ['en-US-GuyNeural', 'en-US-JennyNeural']);
+  loadTTSVoices(prov).then(() => renderAdjustVoiceRoles(sanitizeRolesForProvider(cur.length ? cur : null, prov)));
   const ready = art.meta.audioReady === false;
   $('tts-status').textContent = I18N[state.lang][ready ? 'tts.statusReady' : 'tts.statusExist'];
   openAdjustModal('voice');
@@ -3405,7 +3486,7 @@ function openTTSModal() {
 function closeTTSModal() { closeAdjustModal(); }
 function renderAdjustVoiceRoles(voices) {
   const box = $('adj-voice-roles'); if (!box) return;
-  const list = (voices && voices.length) ? voices : [{ name: 'Speaker A', voice: 'en-US-GuyNeural' }, { name: 'Speaker B', voice: 'en-US-JennyNeural' }];
+  const list = sanitizeRolesForProvider((voices && voices.length) ? voices : null, adjTTSProvider());
   box.innerHTML = list.map((r, i) => {
     if (typeof r === 'string') r = { name: 'Speaker ' + String.fromCharCode(65 + i), voice: r };
     return roleRowHTML(r);
@@ -3421,7 +3502,9 @@ function currentAdjustVoiceRoles() {
 function addAdjustRole() {
   const cur = currentAdjustVoiceRoles();
   const used = new Set(cur.map(x => x.voice));
-  const next = TTS_VOICES.find(v => !used.has(v)) || 'en-US-GuyNeural';
+  const pool = ttsVoicePool(adjTTSProvider());
+  const found = pool.find(o => !used.has(typeof o === 'string' ? o : o.id));
+  const next = typeof found === 'object' ? found.id : (found || 'af_bella');
   renderAdjustVoiceRoles(cur.concat([{ name: 'Speaker ' + String.fromCharCode(65 + cur.length), voice: next }]));
 }
 function delAdjustRole(btn) {
@@ -3443,7 +3526,7 @@ async function auditionAdjustRole(btn) {
     const r = await API.testTTS({ provider: $('adj-tts-provider').value, voice, speech_rate: parseFloat($('adj-tts-rate').value), style: $('adj-tts-style').value, text: txt || undefined });
     if (r.ok) {
       res.className = 'test-output ok';
-      res.textContent = I18N[state.lang]['settings.tts.ok'] + ' · ' + voice + (r.audio_url ? '' : ' · Mock');
+      res.textContent = I18N[state.lang]['settings.tts.ok'] + ' · ' + ttsVoiceLabel(voice, adjTTSProvider()) + (r.audio_url ? '' : ' · Mock');
       if (r.audio_url && aud) {
         aud.src = r.audio_url;
         aud.onended = () => btn.classList.remove('played');
@@ -3457,15 +3540,17 @@ function applyTTS() {
   const art = currentArtifact();
   const roles = currentAdjustVoiceRoles();
   const voices = roles.map(r => r.voice).filter(Boolean);
-  if (!voices.length) voices.push('en-US-GuyNeural');
+  const prov = adjTTSProvider();
+  if (!voices.length) voices.push(prov === 'kokoro' ? 'af_bella' : 'en-US-GuyNeural');
   art.meta.voice = voices.join(' + ');
   art.meta.voiceRoles = roles;
   art.meta.ttsStyle = $('adj-tts-style').value;
+  art.meta.tts_provider = prov;
   try {
     const s = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {};
     s.tts = s.tts || {};
     s.tts.voice = art.meta.voice; s.tts.speechRate = $('adj-tts-rate').value; s.tts.style = art.meta.ttsStyle;
-    s.tts.provider = $('adj-tts-provider').value;
+    s.tts.provider = prov;
     localStorage.setItem('telg-settings', JSON.stringify(s));
   } catch (e) {}
   art.meta.audioReady = false;          /* force (re-)conversion */
@@ -3493,7 +3578,8 @@ function synthesizeAudio() {
         const t = JSON.parse(localStorage.getItem('telg-settings') || '{}');
         let storedVoices = (t.tts && t.tts.voice) || (t.tts && t.tts.voices) || '';
         if (Array.isArray(storedVoices)) storedVoices = storedVoices.map(x => (x && x.voice) || x).filter(Boolean).join(' + ');
-        ttsCfg = { voices: storedVoices, rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1 };
+        ttsCfg = { voices: storedVoices, rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1,
+                   provider: normalizeTTSProvider(art.meta.tts_provider || (t.tts && t.tts.provider) || 'edge-tts') };
       } catch (e) {}
       const r = await API.synthesize(art.id, ttsCfg);
       if (r.audio_url) art.meta.audio_url = r.audio_url;
@@ -4083,8 +4169,12 @@ function openModal() {
   if (zhSeg) setSeg($('cfg-zh-seg'), zhSeg);
   try {
     const cfg = JSON.parse(localStorage.getItem('telg-settings') || 'null');
-    if (cfg && cfg.tts) $('cfg-tts-provider').value = cfg.tts.provider;
-    renderVoiceRoles(cfg && cfg.tts ? (cfg.tts.voices || (cfg.tts.voice ? String(cfg.tts.voice).split(' + ') : null)) : null);
+    if (cfg && cfg.tts) {
+      const prov = normalizeTTSProvider(cfg.tts.provider);
+      $('cfg-tts-provider').value = prov;
+      const stored = cfg.tts.voices || (cfg.tts.voice ? String(cfg.tts.voice).split(' + ') : null);
+      loadTTSVoices(prov).then(() => renderVoiceRoles(sanitizeRolesForProvider(stored, prov)));
+    } else { renderVoiceRoles(null); loadTTSVoices(ttsProvider()); }
   } catch (e) { renderVoiceRoles(null); }
   applyDebugStates();
 }
@@ -4225,7 +4315,7 @@ let toastTimer = null;
 /* ---------- TTS failure handling: friendly reason + retry ---------- */
 function ttsFriendlyError(cls, raw) {
   const L = I18N[state.lang];
-  const map = { timeout: L['err.tts.timeout'], unreachable: L['err.tts.unreachable'], auth: L['err.tts.auth'], other: L['err.tts.other'], audio: L['err.audio'] };
+  const map = { timeout: L['err.tts.timeout'], unreachable: L['err.tts.unreachable'], auth: L['err.tts.auth'], other: L['err.tts.other'], audio: L['err.audio'], model_missing: L['err.tts.modelMissing'] };
   const head = map[cls] || map.other;
   const detail = raw ? String(raw).replace(/\s+/g, ' ').slice(0, 240) : '';
   return detail ? head + ' — ' + detail : head;
@@ -4508,8 +4598,9 @@ function init() {
       if (!(llmProvider in LLM_PRESETS)) llmProvider = 'deepseek';
       $('cfg-llm-provider').value = llmProvider;
       $('cfg-llm-model').value = cfg.llm.model; $('cfg-llm-base').value = cfg.llm.baseUrl; $('cfg-llm-key').value = cfg.llm.apiKey;
-      $('cfg-tts-provider').value = cfg.tts.provider;
-      renderVoiceRoles(cfg.tts.voices || (cfg.tts.voice ? String(cfg.tts.voice).split(' + ') : null));
+      const ttsProv = normalizeTTSProvider(cfg.tts.provider);
+      $('cfg-tts-provider').value = ttsProv;
+      loadTTSVoices(ttsProv).then(() => renderVoiceRoles(sanitizeRolesForProvider(cfg.tts.voices || (cfg.tts.voice ? String(cfg.tts.voice).split(' + ') : null), ttsProv)));
       if (cfg.llm.temperature) { $('cfg-llm-temp').value = cfg.llm.temperature; const tv = $('cfg-temp-val'); if (tv) tv.textContent = cfg.llm.temperature; }
       if (cfg.tts.speechRate) $('cfg-tts-rate').value = cfg.tts.speechRate;
     }
@@ -4530,6 +4621,10 @@ function init() {
   initResize();
   updateDepth();
   watchMTab();
+  const cfgTTS = $('cfg-tts-provider');
+  if (cfgTTS) cfgTTS.addEventListener('change', () => onProviderChange('cfg'));
+  const adjTTS = $('adj-tts-provider');
+  if (adjTTS) adjTTS.addEventListener('change', () => onProviderChange('adj'));
   $('cfg-llm-provider').addEventListener('change', () => {
     const pr = LLM_PRESETS[$('cfg-llm-provider').value];
     if (pr) { $('cfg-llm-base').value = pr.base; $('cfg-llm-model').value = pr.model; }

@@ -431,6 +431,7 @@ class SynthIn(BaseModel):
 
     voices: str | list | None = None
     rate: float | None = None
+    provider: str | None = None   # 'edge-tts' | 'kokoro'; None falls back to meta
 
 
 # ----------------------------------------------------------------------------
@@ -958,11 +959,17 @@ _SHORT_PREFIX = {"GuyNeural": "en-US", "JennyNeural": "en-US", "ChristopherNeura
                  "NatashaNeural": "en-AU", "WilliamNeural": "en-AU"}
 
 
+class TTSModelMissing(RuntimeError):
+    """Kokoro model files or dependency not available (not an edge-tts network error)."""
+
+
 def tts_error_class(e: Exception) -> str:
-    """Classify an edge-tts failure so the frontend can show a friendly reason
+    """Classify a TTS failure so the frontend can show a friendly reason
     instead of a raw exception dump. Returns one of: timeout / unreachable /
-    auth / other."""
+    auth / model_missing / other."""
     s = str(e).lower()
+    if isinstance(e, TTSModelMissing) or ("model" in s and "not found" in s) or "not downloaded" in s:
+        return "model_missing"
     if any(k in s for k in ("connection timeout", "timed out", "timeout")):
         return "timeout"
     if any(k in s for k in ("failed to connect", "cannot connect", "connect call failed",
@@ -1038,6 +1045,111 @@ def merge_mp3(out_dir: Path, mid: str, n: int, out: Path, gap: Path | None = Non
     subprocess.run(cmd, capture_output=True, text=True, timeout=300, check=True)
 
 
+# ----------------------------------------------------------------------------
+# Pluggable TTS engines
+# ----------------------------------------------------------------------------
+class TTSEngine:
+    name = "edge-tts"
+    is_online = True
+    requires_gpu = False
+
+    def ensure_loaded(self) -> None:
+        """No-op for online engines; Kokoro loads its ONNX model lazily."""
+
+    async def synthesize_seg(self, text: str, voice: str, rate: float,
+                             wav_path: Path, mid: str, i: int) -> None:
+        """Synthesize one sentence to a 24k mono PCM16 WAV at wav_path."""
+        raise NotImplementedError  # pragma: no cover
+
+    def available_voices(self) -> list[dict]:
+        return [{"id": v, "label": v, "lang": "en"} for v in TTS_VERIFIED]
+
+
+class EdgeTTSEngine(TTSEngine):
+    name = "edge-tts"
+    is_online = True
+
+    async def synthesize_seg(self, text: str, voice: str, rate: float,
+                             wav_path: Path, mid: str, i: int) -> None:
+        import edge_tts
+        mp3_path = wav_path.with_suffix(".mp3")
+        com = edge_tts.Communicate(text, voice=voice,
+                                   rate="%+d%%" % int((rate - 1.0) * 100))
+        await asyncio.wait_for(com.save(str(mp3_path)), timeout=45)
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(mp3_path), "-ar", "24000", "-ac", "1",
+             "-c:a", "pcm_s16le", str(wav_path)],
+            capture_output=True, text=True, timeout=60, check=True,
+        )
+        mp3_path.unlink(missing_ok=True)
+
+
+_KOKORO_LANGS = {"af": "en-us", "am": "en-us", "bf": "en-gb", "bm": "en-gb",
+                 "zf": "zh", "zm": "zh", "jf": "ja", "jm": "ja", "hf": "hi",
+                 "ef": "es", "ff": "fr", "if": "it", "pf": "pt", "kf": "ko"}
+
+
+def _voice_lang(v: str) -> str:
+    return _KOKORO_LANGS.get((v or "")[:2], "en-us")
+
+
+def _voice_label(v: str) -> str:
+    # af_bella -> Bella
+    name = v.split("_", 1)[-1]
+    return name[:1].upper() + name[1:] if name else v
+
+
+class KokoroEngine(TTSEngine):
+    name = "kokoro"
+    is_online = False
+
+    def __init__(self) -> None:
+        self.cache_dir = Path(os.environ.get(
+            "TELG_KOKORO_CACHE", str(Path.home() / ".cache" / "telg" / "kokoro")))
+        self.model_path = self.cache_dir / "kokoro-v1.0.onnx"
+        self.voices_path = self.cache_dir / "voices-v1.0.bin"
+        self._kokoro = None
+
+    def ensure_loaded(self) -> None:
+        if self._kokoro is not None:
+            return
+        miss = [str(p) for p in (self.model_path, self.voices_path) if not p.exists()]
+        if miss:
+            raise TTSModelMissing(
+                "Kokoro model not downloaded — put kokoro-v1.0.onnx and voices-v1.0.bin "
+                "under %s (see requirements-tts-kokoro.txt / download script)" % self.cache_dir)
+        try:
+            from kokoro_onnx import Kokoro
+        except ImportError:
+            raise TTSModelMissing(
+                "kokoro-onnx not installed — run: pip install -r requirements-tts-kokoro.txt")
+        try:
+            self._kokoro = Kokoro(str(self.model_path), str(self.voices_path))
+        except Exception as e:  # noqa: BLE001  (InvalidProtobuf etc. → model files corrupt/incomplete)
+            raise TTSModelMissing(
+                "Kokoro model files are incomplete or corrupt under %s — re-download them "
+                "(see requirements-tts-kokoro.txt): %s" % (self.cache_dir, str(e)[:160]))
+
+    async def synthesize_seg(self, text: str, voice: str, rate: float,
+                             wav_path: Path, mid: str, i: int) -> None:
+        self.ensure_loaded()
+        import soundfile as sf
+        samples, sr = self._kokoro.create(text, voice=voice, speed=rate)
+        sf.write(str(wav_path), samples, sr, subtype="PCM_16")
+
+    def available_voices(self) -> list[dict]:
+        self.ensure_loaded()
+        return [{"id": v, "label": _voice_label(v), "lang": _voice_lang(v)}
+                for v in self._kokoro.get_voices()]
+
+
+ENGINES = {"edge-tts": EdgeTTSEngine(), "kokoro": KokoroEngine()}
+
+
+def get_engine(provider: str | None) -> TTSEngine:
+    return ENGINES.get((provider or "").strip().lower(), ENGINES["edge-tts"])
+
+
 @app.post("/api/v1/materials/{mid}/synthesize")
 async def synthesize(mid: str, body: SynthIn | None = None):
     body = body or SynthIn()
@@ -1061,34 +1173,29 @@ async def synthesize(mid: str, body: SynthIn | None = None):
     if isinstance(raw_voices, list):
         raw_voices = " + ".join(str(x.get("voice") if isinstance(x, dict) else x) for x in raw_voices)
     vs = [v.strip() for v in re.split(r"[+]", raw_voices or "") if v.strip()] or voices_of(meta)
-    vs = [normalize_voice(v) for v in vs] or ["en-US-GuyNeural"]
+    engine = get_engine(body.provider or meta.get("tts_provider") or "edge-tts")
+    if engine.name == "edge-tts":
+        vs = [normalize_voice(v) for v in vs] or ["en-US-GuyNeural"]
+    else:
+        vs = [v for v in vs] or ["af_bella"]
     rate = body.rate if (body.rate is not None and 0.5 <= body.rate <= 2.0) else 1.0
-    rate_arg = "%+d%%" % int((rate - 1.0) * 100)
     gap_ms = 300
-    try:
-        import edge_tts
-    except ImportError:
-        conn.close()
-        raise HTTPException(500, "edge-tts not installed — run: pip install edge-tts")
     STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        engine.ensure_loaded()
+    except TTSModelMissing as e:
+        conn.close()
+        raise HTTPException(502, "TTS synthesis failed [model_missing]: %s" % e)
     try:
         times = []
         start = 0
         for i, seg in enumerate(segs):
             text = (seg["text_en"] or "").strip() or "…"
             voice = vs[i % len(vs)]
-            mp3_path = STORAGE_DIR / ("%s-seg-%d.mp3" % (mid, i))
-            com = edge_tts.Communicate(text, voice=voice, rate=rate_arg)
-            await asyncio.wait_for(com.save(str(mp3_path)), timeout=45)
-            # normalize to 24k mono WAV so duration is sample-exact and the
-            # merge pass sees one consistent decoded format
+            # each sentence is normalized to 24k mono WAV so duration is
+            # sample-exact and the merge pass sees one consistent format
             wav_path = STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i))
-            subprocess.run(
-                ["ffmpeg", "-y", "-i", str(mp3_path), "-ar", "24000", "-ac", "1",
-                 "-c:a", "pcm_s16le", str(wav_path)],
-                capture_output=True, text=True, timeout=60, check=True,
-            )
-            mp3_path.unlink(missing_ok=True)
+            await engine.synthesize_seg(text, voice, rate, wav_path, mid, i)
             dur = probe_ms(wav_path)
             times.append((seg["seq"], start, start + dur))
             start += dur + gap_ms
@@ -1381,20 +1488,42 @@ def usage_stats(granularity: str = "week", offset_days: int = 0):
             "breakdown": breakdown, "mock": False}
 
 
+@app.get("/api/v1/tts/voices")
+def tts_voices(provider: str = "edge-tts"):
+    """Available voices for a TTS provider, so the frontend can render the
+    role list dynamically (edge-tts hardcoded list; Kokoro read from model)."""
+    try:
+        return {"ok": True, "provider": provider,
+                "voices": get_engine(provider).available_voices()}
+    except TTSModelMissing as e:
+        return {"ok": False, "error_class": "model_missing", "error": str(e)[:300]}
+
+
 @app.post("/api/v1/config/test-tts")
 async def test_tts(c: TestTTSIn):
+    engine = get_engine(c.provider)
     try:
-        import edge_tts
-    except ImportError:
-        return {"ok": False, "error": "edge-tts not installed — run: pip install edge-tts"}
-    voice = normalize_voice((c.voice or "").split("+")[0])
+        engine.ensure_loaded()
+    except TTSModelMissing as e:
+        return {"ok": False, "error_class": "model_missing", "error": str(e)[:300]}
+    if engine.name == "edge-tts":
+        voice = normalize_voice((c.voice or "").split("+")[0])
+    else:
+        voice = (c.voice or "").strip() or "af_bella"
     rate = max(0.5, min(2.0, c.speech_rate or 1.0))
     text = (c.text or "").strip() or "Technical English, grounded in real engineering. 以真实技术知识为背景，以英语为训练载体。"
     STORAGE_DIR.mkdir(parents=True, exist_ok=True)
-    out = STORAGE_DIR / ("test_%d.mp3" % int(time.time() * 1000))
+    suffix = ".mp3" if engine.name == "edge-tts" else ".wav"
+    out = STORAGE_DIR / ("test_%d%s" % (int(time.time() * 1000), suffix))
     try:
-        com = edge_tts.Communicate(text, voice=voice, rate="%+d%%" % int((rate - 1.0) * 100))
-        await com.save(str(out))
+        if engine.name == "edge-tts":
+            import edge_tts
+            com = edge_tts.Communicate(text, voice=voice, rate="%+d%%" % int((rate - 1.0) * 100))
+            await com.save(str(out))
+        else:
+            import soundfile as sf
+            samples, sr = engine._kokoro.create(text, voice=voice, speed=rate)
+            sf.write(str(out), samples, sr, subtype="PCM_16")
     except Exception as e:  # noqa: BLE001
         return {"ok": False, "error_class": tts_error_class(e), "error": str(e)[:300]}
     return {"ok": True, "audio_url": "/api/v1/audio/" + out.name, "voice": voice}

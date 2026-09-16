@@ -14,7 +14,7 @@ TELG 是一个纯 PC 的**技术英语听力工具**：你输入一个技术主�
 
 | 组件 | 位置 | 作用 |
 |------|------|------|
-| 后端 | `backend/main.py` | FastAPI 服务：调 LLM 生成语料、用 edge-tts 合成音频、存储素材到 SQLite |
+| 后端 | `backend/main.py` | FastAPI 服务：调 LLM 生成语料、合成音频（edge-tts 在线 / Kokoro 本地离线，可切换）、存储素材到 SQLite |
 | 前端 | `frontend/index.html` | 单文件页面：生成/播放/管理界面（后端启动后会自动托管它） |
 
 所以**只要启动后端**，打开浏览器访问 `http://127.0.0.1:8000`，整个产品就都在了。
@@ -22,7 +22,7 @@ TELG 是一个纯 PC 的**技术英语听力工具**：你输入一个技术主�
 你有两种使用方式，按需选择：
 
 - **路线 A（最快，离线）**：纯前端 + 内置测试数据，不需要后端、不需要装任何东西，5 分钟体验完整流程；
-- **路线 B（完整功能，推荐）**：真实后端，接入你的 LLM API + edge-tts 合成，生成真正可听的素材。
+- **路线 B（完整功能，推荐）**：真实后端，接入你的 LLM API + TTS 合成（默认 edge-tts；网络不通时可选 Kokoro 本地离线引擎），生成真正可听的素材。
 
 下面从准备工作开始，两条路线都会带你们走到。
 
@@ -63,10 +63,12 @@ ffprobe -version
 
 ### 1.3 确认网络
 
-真实模式需要访问两个外部服务（测试数据模式不需要）：
+真实模式需要访问外部服务（测试数据模式不需要）：
 
-- `speech.platform.bing.com` —— edge-tts 语音合成
+- `speech.platform.bing.com` —— **edge-tts** 语音合成（若改用 Kokoro 离线引擎则**不需要**此域名）
 - 你的 LLM API 域名（如 DeepSeek 的 `api.deepseek.com`）
+
+> 如果你的网络访问 `speech.platform.bing.com` 超时（常见于公司网络/部分地区），在设置页把 **Synthesis Engine 切换为 `Kokoro (Local offline)`** 即可离线合成，不依赖任何外网 TTS 服务。
 
 ### 1.4 放好工程目录
 
@@ -113,6 +115,31 @@ pip install -r requirements.txt
 > cd D:\dev\telg-project\backend
 > .venv\Scripts\python.exe main.py
 > ```
+
+#### 3.1 可选：安装 Kokoro 离线 TTS 引擎
+
+Kokoro 是本地离线的语音合成引擎（英文音色自然、无需联网、免 Key）。**只有你想用它时才需要装**：
+
+```powershell
+.venv\Scripts\Activate.ps1
+pip install -r requirements-tts-kokoro.txt
+```
+
+然后下载模型（约 310MB，放到缓存目录；二选一）：
+
+```powershell
+# 方式一：命令行下载（任选一个地址）
+curl -L -o $env:USERPROFILE\.cache\telg\kokoro\kokoro-v1.0.onnx https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.onnx
+curl -L -o $env:USERPROFILE\.cache\telg\kokoro\voices-v1.0.bin  https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/voices-v1.0.bin
+
+# 方式二：直接手动建目录放文件
+#   目录：%USERPROFILE%\.cache\telg\kokoro\
+#   放两个文件：kokoro-v1.0.onnx、voices-v1.0.bin
+```
+
+然后在设置页把 **Synthesis Engine 切换为 `Kokoro (Local offline)`**，音色列表会自动切换为 Kokoro 音色（如 Bella / Heart / Michael / Xiaobei…），试听与合成均在本机完成。
+
+> Windows 若安装 `kokoro-onnx` 报编译错误，先装 Visual Studio Build Tools（"使用 C++ 的桌面开发"工作负载）后重试；若仍失败，可继续使用 edge-tts。
 >
 > 如果又把工程重新 clone 到了新目录（如 `telg-projectV2`），也**不必重建 venv**——直接复用旧目录的：
 > `D:\dev\telg-project\backend\.venv\Scripts\python.exe main.py`。
@@ -197,6 +224,7 @@ Uvicorn running on http://127.0.0.1:8000
 | ⑤ | `127.0.0.1 拒绝连接`，但 `netstat` 显示有监听 | 防火墙/安全软件拦截本机回环。临时关闭防火墙（管理员 CMD）：`netsh advfirewall set allprofiles state off`；**调试完务必恢复**：`netsh advfirewall set allprofiles state on`（仅建议在可信网络下短暂使用） |
 | ⑥ | Test Connection 报 `Backend returned HTML instead of JSON` | 前端不是通过 `http://127.0.0.1:8000` 打开（如 file:// 或其它静态端口）。改为通过 8000 访问 |
 | ⑦ | 合成报 `TTS synthesis failed` | edge-tts 需联网访问微软语音服务：检查网络/代理；临时可用「测试数据」验证其余功能 |
+| ⑦b | 合成/试听报 `TTS model not downloaded`（Kokoro） | Kokoro 引擎的模型文件缺失：按 3.1 下载 `kokoro-v1.0.onnx` + `voices-v1.0.bin` 到 `%USERPROFILE%\.cache\telg\kokoro\` |
 | ⑧ | `pip install` 慢/失败 | 换国内镜像：`pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple` |
 | ⑨ | Generate 报 `LLM API key not configured` | 设置里填 Key 并 **Apply**；或设置环境变量 `DEEPSEEK_API_KEY`（PowerShell：`$env:DEEPSEEK_API_KEY="sk-..."`） |
 | ⑩ | 每次拉到新目录都要新建 venv 吗？ | **不需要**。venv 建一次即可复用：`D:\dev\telg-project\backend\.venv\Scripts\python.exe main.py`。仅换机器 / 换 Python 大版本才重建 |
