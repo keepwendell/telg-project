@@ -228,6 +228,8 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .zh-toggle.on{color:var(--primary);background:var(--surface-low);border-color:var(--line)}
 .playing-flag{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--primary);margin-left:6px}
 .playing-flag .dot{background:var(--primary)}
+.playing-flag.paused{color:var(--warning)}
+.playing-flag.paused .dot{background:var(--warning)}
 .blind-mode .trow-zh{opacity:0}
 .blind-mode .trow-en{filter:blur(5px);transition:filter .2s var(--ease)}
 .blind-mode .trow-en:hover{filter:none}
@@ -298,8 +300,15 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .playlist-row.confirm-del .pl-act.del{color:var(--error)}
 .pl-rename-input{font:inherit;font-size:11px;background:var(--surface-highest);border:1px solid var(--outline);border-radius:4px;color:var(--on-surface);padding:2px 6px;width:100%;min-width:0}
 .pl-row-input-wrap{flex:1;min-width:0}
-.pl-check{display:flex;align-items:center;justify-content:center;width:15px;height:15px;border:1px solid var(--outline);border-radius:4px;color:transparent;flex-shrink:0;transition:all .12s var(--ease)}
+.pl-check{display:flex;align-items:center;justify-content:center;width:16px;height:16px;border:1px solid var(--outline);border-radius:4px;color:transparent;flex-shrink:0;transition:all .12s var(--ease)}
 .pl-row.on .pl-check{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.pl-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--on-variant);transition:background .12s var(--ease),color .12s var(--ease)}
+.pl-row:hover{background:var(--surface-low);color:var(--on-surface)}
+.pl-row.on{background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--on-surface)}
+.pl-row-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;font-weight:500}
+.pl-row-count{font-size:10px;font-family:var(--mono);color:var(--outline);flex-shrink:0}
+.pl-row.on .pl-row-count{color:var(--primary)}
+.pl-list-empty{padding:18px 10px;text-align:center;font-size:11.5px;color:var(--outline);border:1px dashed var(--line-strong);border-radius:8px}
 .playlist-row{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;cursor:pointer;color:var(--on-variant)}
 .playlist-row:hover{background:var(--surface-low);color:var(--on-surface)}
 .playlist-row .ic{display:flex;align-items:center;gap:8px;min-width:0}
@@ -1150,7 +1159,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
     <div class="modal-head">
       <div>
         <div class="t-15" data-i18n="pl.title">Add to Playlist</div>
-        <div class="t-11 dim" id="pl-material-name">Tire Burst Stability Control</div>
+        <div class="t-12" style="margin-top:2px;font-weight:600;color:var(--on-surface)" id="pl-material-name">Tire Burst Stability Control</div>
       </div>
       <button class="btn-icon" id="btn-pl-close" title="Close"><svg class="icon"><use href="#i-close"/></svg></button>
     </div>
@@ -1334,6 +1343,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         </div>
         <div>
           <textarea class="input" id="adj-voice-text" rows="4" data-i18n-ph="settings.tts.testTextPh" placeholder="Enter text to audition with each role…">Technical English, grounded in real engineering. 以真实技术知识为背景，以英语为训练载体。</textarea>
+          <div class="t-10" id="adj-single-hint" style="display:none;margin-top:8px;padding:7px 10px;border-radius:6px;background:color-mix(in srgb,var(--warning) 12%,transparent);color:var(--warning)"></div>
           <div class="voice-roles" id="adj-voice-roles" style="margin-top:8px"></div>
           <div class="tts-voice-foot" style="margin-top:8px">
             <button class="btn-role-add" id="adj-role-add"><svg class="icon"><use href="#i-plus"/></svg><span data-i18n="settings.tts.addRole">Add role</span></button>
@@ -2533,6 +2543,7 @@ const I18N = {
     'tts.target': 'Target material — converted with the settings below.',
     'tts.preset': 'Voice Pair Preset', 'tts.speakerA': 'Speaker A — Engineer A', 'tts.speakerB': 'Speaker B — Engineer B',
     'tts.convert': 'Apply & Convert', 'tts.reconvert': 'Re-synthesize',
+    'tts.singleHint': 'Single-speaker dialogue — one voice is enough. Extra voices will be used in order.',
     'tts.statusReady': 'Corpus ready — not synthesized yet.',
     'tts.statusExist': 'Audio exists — re-converting will replace it.',
     'tr.regenerate': 'Regenerate', 'tr.refine': 'Edit Corpus…', 'tr.editAudio': 'Edit Audio Settings', 'tr.audioReady': 'Audio ready — review and publish.',
@@ -2702,6 +2713,7 @@ const I18N = {
     'tts.target': '目标素材 — 将按以下设置转换。',
     'tts.preset': '音色组合预设', 'tts.speakerA': '说话人 A — 工程师 A', 'tts.speakerB': '说话人 B — 工程师 B',
     'tts.convert': '应用并转换', 'tts.reconvert': '重新合成',
+    'tts.singleHint': '当前语料为单人对话，仅需配置 1 个音色；多余音色将按顺序使用。',
     'tts.statusReady': '语料已就绪 — 尚未合成。',
     'tts.statusExist': '已有音频 — 重新转换将替换现有音频。',
     'tr.regenerate': '重新生成', 'tr.refine': '编辑语料…', 'tr.editAudio': '编辑音频设置', 'tr.audioReady': '音频已就绪 — 可试听或发布。',
@@ -3285,23 +3297,24 @@ function doDeleteMaterial(id) {
 }
 /* All materials now live inside the "All Materials" accordion in
    renderPlaylists; this wrapper keeps every existing call site valid. */
-function materialRowHTML(m) {
+function materialRowHTML(m, inPlaylist) {
   const active = state.current && state.current.id === m.id;
   const cls = 'lib-item' + (active ? ' active' : '') + (state.renamingId === m.id ? ' renaming' : '');
   const nameCell = state.renamingId === m.id
     ? '<input class="lib-rename-input" value="' + escapeHtml(m.meta.title) + '" data-rid="' + m.id + '"/>'
     : '<span class="lib-item-name">' + escapeHtml(m.meta.title) + '</span>' + (m.meta.saved === false ? '<span class="lib-draft">' + I18N[state.lang]['lib.draft'] + '</span>' : '') + (m.meta.generated && m.meta.audioReady === false ? '<span class="lib-draft unsynth">' + I18N[state.lang]['lib.unsynth'] + '</span>' : '');
+  const acts = inPlaylist
+    ? '<span class="lib-act del" data-act="pl-remove" title="' + escapeHtml(I18N[state.lang]['pl.remove']) + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-minus"/></svg></span>'
+    : '<span class="lib-act" data-act="pl-add" title="' + escapeHtml(I18N[state.lang]['pl.addTo']) + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-folder"/></svg></span>' +
+      '<span class="lib-act" data-act="rename" title="Rename"><svg class="icon" style="width:13px;height:13px"><use href="#i-edit"/></svg></span>' +
+      '<span class="lib-act del" data-act="delete" title="Delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></span>';
   return '<div class="' + cls + '" data-id="' + m.id + '" title="' + escapeHtml(m.meta.title) + '">' +
     '<div class="lib-ic"><svg class="icon"><use href="#i-waveform"/></svg></div>' +
     '<div class="lib-item-body">' +
       '<div class="lib-item-title">' + nameCell + '<span class="lib-item-dur">' + fmt(m.meta.total_duration_ms) + '</span></div>' +
       '<div class="lib-item-meta"><span>' + escapeHtml(String(m.meta.domain).split(' ')[0]) + '</span><span>·</span><span>Lvl ' + m.meta.difficulty.replace('Level ', '') + '</span></div>' +
     '</div>' +
-    '<div class="lib-item-actions">' +
-      '<span class="lib-act" data-act="pl-add" title="' + escapeHtml(I18N[state.lang]['pl.addTo']) + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-folder"/></svg></span>' +
-      '<span class="lib-act" data-act="rename" title="Rename"><svg class="icon" style="width:13px;height:13px"><use href="#i-edit"/></svg></span>' +
-      '<span class="lib-act del" data-act="delete" title="Delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></span>' +
-    '</div></div>';
+    '<div class="lib-item-actions">' + acts + '</div></div>';
 }
 function renderLibrary() {
   renderPlaylists();   /* materials + playlists all render in the sidebar accordion */
@@ -3396,12 +3409,13 @@ function renderPlList() {
   if (!art) return;
   let html = state.playlists.map(p => {
     const on = p.materialIds.includes(art.id);
-    return '<div class="pl-row ' + (on ? 'on' : '') + '" data-plid="' + p.id + '" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;cursor:pointer;color:var(--on-variant);transition:background .12s var(--ease)">' +
+    return '<div class="pl-row ' + (on ? 'on' : '') + '" data-plid="' + p.id + '">' +
       '<span class="pl-check"><svg class="icon" style="width:10px;height:10px"><use href="#i-check"/></svg></span>' +
-      '<span class="t-12" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(p.name) + '</span>' +
-      '<span class="t-10 faint mono">' + p.materialIds.length + '</span>' +
+      '<span class="pl-row-name">' + escapeHtml(p.name) + '</span>' +
+      '<span class="pl-row-count">' + p.materialIds.length + '</span>' +
       '</div>';
   }).join('');
+  if (!html) html = '<div class="pl-list-empty">' + escapeHtml(I18N[state.lang]['pl.empty']) + '</div>';
   if (state.plCreating) {
     html += '<div style="margin-top:8px"><input class="pl-rename-input" id="pl-create-input" data-pl-create="1" placeholder="' + escapeHtml(I18N[state.lang]['pl.createPh']) + '" style="width:100%"/></div>';
   }
@@ -3462,13 +3476,7 @@ function renderPlaylists() {
     const exp = members.length
       ? members.map(id => {
           const m = state.library.find(x => x.id === id);
-          if (!m) return '';
-          return '<div class="pl-item" data-mid="' + id + '" title="' + escapeHtml(m.meta.title) + '">' +
-            '<svg class="icon"><use href="#i-waveform"/></svg>' +
-            '<span class="pl-item-name">' + escapeHtml(m.meta.title) + '</span>' +
-            '<span class="pl-item-dur">' + fmt(m.meta.total_duration_ms) + '</span>' +
-            '<span class="lib-act" data-act="pl-remove" title="' + escapeHtml(I18N[state.lang]['pl.remove']) + '"><svg class="icon" style="width:12px;height:12px"><use href="#i-minus"/></svg></span>' +
-            '</div>';
+          return m ? materialRowHTML(m, true) : '';
         }).join('')
       : '<div class="pl-item-empty">' + escapeHtml(I18N[state.lang]['pl.empty']) + '</div>';
     rows.push(
@@ -3981,12 +3989,43 @@ function openTTSModal() {
   $('adj-tts-rate').value = tts.speechRate || '1';
   $('adj-tts-style').value = art.meta.ttsStyle || tts.style || 'neutral';
   const cur = splitVoice(art.meta.voice);
-  loadTTSVoices(prov).then(() => renderAdjustVoiceRoles(sanitizeRolesForProvider(cur.length ? cur : null, prov)));
+  const roles = dialogueRoleNames(art);
+  const saved = art.meta.voiceRoles;
+  const hasCustom = Array.isArray(saved) && saved.some(r => r && r.name && !/^Speaker [A-Z]$/.test(String(r.name).trim()));
+  const hint = $('adj-single-hint');
+  if (hint) {
+    hint.style.display = roles.length === 1 ? '' : 'none';
+    hint.textContent = I18N[state.lang]['tts.singleHint'];
+  }
+  loadTTSVoices(prov).then(() => {
+    if (roles.length && !hasCustom) {
+      const defV = prov === 'kokoro' ? 'af_bella' : 'en-US-GuyNeural';
+      const pool = ttsVoicePool(prov);
+      const vs = cur.length ? cur : [defV];
+      renderAdjustVoiceRoles(roles.map((r, i) => {
+        let v = vs[i % vs.length];
+        if (!pool.some(o => (typeof o === 'string' ? o : o.id) === v)) v = defV;
+        return { name: r.role ? r.name + ' · ' + r.role : r.name, voice: v };
+      }));
+    } else {
+      renderAdjustVoiceRoles(sanitizeRolesForProvider(cur.length ? cur : null, prov));
+    }
+  });
   const ready = art.meta.audioReady === false;
   $('tts-status').textContent = I18N[state.lang][ready ? 'tts.statusReady' : 'tts.statusExist'];
   openAdjustModal('voice');
 }
 function closeTTSModal() { closeAdjustModal(); }
+/* Extract unique speaker roles from the corpus dialogue (LLM-recommended
+   names/roles) so the voice panel can pre-fill one row per role. */
+function dialogueRoleNames(art) {
+  const seen = [];
+  (art.dialogue || []).forEach(d => {
+    const n = String(d.speaker || '').trim();
+    if (n && !seen.some(x => x.name === n)) seen.push({ name: n, role: String(d.role || '').trim() });
+  });
+  return seen;
+}
 function renderAdjustVoiceRoles(voices) {
   const box = $('adj-voice-roles'); if (!box) return;
   const p = adjTTSProvider();
@@ -4401,7 +4440,8 @@ function syncHighlight() {
     if (flag) {
       if (i === idx) {
         flag.style.display = '';
-        flag.innerHTML = state.playing ? '<span class="dot"></span>Playing' : '<span class="dot"></span>Paused';
+        flag.className = 'playing-flag' + (state.playing ? '' : ' paused');
+        flag.innerHTML = state.playing ? '<span class="dot"></span>Playing' : '<span class="dot warn"></span>Paused';
       } else {
         flag.style.display = 'none';
       }
@@ -5329,11 +5369,6 @@ function onClick(e) {
     return;
   }
   if (e.target.closest('.pl-rename-input')) return;
-  const plItem = e.target.closest('.pl-expand .pl-item');
-  if (plItem) {
-    if (e.target.closest('.lib-act[data-act="pl-remove"]')) { removeFromActivePlaylist(plItem.dataset.mid); return; }
-    loadMaterial(plItem.dataset.mid); return;
-  }
   const libAct = e.target.closest('.lib-item .lib-act');
   if (libAct) {
     const id = libAct.closest('.lib-item').dataset.id;

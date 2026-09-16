@@ -26,7 +26,7 @@
     "dialogue": [
       {
         "id": 1,
-        "speaker": "Engineer A",
+        "speaker": "Alex",
         "role": "Vehicle Dynamics",
         "voice": "GuyNeural",
         "start_ms": 0,
@@ -36,7 +36,7 @@
       },
       {
         "id": 2,
-        "speaker": "Engineer B",
+        "speaker": "Priya",
         "role": "Controls Lead",
         "voice": "JennyNeural",
         "start_ms": 8000,
@@ -46,7 +46,7 @@
       },
       {
         "id": 3,
-        "speaker": "Engineer A",
+        "speaker": "Alex",
         "role": "Vehicle Dynamics",
         "voice": "GuyNeural",
         "start_ms": 19000,
@@ -56,7 +56,7 @@
       },
       {
         "id": 4,
-        "speaker": "Engineer B",
+        "speaker": "Priya",
         "role": "Controls Lead",
         "voice": "JennyNeural",
         "start_ms": 32000,
@@ -66,7 +66,7 @@
       },
       {
         "id": 5,
-        "speaker": "Engineer A",
+        "speaker": "Alex",
         "role": "Vehicle Dynamics",
         "voice": "GuyNeural",
         "start_ms": 46000,
@@ -76,7 +76,7 @@
       },
       {
         "id": 6,
-        "speaker": "Engineer B",
+        "speaker": "Priya",
         "role": "Controls Lead",
         "voice": "JennyNeural",
         "start_ms": 57000,
@@ -120,10 +120,10 @@
           "The steering angle sensor lost its calibration frame."
         ],
         "answer": 1,
-        "explain": "Segment 00:00 — Engineer A stresses the baseline ESC was \"far too sluggish to counteract the immediate rolling resistance spike.\""
+        "explain": "Segment 00:00 — Alex stresses the baseline ESC was \"far too sluggish to counteract the immediate rolling resistance spike.\""
       },
       {
-        "q": "What does Engineer B propose for the feedforward compensator?",
+        "q": "What does Priya propose for the feedforward compensator?",
         "options": [
           "Increase total friction braking force symmetrically.",
           "Use wheel speed variance and estimated burst drag force in the target yaw rate calculation.",
@@ -178,7 +178,7 @@
     "dialogue": [
       {
         "id": 1,
-        "speaker": "Engineer A",
+        "speaker": "Alex",
         "role": "Embedded Lead",
         "voice": "GuyNeural",
         "start_ms": 0,
@@ -188,7 +188,7 @@
       },
       {
         "id": 2,
-        "speaker": "Engineer B",
+        "speaker": "Priya",
         "role": "Kernel Debugger",
         "voice": "JennyNeural",
         "start_ms": 9000,
@@ -198,7 +198,7 @@
       },
       {
         "id": 3,
-        "speaker": "Engineer A",
+        "speaker": "Alex",
         "role": "Embedded Lead",
         "voice": "GuyNeural",
         "start_ms": 20000,
@@ -208,7 +208,7 @@
       },
       {
         "id": 4,
-        "speaker": "Engineer B",
+        "speaker": "Priya",
         "role": "Kernel Debugger",
         "voice": "JennyNeural",
         "start_ms": 32000,
@@ -252,7 +252,7 @@
           "A baud rate mismatch between nodes"
         ],
         "answer": 1,
-        "explain": "Segment 00:09 — Engineer B hypothesizes: \"Could be the transceiver waking up before the oscillator has stabilized.\""
+        "explain": "Segment 00:09 — Priya hypothesizes: \"Could be the transceiver waking up before the oscillator has stabilized.\""
       }
     ],
     "core_sentence_patterns": [
@@ -295,7 +295,7 @@
     "dialogue": [
       {
         "id": 1,
-        "speaker": "Engineer A",
+        "speaker": "Alex",
         "role": "Vehicle Dynamics",
         "voice": "GuyNeural",
         "start_ms": 0,
@@ -305,7 +305,7 @@
       },
       {
         "id": 2,
-        "speaker": "Engineer B",
+        "speaker": "Priya",
         "role": "Controls Architect",
         "voice": "JennyNeural",
         "start_ms": 9000,
@@ -315,7 +315,7 @@
       },
       {
         "id": 3,
-        "speaker": "Engineer A",
+        "speaker": "Alex",
         "role": "Vehicle Dynamics",
         "voice": "GuyNeural",
         "start_ms": 20000,
@@ -325,7 +325,7 @@
       },
       {
         "id": 4,
-        "speaker": "Engineer B",
+        "speaker": "Priya",
         "role": "Controls Architect",
         "voice": "JennyNeural",
         "start_ms": 33000,
@@ -335,7 +335,7 @@
       },
       {
         "id": 5,
-        "speaker": "Engineer A",
+        "speaker": "Alex",
         "role": "Vehicle Dynamics",
         "voice": "GuyNeural",
         "start_ms": 47000,
@@ -379,7 +379,7 @@
           "Only after ABS activates"
         ],
         "answer": 1,
-        "explain": "Segment 00:33 — Engineer B: \"we gate the intervention on the estimated friction coefficient and the steering rate, not just the yaw error alone.\""
+        "explain": "Segment 00:33 — Priya: \"we gate the intervention on the estimated friction coefficient and the steering rate, not just the yaw error alone.\""
       }
     ],
     "core_sentence_patterns": [

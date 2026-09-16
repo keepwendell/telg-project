@@ -460,12 +460,12 @@ def parse_sec(l: str) -> int | None:
 
 
 TEMPLATE_DIALOGUE = [
-    {"speaker": "Engineer A", "role": "System Lead", "text_en": "Let's walk through the current {topic} baseline and see where the margin is.", "text_zh": "我们先过一遍当前 {topic} 的基线，看看裕度在哪里。"},
-    {"speaker": "Engineer B", "role": "Controls", "text_en": "The key constraint is response time — we only have a narrow window before the condition escalates.", "text_zh": "关键约束是响应时间——在状况恶化之前，我们只有很窄的时间窗口。"},
-    {"speaker": "Engineer A", "role": "System Lead", "text_en": "Right. So the compensation logic should trigger from the sensor estimate, not wait for the effect to show up.", "text_zh": "对。所以补偿逻辑应基于传感器估计触发，而不是等效应显现出来。"},
-    {"speaker": "Engineer B", "role": "Controls", "text_en": "Agreed, but we still need to verify it under the worst-case load, including degraded sensor quality.", "text_zh": "同意，但我们仍要在最恶劣工况下验证，包括传感器质量退化的情况。"},
-    {"speaker": "Engineer A", "role": "System Lead", "text_en": "Then we close the loop with a conservative calibration and validate it on the HIL bench this week.", "text_zh": "那我们就用保守标定闭环，本周在 HIL 台架上做验证。"},
-    {"speaker": "Engineer B", "role": "Controls", "text_en": "Sounds good. Let's track the margin over time and review it again at the next design review.", "text_zh": "可以。我们持续跟踪裕度变化，下次设计评审再回顾一次。"},
+    {"speaker": "Alex", "role": "System Lead", "text_en": "Let's walk through the current {topic} baseline and see where the margin is.", "text_zh": "我们先过一遍当前 {topic} 的基线，看看裕度在哪里。"},
+    {"speaker": "Priya", "role": "Controls", "text_en": "The key constraint is response time — we only have a narrow window before the condition escalates.", "text_zh": "关键约束是响应时间——在状况恶化之前，我们只有很窄的时间窗口。"},
+    {"speaker": "Alex", "role": "System Lead", "text_en": "Right. So the compensation logic should trigger from the sensor estimate, not wait for the effect to show up.", "text_zh": "对。所以补偿逻辑应基于传感器估计触发，而不是等效应显现出来。"},
+    {"speaker": "Priya", "role": "Controls", "text_en": "Agreed, but we still need to verify it under the worst-case load, including degraded sensor quality.", "text_zh": "同意，但我们仍要在最恶劣工况下验证，包括传感器质量退化的情况。"},
+    {"speaker": "Alex", "role": "System Lead", "text_en": "Then we close the loop with a conservative calibration and validate it on the HIL bench this week.", "text_zh": "那我们就用保守标定闭环，本周在 HIL 台架上做验证。"},
+    {"speaker": "Priya", "role": "Controls", "text_en": "Sounds good. Let's track the margin over time and review it again at the next design review.", "text_zh": "可以。我们持续跟踪裕度变化，下次设计评审再回顾一次。"},
 ]
 TEMPLATE_VOCAB = [
     {"en": "response time", "zh": "响应时间", "symbol": "t_resp", "def": "Time from event onset to actuator response, a key control margin factor."},
@@ -477,8 +477,8 @@ TEMPLATE_VOCAB = [
 ]
 TEMPLATE_QUESTIONS = [
     {"q": "What is the key constraint mentioned at the start of the discussion?", "options": ["Cost of the hardware", "Response time window", "Fuel efficiency", "Software license"], "answer": "Response time window", "explain": "Engineer B: 'The key constraint is response time — we only have a narrow window before the condition escalates.'"},
-    {"q": "How should the compensation logic be triggered?", "options": ["By waiting for the effect to appear", "By a manual operator switch", "From the sensor estimate", "On a fixed timer"], "answer": "From the sensor estimate", "explain": "Engineer A: 'So the compensation logic should trigger from the sensor estimate, not wait for the effect to show up.'"},
-    {"q": "Where will the final validation be performed this week?", "options": ["On the HIL bench", "On the public road", "In a thermal chamber", "In simulation only"], "answer": "On the HIL bench", "explain": "Engineer A: 'validate it on the HIL bench this week.'"},
+    {"q": "How should the compensation logic be triggered?", "options": ["By waiting for the effect to appear", "By a manual operator switch", "From the sensor estimate", "On a fixed timer"], "answer": "From the sensor estimate", "explain": "Alex: 'So the compensation logic should trigger from the sensor estimate, not wait for the effect to show up.'"},
+    {"q": "Where will the final validation be performed this week?", "options": ["On the HIL bench", "On the public road", "In a thermal chamber", "In simulation only"], "answer": "On the HIL bench", "explain": "Alex: 'validate it on the HIL bench this week.'"},
 ]
 TEMPLATE_PATTERNS = [
     {"title": "Constraint Statement", "pattern": "The key constraint is [X] — we only have [limit] before [condition].", "example": "The key constraint is power draw — we only have 2 seconds before the cell overheats."},
@@ -566,11 +566,11 @@ DIFFICULTY_DEFS = {
 }
 
 BREADTH_DEFS = {
-    1: "单人讲解：一个工程师系统讲解（speaker 统一用 \"Engineer\"）。",
-    2: "双人技术讨论：两位工程师一问一答推进（Engineer A / Engineer B）。",
-    3: "三人小组讨论：加入测试/仿真第三视角，围绕同一问题多轮交锋（Engineer A/B/C）。",
-    4: "跨团队评审：动力、控制、安全等不同岗位协作决策（用具体岗位名作 speaker）。",
-    5: "全链路多方：从开发、整车集成到量产/供应商多视角，体现端到端权衡（多岗位轮转）。",
+    1: "单人讲解：一位工程师系统讲解（speaker 用真实人名或岗位名，全程一致）。",
+    2: "双人技术讨论：两位工程师一问一答推进（每位 speaker 用真实人名或岗位名，如 Alex / Priya）。",
+    3: "三人小组讨论：加入测试/仿真第三视角，围绕同一问题多轮交锋（三人各用真实人名或岗位名）。",
+    4: "跨团队评审：动力、控制、安全等不同岗位协作决策（speaker 用具体岗位名或人名）。",
+    5: "全链路多方：从开发、整车集成到量产/供应商多视角，体现端到端权衡（多岗位轮转，各自用真实人名或岗位名）。",
 }
 
 TONE_DEFS = {
@@ -602,7 +602,7 @@ LLM_SYSTEM_PROMPT = """你是 TELG 技术英语听力素材生成引擎，为研
     "engineering_scenario": "英文：这段对话发生在什么工作场景，1-2 句"
   },
   "dialogue": [
-    {"speaker": "说话人标识", "role": "角色", "text_en": "英文台词", "text_zh": "对应中文翻译"}
+    {"speaker": "说话人标识（真实人名或岗位名，如 \"Alex Chen\" / \"Supplier QA Manager\"，严禁 Engineer A 式占位）", "role": "职场角色/职位（如 Vehicle Dynamics Engineer）", "text_en": "英文台词", "text_zh": "对应中文翻译"}
   ],
   "vocabulary": [
     {"en": "英文术语", "zh": "标准译法", "symbol": "符号，无则空串", "def": "英文释义"}
@@ -626,6 +626,11 @@ LLM_SYSTEM_PROMPT = """你是 TELG 技术英语听力素材生成引擎，为研
 - 单人技术讲解/汇报场景（Scenario 为 Single Technical Deep-Dive、Technical Presentation 等）：dialogue 只包含 1 个 speaker，role 为该场景角色，全程一人连贯讲解，可带少量自问自答，但不得出现第二个人名或 Interviewer/Candidate 角色。
 - 技术面试场景（Scenario 含 Interview）：dialogue 恰好 2 个 speaker，role 分别为 Interviewer 与 Candidate，一问一答。
 - 其余场景：dialogue 的 speaker 数量与角色由用户消息中的"广度"约束决定。
+
+## 角色命名（硬约束）
+- 每个 speaker 使用真实感的人名（如 Alex、Priya、Dana、Marcus）或具体岗位名（如 Powertrain Lead、Supplier QA Manager、Calibration Engineer）；严禁 "Engineer A"、"Speaker 1" 等占位式命名。
+- role 字段给出该说话人的职场角色/职位，与 speaker 互补（人名 + 职位），同一说话人全部台词中的 speaker 拼写必须一致。
+- 单人讲解场景：speaker 用一个贯穿全程的人名或岗位名（如 Dana 或 Field Service Engineer），role 为该场景角色。
 
 请直接输出 JSON。"""
 
