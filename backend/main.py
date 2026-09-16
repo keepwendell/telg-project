@@ -1729,6 +1729,216 @@ async def test_tts(c: TestTTSIn):
     return result
 
 
+# ---------- Onboarding (profile + recommendations in one LLM call) ----------
+
+class OnboardGenIn(_BM):
+    role: str = ""
+    domain: str = ""
+    language: str = "en-zh"
+    focus: str = ""
+    minutes: int = 0
+    llm_config: dict = {}
+
+
+class OnboardGenOut(_BM):
+    role_portrait: str
+    domain_profile: str
+    focus_tone: str
+    domains: list[RecDomainOut]
+    roles: list[str]
+    scenarios: list[str]
+
+
+ONBOARD_SYSTEM_PROMPT = """你是 TELG 听力素材生成器的一次性初始化引擎，根据用户问卷回答，同时生成「学习档案」与「推荐配置」。
+
+## 输出契约（硬约束）
+- 只输出合法 JSON 对象：
+  {"role_portrait": "…", "domain_profile": "…", "focus_tone": "…",
+   "domains": [{"id": "…", "name": "…", "desc": "…"}], "roles": ["…"], "scenarios": ["…"]}
+- role_portrait：基于用户职位/角色，扩写为 2-3 句专业画像（工作语境、沟通对象、典型英文表达需求），英文。
+- domain_profile：基于用户练习领域，扩写为 3-4 句领域档案（术语惯例、典型工作场景、角色画像；术语准确宁浅勿错），英文。
+- focus_tone：基于专注方向与练习场景，给出 1-2 句训练建议与语气偏好，英文。
+- domains：4-6 个与该用户紧密相关的技术领域，第一个必须是主练习领域；id 用 kebab-case 小写英文标识（若与内置领域 automotive/semiconductor/energy/ai-software/medical/fintech/aerospace/general 匹配则沿用），name 为英文领域名，desc 为不超过 20 字的中文描述。
+- roles：3-6 个该领域研发一线真实岗位（英文岗位名，如 Process Engineer）。
+- scenarios：3-6 个贴合该用户工作场景的英文练习场景短语（如 Process Review Meeting）。
+- 严格贴合问卷中的角色、领域、语言方向与专注方向，禁止输出无关通用内容。
+
+请直接输出 JSON。"""
+
+
+@app.post("/api/v1/config/onboarding/generate")
+def onboarding_generate(c: OnboardGenIn):
+    if not (c.role.strip() or c.domain.strip()):
+        raise HTTPException(400, "role or domain is required")
+    cfg = c.llm_config or {}
+    base = (cfg.get("base_url") or os.environ.get("TELG_LLM_BASE") or "https://api.deepseek.com/v1").strip().rstrip("/")
+    key = (cfg.get("api_key") or os.environ.get("DEEPSEEK_API_KEY") or "").strip()
+    model = (cfg.get("model") or os.environ.get("TELG_LLM_MODEL") or "deepseek-chat").strip()
+    lang_label = {"en-zh": "English + Chinese", "ja-zh": "Japanese + Chinese", "other": "other"}.get(c.language, c.language)
+    user = (
+        "## 用户问卷\n"
+        "- 职位/角色：" + (c.role or "—") + "\n"
+        "- 主要练习领域：" + (c.domain or "—") + "\n"
+        "- 语言方向：" + lang_label + "\n"
+        "- 每日练习时长目标：" + (str(c.minutes) + " 分钟" if c.minutes else "—") + "\n"
+        "- 专注方向：" + (c.focus or "—")
+    )
+    if not key:
+        raise HTTPException(400, "LLM API key not configured — configure it in Settings (Apply) first")
+    try:
+        key.encode("ascii")
+    except UnicodeEncodeError:
+        raise HTTPException(400, "api_key contains non-ASCII characters (placeholder?) — enter a real key")
+    try:
+        client = OpenAI(base_url=base, api_key=key, timeout=60)
+        errors = []
+        for attempt in range(3):
+            u = user
+            if errors:
+                u += "\n\n## 校验失败反馈\n你上次输出未通过校验：\n" + "\n".join(errors) + "\n请只修正问题并重新输出完整 JSON。"
+            try:
+                resp = client.chat.completions.create(
+                    model=model, temperature=0.4, max_tokens=1400,
+                    response_format={"type": "json_object"},
+                    messages=[{"role": "system", "content": ONBOARD_SYSTEM_PROMPT}, {"role": "user", "content": u}],
+                )
+                raw = (resp.choices[0].message.content or "").strip()
+                data = json.loads(raw)
+                out = OnboardGenOut.model_validate(data)
+                if not out.roles or not out.scenarios or not out.domains:
+                    raise ValueError("empty roles/scenarios/domains")
+                for d in out.domains:
+                    if not d.id.strip() or not d.name.strip():
+                        raise ValueError("empty domain id/name")
+                try:
+                    us = getattr(resp, "usage", None)
+                    if us:
+                        con = db()
+                        con.execute(
+                            "INSERT INTO llm_usage(provider, model, action, prompt_tokens, completion_tokens, total_tokens)"
+                            " VALUES(?,?,?,?,?,?)",
+                            ((cfg.get("provider") or "openai-compatible"), model, "onboarding-generate",
+                             int(getattr(us, "prompt_tokens", 0) or 0), int(getattr(us, "completion_tokens", 0) or 0),
+                             int(getattr(us, "total_tokens", 0) or 0)),
+                        )
+                        con.commit()
+                        con.close()
+                except Exception:  # noqa: BLE001
+                    pass
+                return out.model_dump()
+            except Exception as e:  # noqa: BLE001
+                errors.append("%s" % e)
+        raise HTTPException(502, "Onboarding generation failed after 3 attempts: " + " | ".join(errors[-2:]))
+    except LLMGenerationError as e:
+        raise HTTPException(502, str(e)) from e
+
+
+
+# ---------- Recommendations (LLM-initialized domain/role/scenario presets) ----------
+
+class RecsGenIn(_BM):
+    role: str = ""
+    domain: str = ""
+    language: str = "en-zh"
+    focus: str = ""
+    role_portrait: str = ""
+    domain_profile: str = ""
+    focus_tone: str = ""
+    llm_config: dict = {}
+
+
+class RecDomainOut(_BM):
+    id: str
+    name: str
+    desc: str = ""
+
+
+class LLMRecsOut(_BM):
+    domains: list[RecDomainOut]
+    roles: list[str]
+    scenarios: list[str]
+
+
+RECOMMEND_SYSTEM_PROMPT = """你是 TELG 听力素材生成器的推荐配置引擎，根据用户的学习档案，为其推荐「领域 / 角色 / 场景」三组选项，作为新建素材弹窗的默认下拉选项。
+
+## 输出契约（硬约束）
+- 只输出合法 JSON 对象：{"domains": [...], "roles": [...], "scenarios": [...]}，禁止任何其他内容。
+- domains：4-6 个与该用户紧密相关的技术领域，第一个必须是用户的主练习领域；每项 {"id": "kebab-case小写英文标识", "name": "英文领域名（如 Semiconductor）", "desc": "一句中文描述"}；id 若与已知内置领域（automotive/semiconductor/energy/ai-software/medical/fintech/aerospace/general）匹配则沿用内置 id，否则用 kebab-case 新 id；desc 不超过 20 字。
+- roles：3-6 个该领域研发一线常见真实岗位（英文岗位名，如 Process Engineer、Yield Engineer），要求真实、专业、可对话。
+- scenarios：3-6 个贴合该用户工作场景的英文练习场景短语（如 Process Review Meeting、Yield Failure RCA），真实可演。
+- 严格贴合用户档案中的角色、领域、专注方向与画像，禁止输出与档案无关的通用内容。
+
+请直接输出 JSON。"""
+
+
+@app.post("/api/v1/config/recommendations/generate")
+def recs_generate(c: RecsGenIn):
+    if not (c.role.strip() or c.domain.strip()):
+        raise HTTPException(400, "role or domain is required")
+    cfg = c.llm_config or {}
+    base = (cfg.get("base_url") or os.environ.get("TELG_LLM_BASE") or "https://api.deepseek.com/v1").strip().rstrip("/")
+    key = (cfg.get("api_key") or os.environ.get("DEEPSEEK_API_KEY") or "").strip()
+    model = (cfg.get("model") or os.environ.get("TELG_LLM_MODEL") or "deepseek-chat").strip()
+    lang_label = {"en-zh": "English + Chinese", "ja-zh": "Japanese + Chinese", "other": "other"}.get(c.language, c.language)
+    user = (
+        "## 学习档案\n"
+        "- 职位/角色：" + (c.role or "—") + "\n"
+        "- 主要练习领域：" + (c.domain or "—") + "\n"
+        "- 语言方向：" + lang_label + "\n"
+        "- 专注方向：" + (c.focus or "—") + "\n"
+        "- 角色画像：" + (c.role_portrait or "—") + "\n"
+        "- 领域档案：" + (c.domain_profile or "—") + "\n"
+        "- 语气建议：" + (c.focus_tone or "—")
+    )
+    if not key:
+        raise HTTPException(400, "LLM API key not configured — configure it in Settings (Apply) first")
+    try:
+        key.encode("ascii")
+    except UnicodeEncodeError:
+        raise HTTPException(400, "api_key contains non-ASCII characters (placeholder?) — enter a real key")
+    try:
+        client = OpenAI(base_url=base, api_key=key, timeout=60)
+        errors = []
+        for attempt in range(3):
+            u = user
+            if errors:
+                u += "\n\n## 校验失败反馈\n你上次输出未通过校验：\n" + "\n".join(errors) + "\n请只修正问题并重新输出完整 JSON。"
+            try:
+                resp = client.chat.completions.create(
+                    model=model, temperature=0.4, max_tokens=900,
+                    response_format={"type": "json_object"},
+                    messages=[{"role": "system", "content": RECOMMEND_SYSTEM_PROMPT}, {"role": "user", "content": u}],
+                )
+                raw = (resp.choices[0].message.content or "").strip()
+                data = json.loads(raw)
+                out = LLMRecsOut.model_validate(data)
+                if not out.roles or not out.scenarios or not out.domains:
+                    raise ValueError("empty roles/scenarios/domains")
+                for d in out.domains:
+                    if not d.id.strip() or not d.name.strip():
+                        raise ValueError("empty domain id/name")
+                try:
+                    us = getattr(resp, "usage", None)
+                    if us:
+                        con = db()
+                        con.execute(
+                            "INSERT INTO llm_usage(provider, model, action, prompt_tokens, completion_tokens, total_tokens)"
+                            " VALUES(?,?,?,?,?,?)",
+                            ((cfg.get("provider") or "openai-compatible"), model, "recs-generate",
+                             int(getattr(us, "prompt_tokens", 0) or 0), int(getattr(us, "completion_tokens", 0) or 0),
+                             int(getattr(us, "total_tokens", 0) or 0)),
+                        )
+                        con.commit()
+                        con.close()
+                except Exception:  # noqa: BLE001
+                    pass
+                return out.model_dump()
+            except Exception as e:  # noqa: BLE001
+                errors.append("%s" % e)
+        raise HTTPException(502, "Recommendation generation failed after 3 attempts: " + " | ".join(errors[-2:]))
+    except LLMGenerationError as e:
+        raise HTTPException(502, str(e)) from e
+
 # --- Static frontend + audio (same origin → no CORS / no file:// fetch issue) ---
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/api/v1/audio", StaticFiles(directory=str(STORAGE_DIR)), name="audio")
@@ -1794,3 +2004,4 @@ if __name__ == "__main__":
         print("       Kill the occupying PID, or change 'port=8000' above.")
         print("=" * 60)
         sys.exit(1)
+

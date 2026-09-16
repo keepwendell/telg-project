@@ -645,6 +645,12 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 #engine-modal .m-panel > .m-section-head .t-11{font-size:12.5px;margin-top:4px}
 .s-sec-title{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--on-variant);padding:24px 0 8px}
 .s-sec-title:first-of-type{padding-top:8px}
+.rec-sec{margin-bottom:14px}
+.rec-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.rec-row .input{flex:1;min-width:0}
+.rec-row[data-g="domains"] .input[data-k="id"]{flex:0 0 120px}
+.rec-row[data-g="domains"] .input[data-k="name"]{flex:0 0 140px}
+.rec-box-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .s-row{display:flex;justify-content:space-between;align-items:center;gap:28px;padding:16px 0;border-bottom:1px solid var(--line)}
 .s-row.s-row-stack{flex-direction:column;align-items:stretch;gap:12px}
 .s-row:last-child{border-bottom:none}
@@ -1516,44 +1522,6 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         </div>
       </div>
 <!-- ===================== BOOKMARKS MODAL ===================== -->
-<!-- ===================== WELCOME / ONBOARDING ===================== -->
-      <div class="modal-overlay hidden" id="welcome-modal">
-        <div class="welcome-card">
-          <div class="welcome-logo">TELG</div>
-          <div class="t-15 bold" id="welcome-title">Technical Listening</div>
-          <div class="t-11 dim" style="margin:6px 0 18px" id="welcome-sub">Real engineering dialogues · sentence-level listening training.</div>
-          <div id="welcome-auth">
-            <div class="flabel" style="margin-bottom:6px">Username</div>
-            <input class="input" id="wl-username" style="width:100%" autocomplete="username"/>
-            <div class="flabel" style="margin:10px 0 6px">Password</div>
-            <input class="input" id="wl-password" type="password" style="width:100%" autocomplete="current-password"/>
-            <div class="flabel" style="margin:10px 0 6px" id="wl-pass2-label">Confirm Password</div>
-            <input class="input" id="wl-pass2" type="password" style="width:100%" autocomplete="new-password"/>
-            <div class="t-10 dim err" id="wl-err" style="min-height:16px;margin-top:6px"></div>
-            <div style="display:flex;gap:8px;margin-top:6px">
-              <button class="btn btn-primary" style="flex:1" id="btn-wl-primary" data-i18n="welcome.create">Create &amp; Start</button>
-            </div>
-            <div style="display:flex;justify-content:center;gap:12px;margin-top:12px">
-              <button class="btn-link" id="btn-wl-switch" data-i18n="welcome.switch">Already have an account? Log in</button>
-            </div>
-            <div style="display:flex;justify-content:center;margin-top:8px">
-              <button class="btn-link dim" id="btn-wl-guest" data-i18n="welcome.guest">Continue as guest</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-overlay hidden" id="onboard-modal">
-        <div class="onboard-card">
-          <div class="onboard-step" id="ob-step-dots"></div>
-          <div class="t-13 bold" id="ob-title">Setup</div>
-          <div class="t-11 dim" id="ob-sub" style="margin:4px 0 12px"></div>
-          <div id="ob-body" class="ob-body-wrap"></div>
-          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
-            <button class="btn btn-ghost hidden" id="ob-back" data-i18n="welcome.back">Back</button>
-            <button class="btn btn-primary" id="ob-next" data-i18n="welcome.next">Next</button>
-          </div>
-        </div>
-      </div>
 <div class="modal-overlay hidden" id="bookmark-modal">
   <div class="modal modal-settings">
     <div class="modal-head">
@@ -1954,6 +1922,11 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <div class="s-sec-title" data-i18n="settings.profile.secDomain">Domain Profiles</div>
         <div id="domain-box">
           <div class="t-11 dim" data-i18n="settings.profile.empty">No domains yet.</div>
+        </div>
+        <div class="s-sec-title" data-i18n="settings.rec.sec">Recommendations</div>
+        <p class="t-10 dim" style="margin:2px 0 8px" data-i18n="settings.rec.sub">LLM-generated from your profile — defaults for Domain / Role / Scenario in New Material. Editable below.</p>
+        <div id="rec-box">
+          <div class="t-11 dim" data-i18n="settings.rec.empty">No recommendations yet — generate from your profile, or add your own.</div>
         </div>
       </div>
       <div class="m-panel" id="mp-usage">
@@ -2649,6 +2622,14 @@ const I18N = {
     'settings.study.total': 'Total', 'settings.study.today': 'Today',
     'settings.study.secGoal': 'Training Goal', 'settings.goal.daily': 'Daily Listening Target', 'settings.goal.hint': 'Minutes of listening per day — tracked in the stats below.',
     'settings.profile.secProfile': 'Learning Profile', 'settings.profile.secDomain': 'Domain Profiles',
+    'settings.rec.sec': 'Recommendations', 'settings.rec.empty': 'No recommendations yet — generate from your profile, or add your own.',
+    'settings.rec.sub': 'LLM-generated from your profile — defaults for Domain / Role / Scenario in New Material. Editable below.',
+    'settings.rec.domains': 'Domains', 'settings.rec.roles': 'Roles', 'settings.rec.scenarios': 'Scenarios',
+    'settings.rec.add': 'Add', 'settings.rec.remove': 'Remove', 'settings.rec.gen': 'Generate with LLM', 'settings.rec.genBusy': 'Generating…',
+    'settings.rec.save': 'Save', 'settings.rec.reset': 'Reset to Default', 'settings.rec.saved': 'Recommendations saved',
+    'settings.rec.cleared': 'Recommendations reset to defaults', 'settings.rec.genFail': 'Recommendation generation failed',
+    'settings.rec.generated': 'Recommendations generated from your profile', 'settings.rec.noKey': 'Configure an LLM key first (Settings · LLM · Apply)',
+    'settings.rec.genAuto': 'Generated recommendations from your profile — edit them anytime in Settings · Study',
     'settings.profile.empty': 'Nothing here yet.', 'settings.profile.emptyTitle': 'Build your learning profile', 'settings.profile.emptyDesc': 'Tell us your role, domain and goals — generation defaults follow automatically.',
     'settings.profile.createBtn': 'Create Profile', 'settings.profile.editBtn': 'Edit', 'settings.profile.regenBtn': 'Re-generate', 'settings.profile.clearBtn': 'Clear',
     'settings.profile.editorTitle': 'Learning Profile', 'settings.profile.editorHint': 'Tell us about your role, domain and goals — AI drafts a profile that drives default generation settings.',
@@ -2849,6 +2830,14 @@ const I18N = {
     'settings.study.total': '累计', 'settings.study.today': '今日',
     'settings.study.secGoal': '训练目标', 'settings.goal.daily': '每日听力目标', 'settings.goal.hint': '每日学习时长目标（分钟），由下方统计跟踪进度。',
     'settings.profile.secProfile': '学习档案', 'settings.profile.secDomain': '领域档案',
+    'settings.rec.sec': '推荐配置', 'settings.rec.empty': '暂无推荐——可从学习档案生成，或手动添加。',
+    'settings.rec.sub': '由 LLM 根据学习档案生成——作为新建素材中领域/角色/场景的默认选项，可在此增删改。',
+    'settings.rec.domains': '领域', 'settings.rec.roles': '角色', 'settings.rec.scenarios': '场景',
+    'settings.rec.add': '添加', 'settings.rec.remove': '删除', 'settings.rec.gen': '由 LLM 生成推荐', 'settings.rec.genBusy': '生成中…',
+    'settings.rec.save': '保存', 'settings.rec.reset': '恢复默认', 'settings.rec.saved': '推荐配置已保存',
+    'settings.rec.cleared': '已恢复默认推荐', 'settings.rec.genFail': '推荐生成失败',
+    'settings.rec.generated': '已根据学习档案生成推荐', 'settings.rec.noKey': '请先在设置 LLM 中配置密钥并应用',
+    'settings.rec.genAuto': '已根据学习档案生成推荐——可在设置·学习页随时增删改',
     'settings.profile.empty': '这里还没有内容。', 'settings.profile.emptyTitle': '建立你的学习档案', 'settings.profile.emptyDesc': '告诉我们你的职位、领域与目标，生成默认值将自动跟随。',
     'settings.profile.createBtn': '建立档案', 'settings.profile.editBtn': '编辑', 'settings.profile.regenBtn': '重新生成', 'settings.profile.clearBtn': '清除',
     'settings.profile.editorTitle': '学习档案', 'settings.profile.editorHint': '告诉我们你的职位、领域与目标，AI 将生成驱动默认生成设置的档案。',
@@ -3592,6 +3581,15 @@ function obFinish() {
   renderProfileBox(); renderToday(); updateEngineBadge();
   closeOnboarding(true);
   showToast(L['welcome.ready']);
+  autoGenRecs();
+}
+function autoGenRecs() {
+  try {
+    const cfg = readStoredCfg() || {};
+    const llm = cfg.llm || {};
+    if (!(llm.apiKey || '').trim() || !(cfg.profile || {}).role) return;
+    genRecs(true);
+  } catch (e) {}
 }
 function obNext() {
   const L = I18N[state.lang];
@@ -3621,9 +3619,12 @@ function refreshAboutAccount() {
 function initGate() {
   state.user = AuthAPI.current();
   refreshAboutAccount();
-  if (!state.user) { showWelcome(); return; }
   const ob = readOnboarding();
-  if (!ob.done) enterOnboarding();
+  if (!state.user || !ob.done) {
+    /* Onboarding (welcome + setup) lives in its own file — same localStorage. */
+    try { location.replace('onboarding.html'); } catch (e) {}
+    return;
+  }
 }
 /* ---------------- LEARNING PROFILE & DOMAIN PROFILES ---------------- */
 const BUILTIN_DOMAINS = [
@@ -3636,6 +3637,75 @@ const BUILTIN_DOMAINS = [
   { id: 'aerospace', name: 'Aerospace', builtin: true, desc: 'Flight control · avionics · airworthiness / 飞控、航电、适航与测试', inject: 'Terms: FCC, DO-178C, actuator, flight envelope…; Scenes: airworthiness review, flight test, integration; Roles: FCS Engineer, Avionics, Test Pilot' },
   { id: 'general', name: 'General Engineering', builtin: true, desc: 'Generic technical discussion / 通用工程与技术沟通', inject: '' }
 ];
+/* Generate-panel options follow the learner profile (domain profiles,
+   profile role, scenario preferences) instead of hard-coded defaults. */
+const DOMAIN_SCENARIOS = {
+  automotive: ['Technical Discussion & Trade-off', 'Root-Cause Failure RCA Meeting', 'Staff Systems Technical Interview'],
+  semiconductor: ['Process Review Meeting', 'Yield Failure RCA', 'Equipment Acceptance & Sign-off'],
+  energy: ['Grid Interconnection Review', 'Battery Testing & Validation', 'O&M Troubleshooting'],
+  'ai-software': ['Architecture & Code Review', 'Incident Response Discussion', 'Technical Interview Loop'],
+  medical: ['Design Validation Meeting', 'Regulatory Compliance Audit', 'Non-Conformance Review'],
+  fintech: ['Risk Review & Go-live', 'Incident & Fraud Analysis', 'Architecture Audit'],
+  aerospace: ['Airworthiness Review', 'Flight Test Debrief', 'Integration Meeting'],
+  general: ['Technical Discussion & Trade-off', 'Root-Cause Analysis', 'Peer Review']
+};
+const SCENARIO_TAG_MAP = { interview: 'Staff Technical Interview', meeting: 'Technical Meeting & Discussion', collab: 'Cross-team Collaboration', supplier: 'Supplier Technical Review', class: 'Technical Class / Tutorial' };
+const FALLBACK_ROLES = ['Vehicle Dynamics Engineer', 'Control Algorithm Architect', 'Embedded Kernel Debugger', 'ISO 26262 Safety Architect'];
+function profileDomains() {
+  try {
+    const s = JSON.parse(localStorage.getItem('telg-settings') || 'null');
+    const ds = s && Array.isArray(s.domains) && s.domains.length ? s.domains : BUILTIN_DOMAINS;
+    return ds.length ? ds : BUILTIN_DOMAINS;
+  } catch (e) { return BUILTIN_DOMAINS; }
+}
+function applyProfileToGenPanel() {
+  const cfg = readStoredCfg() || {};
+  const pf = cfg.profile || {};
+  const recs = recsOrEmpty();
+  /* Domains: recommendations first, then domain profiles */
+  const ds = recs && recs.domains.length ? recs.domains : profileDomains();
+  const wantDomain = (pf.primaryDomain && ds.some(d => d.id === pf.primaryDomain)) ? pf.primaryDomain : (ds[0] || { id: 'general' }).id;
+  $('domain-select').innerHTML = ds.map(d =>
+    '<option value="' + escapeHtml(d.id) + '"' + (d.id === wantDomain ? ' selected' : '') + '>' + escapeHtml(d.name) + '</option>'
+  ).join('');
+  /* Roles: recommendations first, then profile role + fallbacks */
+  const roles = [];
+  if (recs && recs.roles.length) roles.push.apply(roles, recs.roles);
+  else { if (pf.role) roles.push(pf.role); FALLBACK_ROLES.forEach(r => { if (!roles.includes(r)) roles.push(r); }); }
+  $('role-select').innerHTML = roles.map(r => '<option' + (r === (recs ? roles[0] : pf.role) ? ' selected' : '') + '>' + escapeHtml(r) + '</option>').join('');
+  renderScenarioOptions();
+}
+function renderScenarioOptions() {
+  const cfg = readStoredCfg() || {};
+  const pf = cfg.profile || {};
+  const recs = recsOrEmpty();
+  const dom = $('domain-select').value;
+  let opts = [];
+  if (recs && recs.scenarios.length) opts = recs.scenarios.slice();
+  else {
+    const rec = (DOMAIN_SCENARIOS[dom] || DOMAIN_SCENARIOS.general).slice();
+    const prefs = (pf.scenarios || []).map(x => SCENARIO_TAG_MAP[x]).filter(Boolean);
+    prefs.forEach(x => { if (!opts.includes(x)) opts.push(x); });
+    rec.forEach(x => { if (!opts.includes(x)) opts.push(x); });
+  }
+  $('scenario-select').innerHTML = opts.map(o => '<option>' + escapeHtml(o) + '</option>').join('');
+}
+function readRecs() {
+  try { const s = readStoredCfg(); return (s && s.recommendations) || null; } catch (e) { return null; }
+}
+function writeRecs(r) {
+  try {
+    const s = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {};
+    if (r && (r.domains || r.roles || r.scenarios)) s.recommendations = r; else delete s.recommendations;
+    localStorage.setItem('telg-settings', JSON.stringify(s));
+  } catch (e) {}
+}
+function recsOrEmpty() {
+  const r = readRecs();
+  if (!r) return null;
+  const o = { domains: Array.isArray(r.domains) ? r.domains.filter(d => d && d.id && d.name) : [], roles: Array.isArray(r.roles) ? r.roles.filter(x => x && String(x).trim()) : [], scenarios: Array.isArray(r.scenarios) ? r.scenarios.filter(x => x && String(x).trim()) : [] };
+  return (o.domains.length || o.roles.length || o.scenarios.length) ? o : null;
+}
 function readProfile() { const s = readStoredCfg(); return (s && s.profile) || null; }
 function writeProfile(p) {
   try { const s = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; if (p) s.profile = p; else delete s.profile; localStorage.setItem('telg-settings', JSON.stringify(s)); } catch (e) {}
@@ -3761,7 +3831,120 @@ function saveProfile() {
   closeProfileModal();
   renderProfileBox();
   renderGenLlmTag();
+  if (!$('gen-panel').classList.contains('hidden')) applyProfileToGenPanel();
   showToast(I18N[state.lang]['settings.saved']);
+}
+function renderRecsBox() {
+  const box = $('rec-box'); if (!box) return;
+  const L = I18N[state.lang];
+  const recs = readRecs();
+  const d = (recs && recs.domains) ? recs.domains.map(x => ({ id: x.id || '', name: x.name || '', desc: x.desc || '' })) : [];
+  const r = (recs && recs.roles) ? recs.roles.map(String) : [];
+  const sc = (recs && recs.scenarios) ? recs.scenarios.map(String) : [];
+  let h = '';
+  if (recs && recs.generatedAt) {
+    h += '<div class="t-10 dim mono" style="margin-bottom:8px">' + new Date(recs.generatedAt).toLocaleString() + (recs.model ? ' · ' + escapeHtml(recs.model) : '') + '</div>';
+  }
+  h += '<div class="rec-sec"><div class="t-11 bold" style="margin-bottom:6px">' + L['settings.rec.domains'] + '</div>';
+  (d.length ? d : [{}]).forEach((x, i) => {
+    h += '<div class="rec-row" data-g="domains"><input class="input" data-k="id" value="' + escapeHtml(x.id || '') + '" placeholder="id" style="flex:0 0 120px"><input class="input" data-k="name" value="' + escapeHtml(x.name || '') + '" placeholder="Name" style="flex:0 0 140px"><input class="input" data-k="desc" value="' + escapeHtml(x.desc || '') + '" placeholder="Desc"><button class="btn-icon" data-act="rec-del" data-g="domains" data-i="' + i + '" title="' + L['settings.rec.remove'] + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-close"/></svg></button></div>';
+  });
+  h += '<button class="btn btn-ghost btn-sm" data-act="rec-add" data-g="domains">+ ' + L['settings.rec.add'] + '</button></div>';
+  h += '<div class="rec-sec"><div class="t-11 bold" style="margin-bottom:6px">' + L['settings.rec.roles'] + '</div>';
+  (r.length ? r : ['']).forEach((x, i) => {
+    h += '<div class="rec-row" data-g="roles"><input class="input" value="' + escapeHtml(x) + '" placeholder="Role"><button class="btn-icon" data-act="rec-del" data-g="roles" data-i="' + i + '" title="' + L['settings.rec.remove'] + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-close"/></svg></button></div>';
+  });
+  h += '<button class="btn btn-ghost btn-sm" data-act="rec-add" data-g="roles">+ ' + L['settings.rec.add'] + '</button></div>';
+  h += '<div class="rec-sec"><div class="t-11 bold" style="margin-bottom:6px">' + L['settings.rec.scenarios'] + '</div>';
+  (sc.length ? sc : ['']).forEach((x, i) => {
+    h += '<div class="rec-row" data-g="scenarios"><input class="input" value="' + escapeHtml(x) + '" placeholder="Scenario"><button class="btn-icon" data-act="rec-del" data-g="scenarios" data-i="' + i + '" title="' + L['settings.rec.remove'] + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-close"/></svg></button></div>';
+  });
+  h += '<button class="btn btn-ghost btn-sm" data-act="rec-add" data-g="scenarios">+ ' + L['settings.rec.add'] + '</button></div>';
+  h += '<div class="rec-box-actions">' +
+    '<button class="btn btn-sm" id="btn-recs-gen" data-act="rec-gen">' + L['settings.rec.gen'] + '</button>' +
+    '<button class="btn btn-ghost btn-sm" data-act="rec-save">' + L['settings.rec.save'] + '</button>' +
+    '<button class="btn btn-ghost btn-sm" data-act="rec-reset">' + L['settings.rec.reset'] + '</button></div>';
+  box.innerHTML = h;
+}
+function collectRecsFromBox() {
+  const d = [], r = [], sc = [];
+  document.querySelectorAll('#rec-box .rec-row[data-g="domains"]').forEach(row => {
+    const id = (row.querySelector('[data-k="id"]') || {}).value || '';
+    const name = (row.querySelector('[data-k="name"]') || {}).value || '';
+    const desc = (row.querySelector('[data-k="desc"]') || {}).value || '';
+    if (id.trim() && name.trim()) d.push({ id: id.trim(), name: name.trim(), desc: desc.trim() });
+  });
+  document.querySelectorAll('#rec-box .rec-row[data-g="roles"]').forEach(row => {
+    const v = (row.querySelector('input') || {}).value || '';
+    if (v.trim()) r.push(v.trim());
+  });
+  document.querySelectorAll('#rec-box .rec-row[data-g="scenarios"]').forEach(row => {
+    const v = (row.querySelector('input') || {}).value || '';
+    if (v.trim()) sc.push(v.trim());
+  });
+  return { domains: d, roles: r, scenarios: sc };
+}
+function onRecsAction(el) {
+  const L = I18N[state.lang];
+  const act = el.dataset.act;
+  const cur = collectRecsFromBox();
+  if (act === 'rec-add') {
+    if (el.dataset.g === 'domains') cur.domains.push({ id: '', name: '', desc: '' });
+    else if (el.dataset.g === 'roles') cur.roles.push('');
+    else cur.scenarios.push('');
+    const recs = readRecs() || {};
+    writeRecs(Object.assign({}, recs, cur));
+    renderRecsBox(); return;
+  }
+  if (act === 'rec-del') {
+    const g = el.dataset.g, i = +el.dataset.i;
+    if (g === 'domains') cur.domains.splice(i, 1);
+    else if (g === 'roles') cur.roles.splice(i, 1);
+    else cur.scenarios.splice(i, 1);
+    const recs = readRecs() || {};
+    writeRecs(Object.assign({}, recs, cur));
+    renderRecsBox(); return;
+  }
+  if (act === 'rec-save') {
+    const recs = readRecs() || {};
+    writeRecs(Object.assign({}, recs, cur));
+    if (!$('gen-panel').classList.contains('hidden')) applyProfileToGenPanel();
+    renderRecsBox();
+    showToast(L['settings.rec.saved']); return;
+  }
+  if (act === 'rec-reset') {
+    writeRecs(null);
+    renderRecsBox();
+    if (!$('gen-panel').classList.contains('hidden')) applyProfileToGenPanel();
+    showToast(L['settings.rec.cleared']); return;
+  }
+  if (act === 'rec-gen') { genRecs(false); return; }
+}
+async function genRecs(silent) {
+  const L = I18N[state.lang];
+  const cfg = readStoredCfg() || {};
+  const llm = cfg.llm || {};
+  if (!(llm.apiKey || '').trim()) { if (!silent) showToast(L['settings.rec.noKey'], 'warn'); return; }
+  const pf = cfg.profile || {};
+  const btn = $('btn-recs-gen');
+  if (btn && !silent) { btn.disabled = true; btn.textContent = L['settings.rec.genBusy']; }
+  try {
+    const r = await apiFetch('/config/recommendations/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+      role: pf.role || '', domain: pf.primaryDomain || '', language: pf.language || 'en-zh', focus: pf.focus || '',
+      role_portrait: pf.rolePortrait || '', domain_profile: pf.domainProfile || '', focus_tone: pf.focusTone || '',
+      llm_config: buildLLMConfig()
+    }) });
+    writeRecs({ domains: r.domains || [], roles: r.roles || [], scenarios: r.scenarios || [], generatedAt: Date.now(), model: (llm.model || '') });
+    renderRecsBox();
+    if (!$('gen-panel').classList.contains('hidden')) applyProfileToGenPanel();
+    if (!silent) showToast(L['settings.rec.generated']);
+    return true;
+  } catch (e) {
+    if (!silent) showToast(L['settings.rec.genFail'] + ' — ' + e.message, 'error');
+    return false;
+  } finally {
+    if (btn && !silent) { btn.disabled = false; btn.textContent = L['settings.rec.gen']; }
+  }
 }
 function clearProfileForm() {
   $('pf-role').value = ''; $('pf-domain').value = ''; $('pf-focus').value = '';
@@ -4952,9 +5135,7 @@ function exportMD(art) {
 }
 function resetDefaults() {
   $('topic-input').value = 'Tire burst stability control';
-  $('domain-select').selectedIndex = 0;
-  $('role-select').selectedIndex = 0;
-  $('scenario-select').selectedIndex = 0;
+  applyProfileToGenPanel();
   setSeg($('diff-seg'), document.querySelector('#diff-seg [data-level="3"]'));
   setSeg($('len-seg'), document.querySelector('#len-seg [data-length="120"]'));
   setSeg($('depth-seg'), document.querySelector('#depth-seg [data-depth="3"]'));
@@ -5360,6 +5541,7 @@ function renderGenLlmTag() {
 function openGenPanel() {
   $('gen-panel').classList.remove('hidden');
   closeSpeedMenu();
+  applyProfileToGenPanel();
   renderGenLlmTag();
   updateDiff(); updateLen(); updateDepth(); updateBreadth();
   updateGenerateBtn();
@@ -5762,6 +5944,7 @@ function openModal() {
   renderStudy();
   renderProfileBox();
   renderDomainBox();
+  renderRecsBox();
   refreshAboutAccount();
   updateEngineBadge();
   $('cfg-lang').value = state.lang;
@@ -5786,7 +5969,6 @@ function openModal() {
 function closeModal() {
   stopAuditions();
   $('engine-modal').classList.add('hidden');
-  if (state.onboardResume) { state.onboardResume = false; const om = $('onboard-modal'); if (om) { om.classList.remove('hidden'); renderObStep(); } }
 }
 async function testLLM() {
   const btn = $('btn-test-llm'), res = $('llm-test-result');
@@ -6156,16 +6338,11 @@ function onClick(e) {
   if (e.target.closest('#btn-add-domain')) { addCustomDomain(); return; }
   const delDom = e.target.closest('[data-act="del-domain"]');
   if (delDom) { delCustomDomain(delDom.dataset.id); return; }
-  if (e.target.closest('#welcome-modal') && e.target.id === 'welcome-modal') { return; }
-  if (e.target.closest('#btn-wl-primary')) { welcomePrimary(); return; }
-  if (e.target.closest('#btn-wl-switch')) { wlMode = wlMode === 'register' ? 'login' : 'register'; renderWelcome(); return; }
-  if (e.target.closest('#btn-wl-guest')) { welcomeGuest(); return; }
-  if (e.target.closest('#ob-next')) { obNext(); return; }
-  if (e.target.closest('#ob-back')) { obBack(); return; }
-  if (e.target.closest('#ob-test-llm')) { obTestLlm(); return; }
-  if (e.target.closest('#ob-key-eye')) { const k = $('ob-llm-key'); k.type = k.type === 'password' ? 'text' : 'password'; return; }
+  const recEl = e.target.closest('#rec-box [data-act]');
+  if (recEl) { onRecsAction(recEl); return; }
   if (e.target.closest('#ob-skip-llm')) { obIdx = 1; obSub = 0; renderObStep(); return; }
   if (e.target.closest('#ob-gen-profile')) { obGenProfile(); return; }
+  if (e.type === 'change' && e.target.id === 'domain-select') { renderScenarioOptions(); return; }
   if (e.type === 'change' && e.target.id === 'ob-llm-provider') {
     const pr = LLM_PRESETS[$('ob-llm-provider').value];
     if (pr) { $('ob-llm-base').value = pr.base; $('ob-llm-model').value = pr.model; }
@@ -6182,8 +6359,8 @@ function onClick(e) {
     else if (row.dataset.multi) { const arr = obSurvey[q] || []; const i = arr.indexOf(val); if (i >= 0) arr.splice(i, 1); else arr.push(val); obSurvey[q] = arr; obChip.classList.toggle('active'); }
     return;
   }
-  if (e.target.closest('#btn-account-login')) { showWelcome(); return; }
-  if (e.target.closest('#btn-account-logout')) { AuthAPI.logout(); state.user = null; refreshAboutAccount(); $('engine-modal').classList.add('hidden'); showWelcome(); return; }
+  if (e.target.closest('#btn-account-login')) { location.href = 'onboarding.html'; return; }
+  if (e.target.closest('#btn-account-logout')) { AuthAPI.logout(); state.user = null; refreshAboutAccount(); $('engine-modal').classList.add('hidden'); location.href = 'onboarding.html'; return; }
   if (e.target.closest('#profile-modal') && e.target.id === 'profile-modal') { closeProfileModal(); return; }
   if (e.target.closest('#profile-modal .chip[data-sc]')) { const c = e.target.closest('#profile-modal .chip[data-sc]'); c.classList.toggle('active'); return; }
   if (e.target.closest('#pf-lang .seg-item')) { const b = e.target.closest('#pf-lang .seg-item'); document.querySelectorAll('#pf-lang .seg-item').forEach(x => x.classList.remove('active')); b.classList.add('active'); return; }
