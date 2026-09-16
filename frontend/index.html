@@ -509,6 +509,10 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .gen-trigger:active{transform:scale(.985)}
 .gen-trigger .icon{color:var(--on-primary);opacity:.9}
 .synth-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;margin-bottom:12px;background:var(--surface-high);border:1px solid var(--line);border-radius:8px}
+.synth-error{display:flex;flex-direction:column;gap:6px;padding:10px 12px;margin-bottom:12px;background:var(--surface-high);border:1px solid var(--error);border-radius:8px}
+.synth-error-head{display:flex;align-items:center;gap:6px;min-width:0}
+.synth-error-head .t-11{flex:1;min-width:0}
+.synth-error-detail{word-break:break-all;max-height:76px;overflow-y:auto}
 .pb-play.disabled{opacity:.45}
 .btn-block{width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
 .gen-panel{position:fixed;inset:0;z-index:110;display:flex;justify-content:center;align-items:flex-start;padding:9vh 20px 20px}
@@ -805,6 +809,17 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <div id="llm-trace" class="llm-trace hidden"></div>
         </div>
         <div id="transcript-body">
+          <div class="synth-error hidden" id="synth-error">
+            <div class="synth-error-head">
+              <svg class="icon icon-sm" style="color:var(--error)"><use href="#i-close"/></svg>
+              <span class="t-11 bold" id="synth-error-title" style="color:var(--error)"></span>
+              <span class="t-10 dim nowrap" id="synth-error-class"></span>
+            </div>
+            <div class="t-10 dim synth-error-detail" id="synth-error-detail"></div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" id="btn-retry-synth"><svg class="icon icon-sm"><use href="#i-refresh"/></svg><span class="nowrap" data-i18n="err.retry">Retry</span></button>
+            </div>
+          </div>
           <div class="synth-banner hidden" id="synth-banner">
             <div style="display:flex;align-items:center;gap:8px;min-width:0">
               <svg class="icon icon-sm accent"><use href="#i-waves"/></svg>
@@ -1997,7 +2012,7 @@ async function apiFetch(path, opts, timeoutMs) {
   }
   const data = await res.json();
   if (!res.ok) {
-    const msg = data && data.detail ? data.detail : ('HTTP ' + res.status);
+    const msg = data && data.detail ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)) : ('HTTP ' + res.status);
     throw new Error(msg);
   }
   return data;
@@ -2279,6 +2294,12 @@ const I18N = {
     'settings.tts.providerhint': 'edge-tts: no key · Piper: offline · CosyVoice: GPU.',
     'settings.tts.ok': 'Voice OK',
     'settings.test.err': 'Failed',
+    'err.tts.timeout': 'TTS connection timeout — the TTS service is unreachable. Check network, proxy or firewall, then retry.',
+    'err.tts.unreachable': 'TTS service unreachable — check network, proxy or firewall, then retry.',
+    'err.tts.auth': 'TTS service rejected the request (authentication / token).',
+    'err.tts.other': 'TTS synthesis failed.',
+    'err.audio': 'Audio file unavailable — re-synthesize to restore playback.',
+    'err.retry': 'Retry',
     'tts.voice': 'Voice', 'tts.setVoice': 'Set Voice & Synthesize',
     'tts.presetDesc': 'Quick-select a matching two-voice combination.',
     'tts.speakerADesc': 'Voice used for the first speaker.',
@@ -2429,6 +2450,12 @@ const I18N = {
     'settings.tts.providerhint': 'edge-tts 免 Key · Piper 本地 · CosyVoice GPU。',
     'settings.tts.ok': '音色可用',
     'settings.test.err': '失败',
+    'err.tts.timeout': 'TTS 连接超时——TTS 服务不可达。请检查网络、代理或防火墙后重试。',
+    'err.tts.unreachable': 'TTS 服务不可达——请检查网络、代理或防火墙后重试。',
+    'err.tts.auth': 'TTS 服务拒绝了请求（鉴权 / 令牌问题）。',
+    'err.tts.other': 'TTS 合成失败。',
+    'err.audio': '音频文件不可用——请重新合成以恢复播放。',
+    'err.retry': '重试',
     'tts.voice': '音色', 'tts.setVoice': '设置音色并合成',
     'tts.presetDesc': '快速选择匹配的双人音色组合。',
     'tts.speakerADesc': '第一位说话人使用的音色。',
@@ -2670,8 +2697,8 @@ async function auditionRole(btn) {
         aud.onended = () => btn.classList.remove('played');
         aud.play().then(() => btn.classList.add('played')).catch(() => {});
       }
-    } else { res.className = 'test-output err'; res.textContent = (r.error || I18N[state.lang]['settings.test.err']); }
-  } catch (e) { res.className = 'test-output err'; res.textContent = e.message; }
+    } else { res.className = 'test-output err'; res.textContent = ttsFriendlyError(r.error_class, r.error); }
+  } catch (e) { res.className = 'test-output err'; res.textContent = ttsFriendlyError('other', e.message); }
   btn.classList.remove('loading');
 }
 function toggleTheme() {
@@ -3422,8 +3449,8 @@ async function auditionAdjustRole(btn) {
         aud.onended = () => btn.classList.remove('played');
         aud.play().then(() => btn.classList.add('played')).catch(() => {});
       }
-    } else { res.className = 'test-output err'; res.textContent = (r.error || I18N[state.lang]['settings.test.err']); }
-  } catch (e) { res.className = 'test-output err'; res.textContent = e.message; }
+    } else { res.className = 'test-output err'; res.textContent = ttsFriendlyError(r.error_class, r.error); }
+  } catch (e) { res.className = 'test-output err'; res.textContent = ttsFriendlyError('other', e.message); }
   btn.classList.remove('loading');
 }
 function applyTTS() {
@@ -3471,6 +3498,7 @@ function synthesizeAudio() {
       const r = await API.synthesize(art.id, ttsCfg);
       if (r.audio_url) art.meta.audio_url = r.audio_url;
       if (r.total_duration_ms) art.meta.total_duration_ms = r.total_duration_ms;
+      hideSynthError();
       steps.forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
       art.meta.generated = true;           /* synthesis implies a generation pipeline */
       art.meta.audioReady = true;
@@ -3495,7 +3523,7 @@ function synthesizeAudio() {
       $('gen-progress-box').classList.add('hidden');
       $('transcript-body').classList.remove('hidden');
       renderMaterial();
-      showToast('Synthesis failed: ' + err.message);
+      showSynthError(err);
     }
   })();
 }
@@ -3574,6 +3602,7 @@ function toggleAdvanced() {
 function playArtifact(art) {
   state.current = art;
   state.time = 0;
+  hideSynthError();   /* a new material must not keep the previous failure banner */
   pause();
   renderMaterial();
 }
@@ -4193,6 +4222,30 @@ function saveModal() {
   closeModal();
 }
 let toastTimer = null;
+/* ---------- TTS failure handling: friendly reason + retry ---------- */
+function ttsFriendlyError(cls, raw) {
+  const L = I18N[state.lang];
+  const map = { timeout: L['err.tts.timeout'], unreachable: L['err.tts.unreachable'], auth: L['err.tts.auth'], other: L['err.tts.other'], audio: L['err.audio'] };
+  const head = map[cls] || map.other;
+  const detail = raw ? String(raw).replace(/\s+/g, ' ').slice(0, 240) : '';
+  return detail ? head + ' — ' + detail : head;
+}
+function showSynthError(err) {
+  const box = $('synth-error');
+  if (!box) { showToast('Synthesis failed: ' + (err && err.message || err)); return; }
+  const msg = err && err.message || String(err);
+  let cls = 'other', raw = msg;
+  const m = msg.match(/^TTS synthesis failed \[(\w+)\]: ([\s\S]*)$/);
+  if (m) { cls = m[1]; raw = m[2]; }
+  else if (msg.indexOf('Audio file unavailable') >= 0) cls = 'audio';
+  else if (msg.indexOf('Cannot reach backend') >= 0 || /Failed to fetch|NetworkError|ERR_/.test(msg)) cls = 'unreachable';
+  const L = I18N[state.lang];
+  $('synth-error-title').textContent = (L['err.tts.' + cls] || L['err.' + cls] || L['err.tts.other']);
+  $('synth-error-class').textContent = '[' + cls + ']';
+  $('synth-error-detail').textContent = String(raw).replace(/\s+/g, ' ').slice(0, 300);
+  box.classList.remove('hidden');
+}
+function hideSynthError() { const b = $('synth-error'); if (b) b.classList.add('hidden'); }
 function showToast(msg) {
   $('toast-msg').textContent = msg;
   const t = $('toast');
@@ -4253,6 +4306,7 @@ function onClick(e) {
   if (e.target.closest('#btn-refine')) { openRefineModal(); return; }
   if (e.target.closest('#btn-voice') || e.target.closest('#btn-edit-audio')) { openTTSModal(); return; }
   if (e.target.closest('#btn-synth')) { openTTSModal(); return; }
+  if (e.target.closest('#btn-retry-synth')) { hideSynthError(); synthesizeAudio(); return; }
   if (e.target.closest('#btn-generate')) { runGenerate(); return; }
   if (e.target.closest('#btn-reset')) { resetDefaults(); return; }
   if (e.target.closest('#toggle-advanced')) { toggleAdvanced(); return; }
@@ -4430,6 +4484,15 @@ function onKey(e) {
 
 /* ---------------- INIT ---------------- */
 function init() {
+  const pbAudio = document.getElementById('pb-audio');
+  if (pbAudio) {
+    pbAudio.addEventListener('error', () => {
+      if (state.playing) {
+        state.playing = false; setPlayIcon(false);
+        showSynthError(new Error('Audio file unavailable (missing or corrupted) — re-synthesize to restore playback.'));
+      }
+    });
+  }
   const extra = document.createElement('style');
   extra.textContent = '.preset-tag.active-filter{background:var(--surface-high);color:var(--on-surface);border:1px solid var(--line-strong)}' +
     '.btn.on{background:var(--primary);color:var(--on-primary);border-color:transparent}' +

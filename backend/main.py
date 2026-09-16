@@ -17,6 +17,7 @@ Run:  uvicorn main:app --reload --port 8000   (from this directory)
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
@@ -957,6 +958,22 @@ _SHORT_PREFIX = {"GuyNeural": "en-US", "JennyNeural": "en-US", "ChristopherNeura
                  "NatashaNeural": "en-AU", "WilliamNeural": "en-AU"}
 
 
+def tts_error_class(e: Exception) -> str:
+    """Classify an edge-tts failure so the frontend can show a friendly reason
+    instead of a raw exception dump. Returns one of: timeout / unreachable /
+    auth / other."""
+    s = str(e).lower()
+    if any(k in s for k in ("connection timeout", "timed out", "timeout")):
+        return "timeout"
+    if any(k in s for k in ("failed to connect", "cannot connect", "connect call failed",
+                            "getaddrinfo", "name or service not known", "clientconnectorerror",
+                            "network is unreachable", "unreachable", "connection refused")):
+        return "unreachable"
+    if any(k in s for k in ("unauthorized", "forbidden", "token", "401", "403", "access denied")):
+        return "auth"
+    return "other"
+
+
 def normalize_voice(v: str) -> str:
     """Map legacy short names / unverified voices to a working edge-tts voice."""
     v = (v or "").strip()
@@ -1062,7 +1079,7 @@ async def synthesize(mid: str, body: SynthIn | None = None):
             voice = vs[i % len(vs)]
             mp3_path = STORAGE_DIR / ("%s-seg-%d.mp3" % (mid, i))
             com = edge_tts.Communicate(text, voice=voice, rate=rate_arg)
-            await com.save(str(mp3_path))
+            await asyncio.wait_for(com.save(str(mp3_path)), timeout=45)
             # normalize to 24k mono WAV so duration is sample-exact and the
             # merge pass sees one consistent decoded format
             wav_path = STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i))
@@ -1082,7 +1099,7 @@ async def synthesize(mid: str, body: SynthIn | None = None):
             (STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i))).unlink(missing_ok=True)
     except Exception as e:  # noqa: BLE001
         conn.close()
-        raise HTTPException(502, "TTS synthesis failed: %s" % e)
+        raise HTTPException(502, "TTS synthesis failed [%s]: %s" % (tts_error_class(e), e))
     for seq, st, en in times:
         conn.execute(
             "UPDATE dialogue_segments SET start_ms=?, end_ms=? "
@@ -1379,7 +1396,7 @@ async def test_tts(c: TestTTSIn):
         com = edge_tts.Communicate(text, voice=voice, rate="%+d%%" % int((rate - 1.0) * 100))
         await com.save(str(out))
     except Exception as e:  # noqa: BLE001
-        return {"ok": False, "error": str(e)[:300]}
+        return {"ok": False, "error_class": tts_error_class(e), "error": str(e)[:300]}
     return {"ok": True, "audio_url": "/api/v1/audio/" + out.name, "voice": voice}
 
 
