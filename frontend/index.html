@@ -389,6 +389,7 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .btn-rename{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;background:none;color:var(--outline);cursor:pointer;border-radius:5px;transition:color .12s var(--ease),background .12s var(--ease)}
 .btn-rename:hover{color:var(--on-surface);background:var(--surface-high)}
 .btn-rename .icon{width:14px;height:14px}
+.btn-rename:disabled{opacity:.4;cursor:default;pointer-events:none}
 .title-edit{font-family:var(--font-body);font-size:18px;font-weight:600;letter-spacing:-0.015em;background:var(--surface-low);color:var(--on-surface);border:1px solid var(--primary-dim);border-radius:6px;padding:2px 8px;width:min(420px,60vw);outline:none}
 .material-meta{font-size:12px;color:var(--on-variant);margin-top:3px}
 .material-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
@@ -528,6 +529,7 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .synth-error-head .t-11{flex:1;min-width:0}
 .synth-error-detail{word-break:break-all;max-height:76px;overflow-y:auto}
 .pb-play.disabled{opacity:.45}
+.pb-controls button:disabled,.trow-actions button:disabled,.material-actions button:disabled,.zh-toggle.disabled,.seg-item.disabled{opacity:.4;cursor:default;pointer-events:none}
 .btn-block{width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
 .gen-panel{position:fixed;inset:0;z-index:110;display:flex;justify-content:center;align-items:flex-start;padding:9vh 20px 20px}
 .gen-panel.hidden{display:none}
@@ -754,7 +756,6 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         </div>
         <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
         <div style="display:flex;justify-content:space-between;margin-top:8px" class="t-10 faint">
-          <span class="today-acc">Accuracy —</span>
           <span class="today-speed">Speed 1.0x</span>
         </div>
       </div>
@@ -1984,7 +1985,7 @@ const MOCK_MATERIALS = [
     difficulty: 'Level 3', length: 'medium',
     llm_provider: 'DeepSeek-V3', tts_provider: 'edge-tts',
     voice: 'en-US-GuyNeural + en-US-JennyNeural',
-    audio_url: '/mock/audio/m1.wav', total_duration_ms: 65000,
+    audio_url: '/mock/audio/m1.wav', total_duration_ms: 65000, audioReady: false,
     tag: 'ESC / VDC', filter: 'Automotive'
   },
   background: {
@@ -2041,7 +2042,7 @@ const MOCK_MATERIALS = [
     difficulty: 'Level 2', length: 'short',
     llm_provider: 'DeepSeek-V3', tts_provider: 'edge-tts',
     voice: 'en-US-GuyNeural + en-US-JennyNeural',
-    audio_url: '/mock/audio/m2.wav', total_duration_ms: 60000,
+    audio_url: '/mock/audio/m2.wav', total_duration_ms: 60000, audioReady: false,
     tag: 'CAN / RTOS', filter: 'Software'
   },
   background: {
@@ -2088,7 +2089,7 @@ const MOCK_MATERIALS = [
     difficulty: 'Level 4', length: 'long',
     llm_provider: 'DeepSeek-V3', tts_provider: 'edge-tts',
     voice: 'en-US-GuyNeural + en-US-JennyNeural',
-    audio_url: '/mock/audio/m3.wav', total_duration_ms: 75000,
+    audio_url: '/mock/audio/m3.wav', total_duration_ms: 75000, audioReady: false,
     tag: 'TV / AWD', filter: 'Drivetrain'
   },
   background: {
@@ -3052,10 +3053,9 @@ function renderToday() {
   const w = document.querySelector('.widget');
   if (!w) return;
   const s = state.stats;
-  const t = w.querySelector('.today-time'), a = w.querySelector('.today-acc'), sp = w.querySelector('.today-speed'), f = w.querySelector('.progress-fill');
+  const t = w.querySelector('.today-time'), sp = w.querySelector('.today-speed'), f = w.querySelector('.progress-fill');
   const mins = Math.floor(s.playSec / 60);
   if (t) t.textContent = mins + 'm / ' + state.goalMin + 'm';
-  if (a) a.textContent = 'Accuracy ' + (s.quizTotal ? (Math.round(s.quizCorrect / s.quizTotal * 1000) / 10) + '%' : '—');
   const rate = CONFIG.speeds[state.speedIdx];
   if (sp) sp.textContent = 'Speed ' + (rate === 1 ? '1.0x' : rate + 'x');
   if (f) f.style.width = Math.min(100, s.playSec / (state.goalMin * 60) * 100) + '%';
@@ -3087,6 +3087,10 @@ function addBookmark(idx) {
   const art = currentArtifact();
   if (!art || !art.dialogue[idx]) return;
   const s = art.dialogue[idx];
+  if (s.start_ms == null || Number.isNaN(Number(s.start_ms))) {
+    showToast('Synthesize audio first — bookmarks need real timestamps');
+    return;
+  }
   const bm = { mid: art.id, title: art.meta.title, idx: idx, speaker: s.speaker, text: s.text_en, time: s.start_ms, ts: Date.now() };
   const dup = state.bookmarks.find(x => x.mid === bm.mid && x.idx === bm.idx);
   if (dup) { showToast(I18N[state.lang]['bm.exists']); return; }
@@ -3426,6 +3430,7 @@ function renderPlaylists() {
 /* ---------------- RENDER: shared artifact blocks ---------------- */
 function transcriptHTML(art) {
   const fs = CONFIG.fontSizes[state.fontIdx];
+  const playable = isPlayable(art);
   return '<div class="transcript">' + art.dialogue.map((s, i) => {
     const c = i % 2 === 0 ? 'var(--primary)' : 'var(--secondary)';
     const hasTs = s.start_ms != null && !Number.isNaN(Number(s.start_ms));
@@ -3440,8 +3445,8 @@ function transcriptHTML(art) {
         '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0">' +
           (hasTs ? '<span class="trow-time">' + fmt(s.start_ms) + ' – ' + fmt(s.end_ms) + '</span>' : '') +
           '<span class="trow-actions">' +
-            '<button data-act="sloop" title="Loop this sentence"><svg class="icon icon-sm"><use href="#i-repeat"/></svg></button>' +
-            '<button data-act="bookmark" title="Bookmark phrase"><svg class="icon icon-sm"><use href="#i-bookmark"/></svg></button>' +
+            '<button data-act="sloop" ' + (playable ? '' : 'disabled ') + 'title="Loop this sentence"><svg class="icon icon-sm"><use href="#i-repeat"/></svg></button>' +
+            '<button data-act="bookmark" ' + (playable ? '' : 'disabled ') + 'title="Bookmark phrase"><svg class="icon icon-sm"><use href="#i-bookmark"/></svg></button>' +
           '</span>' +
         '</div>' +
       '</div>' +
@@ -3488,8 +3493,20 @@ function groundingHTML(art) {
 }
 
 /* ---------------- RENDER: player material ---------------- */
+/* Material-header actions that need at least one material loaded. Playback
+   controls are handled separately in renderPlayerBar (audioReady gate). */
+function setActionsDisabled(off) {
+  ['btn-rename','btn-voice','btn-add-pl','btn-md-export','btn-zh-toggle'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.disabled = off; el.classList.toggle('disabled', off); }
+  });
+  document.querySelectorAll('.material-actions .seg-item[data-mode]').forEach(b => {
+    b.disabled = off; b.classList.toggle('disabled', off);
+  });
+}
 function renderMaterial() {
   const art = currentArtifact();
+  const tabbar = document.querySelector('.tabbar');
   if (!art) {
     const empty = I18N[state.lang]['lib.empty'] || 'No materials yet';
     $('m-title').textContent = empty;
@@ -3498,8 +3515,12 @@ function renderMaterial() {
     $('synth-banner').classList.add('hidden');
     ['tab-vocab-count', 'tab-quiz-count'].forEach(id => { const el = $(id); if (el) el.textContent = ''; });
     const pg = $('panel-grounding'); if (pg) pg.innerHTML = '';
+    if (tabbar) tabbar.style.display = 'none';
+    setActionsDisabled(true);
     return;
   }
+  if (tabbar) tabbar.style.display = '';
+  setActionsDisabled(false);
   const meta = art.meta;
   $('m-title').textContent = meta.title;
   $('m-tag').textContent = meta.tag || '';
@@ -3510,7 +3531,6 @@ function renderMaterial() {
   $('tab-quiz-count').textContent = '(' + art.listening_questions.length + ')';
   $('transcript-list').innerHTML = transcriptHTML(art);
   setSynthBanner();
-  $('btn-synth').disabled = !!state.synthesizing;
   $('panel-grounding').innerHTML = groundingHTML(art);
   $('panel-vocab').innerHTML = '<div class="vocab-grid" style="grid-template-columns:1fr">' + vocabHTML(art) + '</div>';
   $('panel-questions').innerHTML = questionsHTML(art);
@@ -3542,6 +3562,7 @@ function syncLoopUI() {
   if (b) b.classList.toggle('on', state.loop);
 }
 function toggleLoop() {
+  if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; }
   state.loop = !state.loop;
   syncLoopUI();
   if (state.loop) {
@@ -3628,6 +3649,13 @@ function setSynthBanner() {
   $('btn-synth').classList.toggle('hidden', !corpusState);
   $('btn-edit-audio').classList.toggle('hidden', corpusState);
   $('btn-publish-banner').classList.toggle('hidden', corpusState);
+  /* while a generation or synthesis task is running, every action in the
+     banner must be disabled — no concurrent edits during the pipeline */
+  const busy = state.synthesizing || state.generating;
+  ['btn-refine','btn-synth','btn-edit-audio','btn-publish-banner'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.classList.contains('hidden')) el.disabled = busy;
+  });
 }
 function genPaint(steps, i) {
   steps.forEach((s, j) => {
@@ -3646,11 +3674,13 @@ function setGenSteps(mode) {
   document.querySelectorAll('#gen-progress-box .gen-step-label').forEach((el, i) => { if (labels[i]) el.textContent = labels[i]; });
 }
 function runGenerate(params, replaceId) {
-  if (state.generating) return;
+  if (state.generating || state.synthesizing) return;
   params = params || collectParams();
+  if (!params.topic || !String(params.topic).trim()) { showToast('Please enter a topic first'); return; }
   closeGenPanel();
   closeRefineModal();
   state.generating = true;
+  setSynthBanner();   /* disable every banner action while the pipeline runs */
   $('gen-progress-box').classList.remove('hidden');
   $('transcript-body').classList.add('hidden');
   setPhases(0, 0);
@@ -3769,6 +3799,8 @@ function updateRefineToneLabel() {
 }
 let adjustPanel = 'text';
 function openAdjustModal(tab) {
+  const art = state.current;
+  if (!art) { showToast('No material selected'); return; }
   if (state.playing) pause();          /* opening an edit modal suspends playback */
   adjustPanel = tab === 'voice' ? 'voice' : 'text';
   const lock = state.current;
@@ -3779,7 +3811,6 @@ function openAdjustModal(tab) {
   const L = I18N[state.lang];
   $('adjust-title').textContent = L[adjustPanel === 'voice' ? 'adjust.titleVoice' : 'adjust.titleCorpus'];
   $('adjust-sub').textContent = L[adjustPanel === 'voice' ? 'adjust.subVoice' : 'adjust.subCorpus'];
-  const art = state.current;
   const ready = art && art.meta.audioReady === false;
   $('btn-adjust-apply').textContent = L[adjustPanel === 'voice' ? (ready ? 'tts.convert' : 'tts.reconvert') : 'refine.apply'];
   const st = $('tts-status');
@@ -3810,6 +3841,8 @@ function openRefineModal() {
 }
 function refineGenerate() {
   const art = currentArtifact();
+  if (!art) return;
+  if (state.synthesizing) { showToast('Audio synthesis in progress — wait for it to finish'); return; }
   const params = paramsFromArt(art);
   params.difficulty = +document.querySelector('#refine-diff .seg-item.active').dataset.level;
   params.length = document.querySelector('#refine-len .seg-item.active').dataset.length;
@@ -3858,6 +3891,7 @@ function splitVoice(voice) {
 }
 function openTTSModal() {
   const art = currentArtifact();
+  if (!art) { showToast('No material selected'); return; }
   $('tts-material-title').textContent = art.meta.title;
   let st = {};
   try { st = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; } catch (e) {}
@@ -3931,6 +3965,8 @@ async function auditionAdjustRole(btn) {
 }
 function applyTTS() {
   const art = currentArtifact();
+  if (!art) return;
+  if (state.synthesizing) { showToast('Audio synthesis in progress — wait for it to finish'); return; }
   const roles = currentAdjustVoiceRoles();
   const voices = roles.map(r => r.voice).filter(Boolean);
   const prov = adjTTSProvider();
@@ -3996,22 +4032,36 @@ function synthesizeAudio() {
       $('gen-progress-box').classList.add('hidden');
       $('transcript-body').classList.remove('hidden');
       state.synthesizing = false;
-      renderMaterial();
-      state.time = 0;
-      /* force the <audio> element to drop its cached source: the file at the
-         same URL was just replaced by re-synthesis, otherwise play() would
-         reuse the stale buffer and the highlight/timeline would drift */
-      const pb = document.getElementById('pb-audio');
-      if (pb) { pb.dataset.src = ''; pb.removeAttribute('src'); pb.load(); }
-      play();
-      syncHighlight();
-      showToast('Audio ready — playing from sentence 1');
+      const isCurrent = state.current && state.current.id === art.id;
+      if (isCurrent) {
+        renderMaterial();
+        state.time = 0;
+        /* force the <audio> element to drop its cached source: the file at the
+           same URL was just replaced by re-synthesis, otherwise play() would
+           reuse the stale buffer and the highlight/timeline would drift */
+        const pb = document.getElementById('pb-audio');
+        if (pb) { pb.dataset.src = ''; pb.removeAttribute('src'); pb.load(); }
+        play();
+        syncHighlight();
+        showToast('Audio ready — playing from sentence 1');
+      } else {
+        /* the user switched to another material while this one was being
+           synthesized — only refresh the library, never touch the current UI */
+        renderLibrary();
+        showToast('Audio ready — ' + art.meta.title);
+      }
     } catch (err) {
       state.synthesizing = false;
       $('gen-progress-box').classList.add('hidden');
       $('transcript-body').classList.remove('hidden');
-      renderMaterial();
-      showSynthError(err);
+      const isCurrent = state.current && state.current.id === art.id;
+      if (isCurrent) {
+        renderMaterial();
+        showSynthError(err);
+      } else {
+        renderLibrary();
+        showToast('Synthesis failed for ' + (art.meta.title || art.id) + ' — ' + (err && err.message || err));
+      }
     }
   })();
 }
@@ -4087,6 +4137,12 @@ function toggleAdvanced() {
 }
 
 /* ---------------- PLAYER ENGINE ---------------- */
+/* A material is playable only when synthesis finished AND an audio file exists.
+   Missing audioReady (e.g. legacy seed material) must NOT be treated as playable. */
+function isPlayable(art) {
+  return !!(art && art.meta && art.meta.audioReady === true && art.meta.audio_url);
+}
+function toastNeedSynth() { showToast('Synthesize audio first — click Set Voice & Synthesize'); }
 function playArtifact(art) {
   state.current = art;
   state.time = 0;
@@ -4179,12 +4235,19 @@ function setPlayIcon(playing) {
     const art = currentArtifact();
     state.time = art.meta.total_duration_ms || 0;
     pause();
+    renderPlayerBar();   /* reset the play icon and progress to the end state */
     /* playlist queue: auto-advance to the next material in the active playlist */
     if (state.queuePlay && state.activePlaylist) {
       const pl = state.playlists.find(x => x.id === state.activePlaylist);
       if (pl && pl.materialIds.length > 1) {
         const i = pl.materialIds.indexOf(art.id);
-        const nextId = pl.materialIds[(i + 1) % pl.materialIds.length];
+        /* skip materials that are not synthesized yet — only playable ones */
+        let nextId = null;
+        for (let step = 1; step <= pl.materialIds.length; step++) {
+          const cand = pl.materialIds[(i + step) % pl.materialIds.length];
+          const m = state.library.find(x => x.id === cand);
+          if (m && isPlayable(m)) { nextId = cand; break; }
+        }
         if (nextId && nextId !== art.id) {
           const next = state.library.find(m => m.id === nextId);
           const go = (m) => { playArtifact(m); play(); };
@@ -4197,7 +4260,7 @@ function setPlayIcon(playing) {
 })();
 function play() {
   const art = currentArtifact();
-  if (art.meta.audioReady === false) { showToast('Audio not synthesized yet — click Synthesize Audio'); return; }
+  if (!art || art.meta.audioReady !== true) { showToast('Audio not synthesized yet — click Synthesize Audio'); return; }
   if (state.time >= art.meta.total_duration_ms) state.time = 0;
   state.playing = true;
   setPlayIcon(true);
@@ -4269,12 +4332,16 @@ function syncHighlight() {
 }
 function renderPlayerBar() {
   const art = state.current;
+  const ctrl = ['btn-pb-play','btn-pb-prev','btn-pb-back10','btn-pb-fwd10','btn-pb-next','btn-pb-bookmark','btn-pb-loop','btn-pb-subs'];
+  const setCtrl = disabled => ctrl.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.disabled = disabled; el.classList.toggle('disabled', disabled); }
+  });
   if (!art) {
     $('pb-title').textContent = '—'; $('pb-meta').textContent = '';
     $('pb-current').textContent = '00:00'; $('pb-total').textContent = '00:00';
     $('pb-fill').style.width = '0%'; $('pb-thumb').style.left = '0%';
-    $('btn-pb-play').classList.add('disabled');
-    $('btn-pb-subs').disabled = true;
+    setCtrl(true);
     return;
   }
   const total = art.meta.total_duration_ms;
@@ -4289,8 +4356,13 @@ function renderPlayerBar() {
   $('pb-speed-label').textContent = sp === 1 ? '1.0x' : (sp + 'x');
   $('pb-back-num').textContent = state.seekStep;
   $('pb-fwd-num').textContent = state.seekStep;
-  $('btn-pb-play').classList.toggle('disabled', art.meta.audioReady === false);
-  $('btn-pb-subs').disabled = art.meta.audioReady === false;
+  const playable = art.meta.audioReady === true;
+  const ctrl2 = ['btn-pb-play','btn-pb-prev','btn-pb-back10','btn-pb-fwd10','btn-pb-next','btn-pb-bookmark','btn-pb-loop'];
+  ctrl2.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.disabled = !playable; el.classList.toggle('disabled', !playable); }
+  });
+  $('btn-pb-subs').disabled = !playable;
   const q = $('btn-pb-queue');
   if (q) {
     q.disabled = !state.activePlaylist;
@@ -4401,9 +4473,16 @@ function openGenPanel() {
   $('gen-panel').classList.remove('hidden');
   closeSpeedMenu();
   updateDiff(); updateLen(); updateDepth(); updateBreadth();
+  updateGenerateBtn();
   const input = $('topic-input');
   input.focus();
   input.select();
+}
+function updateGenerateBtn() {
+  const b = $('btn-generate');
+  if (!b) return;
+  const v = ($('topic-input').value || '').trim();
+  b.disabled = !v;
 }
 function closeGenPanel() { $('gen-panel').classList.add('hidden'); }
 let usageGran = 'week';
@@ -5049,7 +5128,7 @@ function onClick(e) {
   if (e.target.closest('#btn-reset')) { resetDefaults(); return; }
   if (e.target.closest('#toggle-advanced')) { toggleAdvanced(); return; }
   const preset = e.target.closest('.preset-tag[data-topic]');
-  if (preset) { $('topic-input').value = preset.dataset.topic; $('topic-input').focus(); return; }
+  if (preset) { $('topic-input').value = preset.dataset.topic; updateGenerateBtn(); $('topic-input').focus(); return; }
   const diffItem = e.target.closest('#diff-seg .seg-item');
   if (diffItem) { setSeg($('diff-seg'), diffItem); updateDiff(); return; }
   const lenItem = e.target.closest('#len-seg .seg-item');
@@ -5139,12 +5218,12 @@ function onClick(e) {
   const filter = e.target.closest('[data-filter]');
   if (filter) { toggleFilter(filter.dataset.filter, filter); return; }
   if (e.target.closest('#btn-pb-play')) { togglePlay(); return; }
-  if (e.target.closest('#btn-pb-prev')) { prevSentence(); return; }
-  if (e.target.closest('#btn-pb-next')) { nextSentence(); return; }
-  if (e.target.closest('#btn-pb-back10')) { seek(state.time - state.seekStep * 1000, true); return; }
-  if (e.target.closest('#btn-pb-fwd10')) { seek(state.time + state.seekStep * 1000, true); return; }
+  if (e.target.closest('#btn-pb-prev')) { if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; } prevSentence(); return; }
+  if (e.target.closest('#btn-pb-next')) { if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; } nextSentence(); return; }
+  if (e.target.closest('#btn-pb-back10')) { if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; } seek(state.time - state.seekStep * 1000, true); return; }
+  if (e.target.closest('#btn-pb-fwd10')) { if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; } seek(state.time + state.seekStep * 1000, true); return; }
   if (e.target.closest('#btn-pb-loop')) { toggleLoop(); return; }
-  if (e.target.closest('#btn-pb-bookmark')) { openBookmarkModal(); return; }
+  if (e.target.closest('#btn-pb-bookmark')) { if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; } openBookmarkModal(); return; }
   if (e.target.closest('#btn-pb-queue')) { toggleQueuePlay(); return; }
   const spItem = e.target.closest('#speed-menu [data-speed]');
   if (spItem) { setSpeed(parseFloat(spItem.dataset.speed)); return; }
@@ -5162,6 +5241,7 @@ function onClick(e) {
   if (act) {
     const row = act.closest('.trow'), idx = +row.dataset.idx;
     if (act.dataset.act === 'sloop') {
+      if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; }
       /* enable single-sentence loop and jump to that sentence */
       state.loop = true;
       syncLoopUI();
@@ -5169,11 +5249,13 @@ function onClick(e) {
       return;
     }
     if (act.dataset.act === 'bookmark') { addBookmark(idx); return; }
+    if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; }
     seekSentence(idx, true);
     return;
   }
   const row = e.target.closest('.trow');
   if (row) {
+    if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; }
     seekSentence(+row.dataset.idx, true);
     return;
   }
@@ -5227,9 +5309,12 @@ function onKey(e) {
   }
   if (typing || !$('engine-modal').classList.contains('hidden')) return;
   if (e.key === ' ') { e.preventDefault(); togglePlay(); }
-  else if (e.key.toLowerCase() === 'j') { prevSentence(); }
-  else if (e.key.toLowerCase() === 'k') { nextSentence(); }
-  else if (e.key.toLowerCase() === 'r') { const i = currentSegIndex(); if (i >= 0) seekSentence(i, true); }
+  else if (e.key.toLowerCase() === 'j' || e.key.toLowerCase() === 'k' || e.key.toLowerCase() === 'r') {
+    if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; }
+    if (e.key.toLowerCase() === 'j') prevSentence();
+    else if (e.key.toLowerCase() === 'k') nextSentence();
+    else { const i = currentSegIndex(); if (i >= 0) seekSentence(i, true); }
+  }
   else if (e.key === 'Escape') { closeSpeedMenu(); closeAdjustModal(); closePublishModal(); }
 }
 
@@ -5300,6 +5385,7 @@ function init() {
     if (pr) { $('cfg-llm-base').value = pr.base; $('cfg-llm-model').value = pr.model; }
   });
 $('search-input').addEventListener('input', e => { state.query = e.target.value; renderLibrary(); });
+  $('topic-input').addEventListener('input', updateGenerateBtn);
   document.addEventListener('click', onClick);
   document.addEventListener('change', onClick);
   document.addEventListener('input', onClick);
