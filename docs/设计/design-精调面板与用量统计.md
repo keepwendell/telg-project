@@ -69,7 +69,9 @@ function paramsFromArt(art) {
     role: m.role, scenario: m.scenario,
     difficulty: /* 从 refine-diff 读，回填 m.difficulty */,
     length:     /* 从 refine-len 读，回填 m.length */,
-    llm: 'DeepSeek-V3', tts: 'edge-tts', voice: m.voice,
+    llm: llmDisplayLabel(),               /* 动态：设置中的 Provider · Model，与生成面板 LLM 标签同源 */
+    tts: normalizeTTSProvider((readStoredCfg().tts || {}).provider) || 'edge-tts',  /* 动态：设置中的 TTS Provider */
+    voice: m.voice,
     llm_config: buildLLMConfig(),          /* 已修（regenerate 502） */
     test_mode:  buildTestMode(),
     advanced: {

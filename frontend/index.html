@@ -178,7 +178,7 @@ a{color:inherit;text-decoration:none}
 .select:hover{background:var(--surface)}
 .select:focus{background:var(--surface);border-color:var(--primary-dim)}
 .select-arrow{position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--outline)}
-label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--outline);margin-bottom:6px}
+label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;color:var(--on-variant);margin-bottom:7px}
 
 /* ---------- segmented control ---------- */
 .seg{display:grid;gap:2px;padding:2px;background:var(--surface-low);border:1px solid var(--line);border-radius:6px}
@@ -322,9 +322,11 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .chip:hover{color:var(--on-surface)}
 .chip.active{color:var(--on-surface);background:var(--surface-high);border-color:var(--outline);font-weight:500}
 .engine-tags{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
-.engine-tag{display:flex;align-items:center;gap:6px;font-size:11px}
+.engine-tag{display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer}
 .engine-tag .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--outline)}
-.engine-tag .val{font-size:11px;background:var(--bg-lowest);border:1px solid var(--line);border-radius:4px;padding:2px 7px}
+.engine-tag .val{font-size:11px;background:var(--bg-lowest);border:1px solid var(--line);border-radius:4px;padding:2px 7px;transition:border-color .12s var(--ease),color .12s var(--ease)}
+.engine-tag:hover .val{border-color:var(--primary-dim);color:var(--on-surface)}
+.engine-tag.na .val{color:var(--warning);border-color:color-mix(in srgb,var(--warning) 40%,var(--line))}
 .gen-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .range-row{display:flex;flex-direction:column;gap:4px}
 .range-row .range-input{width:100%;accent-color:var(--primary)}
@@ -359,14 +361,12 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .gen-total-fill{height:100%;width:0%;background:var(--primary);border-radius:2px;transition:width .35s var(--ease)}
 .gen-total-pct{font-size:10px;font-family:var(--mono);color:var(--outline);min-width:36px;text-align:right}
 .modal-overlay{backdrop-filter:blur(3px)}
-.confirm-box{width:min(360px,92vw);background:var(--surface);border:1px solid var(--line-strong);border-radius:14px;padding:30px 26px 0;display:flex;flex-direction:column;align-items:center;text-align:center;animation:genIn .2s var(--ease);box-shadow:0 22px 60px rgba(0,0,0,.38)}
-.confirm-ic{width:52px;height:52px;border-radius:14px;background:linear-gradient(140deg,var(--error),color-mix(in oklch,var(--error) 55%,var(--surface-high)));color:var(--on-error);display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 8px 20px color-mix(in oklch,var(--error) 28%,transparent)}
-.confirm-ic .icon{width:24px;height:24px}
-.confirm-title{font-size:16px;font-weight:700;letter-spacing:-.01em;color:var(--on-surface);line-height:1.3}
-.confirm-name{font-family:var(--mono);font-size:11.5px;letter-spacing:.01em;color:var(--on-surface);background:var(--surface-high);border:1px solid var(--line);border-radius:6px;padding:4px 10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:10px 0 12px}
-.confirm-text{font-size:12.5px;line-height:1.7;color:var(--dim);text-align:center;margin:0;max-width:300px}
-.confirm-actions{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:22px;padding:16px 0;border-top:1px solid var(--line)}
-.confirm-actions .btn{min-width:96px;height:34px;border-radius:8px}
+.confirm-box{width:min(360px,92vw);background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;padding:26px 24px 0;display:flex;flex-direction:column;align-items:stretch;text-align:left;animation:genIn .2s var(--ease);box-shadow:0 16px 44px rgba(0,0,0,.28)}
+.confirm-title{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--on-surface);line-height:1.4}
+.confirm-name{font-size:14px;font-weight:600;letter-spacing:.005em;color:var(--on-surface);background:var(--surface-high);border:1px solid var(--line);border-radius:6px;padding:7px 12px;margin:14px 0 10px;width:fit-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.confirm-text{font-size:12.5px;line-height:1.7;color:var(--dim);margin:0;max-width:100%}
+.confirm-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:22px;padding:16px 0;border-top:1px solid var(--line)}
+.confirm-actions .btn{min-width:92px;height:34px;border-radius:8px}
 /* empty state */
 .gen-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:64px 20px;text-align:center}
 .gen-empty .icon{width:30px;height:30px;color:var(--outline)}
@@ -458,7 +458,7 @@ label.flabel{display:block;font-size:10px;text-transform:uppercase;letter-spacin
 .speed-menu button.active::after{content:"✓";margin-left:10px}
 
 /* ---------- modal ---------- */
-.modal-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:24px}
+.modal-overlay{position:fixed;inset:0;z-index:115;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:24px}
 .modal{width:560px;max-width:100%;max-height:84vh;overflow-y:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px}
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
 .modal-body{padding:18px;display:flex;flex-direction:column;gap:16px}
@@ -960,11 +960,10 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
       </div>
     </div>
     <div class="gen-card-body">
+      <p class="t-10 dim" style="margin-bottom:6px" data-i18n="gen.topicHint">Type any engineering topic in English or Chinese — the more specific, the better. Enter to generate · Shift+Enter for a new line.</p>
       <div class="gen-topic-row">
-        <svg class="icon icon-sm" style="margin-top:14px;flex-shrink:0"><use href="#i-terminal"/></svg>
         <textarea id="topic-input" rows="2" data-i18n-ph="gen.topicPh" placeholder="e.g. Asymmetric Yaw Damping, CAN Bus Phase Jitter, FOC Inverter Faults...">Tire burst stability control</textarea>
       </div>
-      <p class="t-10 dim" data-i18n="gen.topicHint">Type any engineering topic in English or Chinese — the more specific, the better. Enter to generate · Shift+Enter for a new line.</p>
       <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
         <span class="t-10 uc faint" style="margin-right:2px" data-i18n="gen.presets">Presets:</span>
         <button class="preset-tag" data-topic="Tire Burst Stability Control">Tire Burst Stability Control</button>
@@ -1031,7 +1030,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <label class="flabel" style="margin:0" data-i18n="gen.duration">Target Audio Duration</label>
-            <span class="t-10 faint mono" id="len-hint">~240 words · 145 wpm</span>
+            <span class="t-10 accent mono" id="len-hint">~240 words · 145 wpm</span>
           </div>
           <div class="seg" id="len-seg" style="grid-template-columns:repeat(5,1fr)">
             <button class="seg-item" data-length="60">60s</button>
@@ -1047,7 +1046,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <label class="flabel" style="margin:0" data-i18n="gen.depth">Technical Depth</label>
-            <span class="t-10 faint mono" id="depth-label">Mechanism + trade-offs</span>
+            <span class="t-10 accent mono" id="depth-label">Mechanism + trade-offs</span>
           </div>
           <div class="seg" id="depth-seg" style="grid-template-columns:repeat(5,1fr)">
             <button class="seg-item" data-depth="1">D1</button>
@@ -1060,7 +1059,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <label class="flabel" style="margin:0" data-i18n="gen.breadth">Breadth</label>
-            <span class="t-10 faint mono" id="breadth-label">Multi-role discussion</span>
+            <span class="t-10 accent mono" id="breadth-label">Multi-role discussion</span>
           </div>
           <div class="seg" id="breadth-seg" style="grid-template-columns:repeat(5,1fr)">
             <button class="seg-item" data-breadth="1">B1</button>
@@ -1073,7 +1072,10 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
       </div>
       <div class="engine-strip">
         <div class="engine-tags">
-          <div class="engine-tag"><span class="lbl">LLM</span><span class="val">DeepSeek-V3</span></div>
+          <div class="engine-tag" id="gen-llm-tag" title="">
+            <span class="lbl">LLM</span>
+            <span class="val" id="gen-llm-val">—</span>
+          </div>
         </div>
         <button class="btn btn-ghost btn-sm" id="toggle-advanced">
           <span data-i18n="gen.advanced">Advanced Directives</span>
@@ -1132,13 +1134,12 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 <!-- ===================== CONFIRM MODAL ===================== -->
 <div class="modal-overlay hidden" id="confirm-modal">
   <div class="confirm-box">
-    <div class="confirm-ic"><svg class="icon"><use href="#i-trash"/></svg></div>
     <div class="confirm-title" id="confirm-title">Delete?</div>
     <div class="confirm-name" id="confirm-name">…</div>
     <p class="confirm-text" id="confirm-text"></p>
     <div class="confirm-actions">
       <button class="btn" id="btn-confirm-cancel" data-i18n="del.cancel">Cancel</button>
-      <button class="btn btn-danger" id="btn-confirm-ok" data-i18n="del.delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg><span>Delete</span></button>
+      <button class="btn btn-danger" id="btn-confirm-ok" data-i18n="del.delete">Delete</button>
     </div>
   </div>
 </div>
@@ -2428,6 +2429,7 @@ const I18N = {
     'depthLabels': { 1: 'Overview level', 2: 'Core concepts', 3: 'Mechanism + trade-offs', 4: 'Deep-dive · math & formulas', 5: 'Principal · research-level' },
     'breadthLabels': { 1: 'Single perspective', 2: 'Two-role exchange', 3: 'Multi-role discussion', 4: 'Cross-team review', 5: 'Full-chain stakeholders' },
     'gen.advanced': 'Advanced Directives', 'gen.reset': 'Reset Defaults', 'gen.generate': 'Generate',
+    'gen.llmNa': 'Not configured — set in Settings', 'gen.llmNaHint': 'Add an LLM provider and API key in Settings to enable generation.',
     'pb.details': 'Details',
     'settings.title': 'Settings',
     
@@ -2596,6 +2598,7 @@ const I18N = {
     'depthLabels': { 1: '概览级', 2: '核心概念', 3: '机制与权衡', 4: '深入 — 公式与推导', 5: '专家级 — 研究深度' },
     'breadthLabels': { 1: '单一视角', 2: '双角色交流', 3: '多角色讨论', 4: '跨团队评审', 5: '全链路多方' },
     'gen.advanced': '高级指令', 'gen.reset': '恢复默认', 'gen.generate': '生成',
+    'gen.llmNa': '未配置 — 前往设置添加', 'gen.llmNaHint': '在设置中添加 LLM 提供商与 API Key 后即可生成。',
     'pb.details': '详情',
     'settings.title': '设置',
     
@@ -3675,7 +3678,7 @@ function collectParams() {
     scenario: $('scenario-select').value,
     difficulty: +document.querySelector('#diff-seg .seg-item.active').dataset.level,
     length: document.querySelector('#len-seg .seg-item.active').dataset.length,
-    llm: 'DeepSeek-V3', tts: normalizeTTSProvider((readStoredCfg().tts || {}).provider) || 'edge-tts', voice: 'en-US-GuyNeural + en-US-JennyNeural',
+    llm: llmDisplayLabel(), tts: normalizeTTSProvider((readStoredCfg().tts || {}).provider) || 'edge-tts', voice: 'en-US-GuyNeural + en-US-JennyNeural',
     llm_config: buildLLMConfig(),
     test_mode: buildTestMode(),
     advanced: {
@@ -3845,7 +3848,7 @@ function paramsFromArt(art) {
     role: m.role, scenario: m.scenario,
     difficulty: parseInt(String(m.difficulty).replace(/\D/g, ''), 10) || 3,
     length: String(parseSec(m.length) || 120),
-    llm: 'DeepSeek-V3', tts: 'edge-tts', voice: m.voice || 'en-US-GuyNeural + en-US-JennyNeural',
+    llm: llmDisplayLabel(), tts: normalizeTTSProvider((readStoredCfg().tts || {}).provider) || 'edge-tts', voice: m.voice || 'en-US-GuyNeural + en-US-JennyNeural',
     llm_config: buildLLMConfig(),
     test_mode: buildTestMode(),
     advanced: {
@@ -4549,9 +4552,37 @@ function pickAnswer(opt) {
 
 /* ---------------- MODAL / TOAST ---------------- */
 /* ---------- Generate panel (⌘K command palette) ---------- */
+/* Display name of the LLM configured in Settings, e.g. "DeepSeek · deepseek-chat". */
+function llmDisplayLabel() {
+  const s = readStoredCfg();
+  const llm = s.llm || {};
+  const prov = LLM_PRESETS[llm.provider] ? llm.provider : 'deepseek';
+  const label = LLM_LABELS[prov] || prov;
+  const model = (llm.model || '').trim();
+  return model ? label + ' · ' + model : label;
+}
+function renderGenLlmTag() {
+  const tag = $('gen-llm-tag'), val = $('gen-llm-val');
+  if (!tag || !val) return;
+  const s = readStoredCfg();
+  const llm = s.llm || {};
+  const prov = LLM_PRESETS[llm.provider] ? llm.provider : 'deepseek';
+  const key = (llm.apiKey || '').trim();
+  const ready = (llm.model || '').trim() && (key || prov === 'ollama');
+  if (ready) {
+    val.textContent = llmDisplayLabel();
+    tag.classList.remove('na');
+    tag.title = '';
+  } else {
+    val.textContent = I18N[state.lang]['gen.llmNa'];
+    tag.classList.add('na');
+    tag.title = I18N[state.lang]['gen.llmNaHint'];
+  }
+}
 function openGenPanel() {
   $('gen-panel').classList.remove('hidden');
   closeSpeedMenu();
+  renderGenLlmTag();
   updateDiff(); updateLen(); updateDepth(); updateBreadth();
   updateGenerateBtn();
   const input = $('topic-input');
@@ -5129,6 +5160,7 @@ function saveModal() {
   applyTranscriptLang();
   renderToday();
   updateEngineBadge();
+  renderGenLlmTag();
   showToast(I18N[state.lang]['settings.saved']);
   closeModal();
   /* Settings changed — the badge must reflect the NEW config's real state. */
@@ -5200,6 +5232,7 @@ function onClick(e) {
   if (e.target.closest('.btn-role-del')) { delVoiceRole(e.target.closest('.btn-role-del')); return; }
   if (e.target.closest('.btn-role-test')) { auditionRole(e.target.closest('.btn-role-test')); return; }
   if (!e.target.closest('#speed-menu') && !e.target.closest('#btn-pb-speed')) closeSpeedMenu();
+  if (e.target.closest('#gen-llm-tag')) { openModal(); switchMTab('llm', false); return; }
   if (e.target.closest('#btn-gen-close')) { closeGenPanel(); return; }
   if (e.target.id === 'gen-backdrop') { closeGenPanel(); return; }
   if (e.target.closest('#btn-theme')) { toggleTheme(); return; }
