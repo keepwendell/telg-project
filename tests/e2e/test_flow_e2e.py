@@ -18,6 +18,9 @@ with sync_playwright() as p:
     pg.add_init_script("try{localStorage.setItem('telg-test-data','tire'); localStorage.setItem('telg-onboarding', JSON.stringify({done:true,at:Date.now()})); localStorage.setItem('telg-llm-mock','1'); localStorage.setItem('telg-tts-mock','1');}catch(e){}")
     pg.goto('file:///home/user/Doubao/chats/38441710896760066/telg-project/frontend/index.html'); pg.wait_for_timeout(600)
     pg.evaluate("localStorage.clear(); localStorage.setItem('telg-test-data','tire'); localStorage.setItem('telg-onboarding', JSON.stringify({done:true,at:Date.now()})); localStorage.setItem('telg-llm-mock','1'); localStorage.setItem('telg-tts-mock','1'); location.reload(); true"); pg.wait_for_timeout(800)
+    for _wl in range(20):
+        if pg.evaluate("state.library.length") > 0: break
+        pg.wait_for_timeout(400)
 
     log('A1 页面加载无 JS 错误', len(errs)==0, '; '.join(errs[:3]))
 

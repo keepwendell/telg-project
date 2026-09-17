@@ -645,6 +645,132 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 .gen-topic-row:focus-within{border-color:var(--primary-dim);color:var(--primary)}
 .gen-topic-row textarea{flex:1;min-height:54px;padding:13px 0;background:transparent;border:none;outline:none;color:var(--on-surface);font-size:14px;font-family:var(--font-body);resize:none;line-height:1.5;min-width:0}
 .gen-card-foot{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--line);gap:10px;flex-shrink:0}
+
+/* ===== New-Material dialog (Claude-aligned layout) ===== */
+#gen-panel .sec-head{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+#gen-panel .sec-head h3{margin:0;font-size:12.5px;font-weight:600;letter-spacing:.3px;color:#cdd5e0}
+#gen-panel .sec-head span{font-size:9.5px;letter-spacing:.14em;color:#454f5d;text-transform:uppercase}
+#gen-panel .field{display:flex;flex-direction:column;gap:9px}
+#gen-panel .field-head{display:flex;align-items:center;justify-content:space-between;height:24px;margin-bottom:2px}
+#gen-panel .field-label{font-size:12.5px;color:#9aa6b6;font-weight:500;letter-spacing:.2px}
+#gen-panel .icon-manage{width:24px;height:24px;border-radius:7px;background:transparent;border:1px solid transparent;color:#4d5867;cursor:pointer;display:grid;place-items:center;transition:.18s;flex:0 0 auto;padding:0}
+#gen-panel .icon-manage:hover{background:var(--surface-high);color:#9aa6b6}
+#gen-panel .icon-manage.active{background:rgba(77,142,255,.13);color:var(--primary-dim);border-color:rgba(77,142,255,.48)}
+#fmt-seg{display:grid;gap:4px;padding:4px;background:var(--surface-low);border:1px solid var(--line-strong);border-radius:13px;max-width:560px}
+#fmt-seg .seg-item{display:flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 10px;border-radius:10px;border:1px solid transparent;background:transparent;color:#687385;font-size:12.5px;cursor:pointer;white-space:nowrap;overflow:hidden;transition:color .18s,background .18s,border-color .18s}
+#fmt-seg .seg-item:hover{color:#9aa6b6;background:rgba(255,255,255,.022)}
+#fmt-seg .seg-item.active{background:linear-gradient(180deg,rgba(77,142,255,.14),rgba(77,142,255,.05));border-color:rgba(77,142,255,.48);color:#cfe0ff;box-shadow:0 2px 10px -4px rgba(77,142,255,.5)}
+#fmt-seg .seg-glyph{display:flex;align-items:center;color:#5b6675;transition:color .18s}
+#fmt-seg .seg-item.active .seg-glyph{color:var(--primary-dim)}
+#fmt-seg .seg-text{font-weight:500;letter-spacing:.2px}
+#gen-panel .chip-row{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:2px 2px 6px;min-height:40px}
+#gen-panel .chip{position:relative;display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:9px;background:var(--surface-high);border:1px solid var(--line-strong);color:#8d99aa;font-size:12.5px;cursor:pointer;user-select:none;white-space:nowrap;transition:background .18s,border-color .18s,color .18s}
+#gen-panel .chip:hover{border-color:#333e4d;color:#c6cfdb}
+#gen-panel .chip.active{background:rgba(77,142,255,.13);border-color:rgba(77,142,255,.48);color:#a8c5ff}
+#gen-panel .chip-row.managing .chip:not(.active){border-style:dashed;border-color:#38424f}
+#gen-panel .chip-x{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:#232b36;border:1px solid #333d4b;color:#8a95a5;opacity:0;transform:scale(.45);pointer-events:none;z-index:3;transition:opacity .18s,transform .2s cubic-bezier(.34,1.4,.64,1),background .16s,border-color .16s,color .16s}
+#gen-panel .chip-row.managing .chip .chip-x{opacity:1;transform:scale(1);pointer-events:auto}
+#gen-panel .chip-x:hover{background:#ff5c6c;border-color:#ff5c6c;color:#fff}
+#gen-panel .chip-x svg{display:block}
+#gen-panel .chip-add{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:9px;border:1px dashed #2c3542;background:transparent;color:#5f6b7c;font-size:12.5px;cursor:pointer;white-space:nowrap;transition:.18s}
+#gen-panel .chip-add:hover{color:var(--primary-dim);border-color:rgba(77,142,255,.48);background:rgba(77,142,255,.13)}
+#gen-panel .field-hint{margin:0;font-size:11px;color:#4e5969;letter-spacing:.2px;line-height:1.5;min-height:0;opacity:0;transition:opacity .22s}
+#gen-panel .field-hint.show{opacity:1}
+#gen-panel #gen-context{width:100%;min-height:98px;resize:vertical;padding:13px 14px;border-radius:12px;background:var(--surface-low);border:1px solid var(--line-strong);color:var(--on-surface);font-size:13px;line-height:1.68;outline:none;transition:border-color .2s,box-shadow .2s,background .2s}
+#gen-panel #gen-context:focus{border-color:rgba(77,142,255,.48);background:var(--surface);box-shadow:0 0 0 3px rgba(77,142,255,.1)}
+#gen-panel .btn-generate-full{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;border-radius:11px;border:none;background:linear-gradient(180deg,#5a94ff,#3f7cf0);color:#fff;font-size:13.5px;font-weight:600;letter-spacing:.4px;cursor:pointer;box-shadow:0 5px 16px -5px rgba(63,124,240,.7);transition:.18s}
+#gen-panel .btn-generate-full:hover{filter:brightness(1.08)}
+#gen-panel .btn-generate-full:active{transform:translateY(1px)}
+#gen-panel .btn-generate-full:disabled{opacity:.45;cursor:not-allowed;filter:none}
+
+/* ===== V2 refinements: tooltips, context note, level blocks, cancel ===== */
+#gen-panel .field-label{display:inline-flex;align-items:center;cursor:default}
+#gen-panel .field-label[data-tip]{cursor:help}
+#gen-panel .hint-ico{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;margin-left:5px;color:#3f4a5a;transition:color .18s,transform .18s}
+#gen-panel .field-label:hover .hint-ico{color:var(--primary-dim);transform:scale(1.08)}
+#gen-panel .context-note{display:flex;align-items:flex-start;gap:6px;margin:-2px 0 0;padding:0 2px;font-size:11px;line-height:1.6;letter-spacing:.2px;color:var(--on-mute,#6b7889)}
+#gen-panel .context-note .hint-dot{flex:0 0 auto;width:4px;height:4px;border-radius:50%;background:var(--primary-dim);opacity:.65;margin-top:7px}
+#gen-panel .context-note em{font-style:normal;color:#9dbdff;font-weight:500}
+#gen-panel .output-stack{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 14px;align-items:start}
+#gen-panel .seg-mini{display:inline-flex;gap:3px;padding:3px;background:#10151d;border:1px solid var(--line-strong);border-radius:9px;width:100%}
+#gen-panel .seg-mini button{flex:1 1 0;height:32px;padding:0 4px;border-radius:6px;border:none;background:transparent;color:#6e7a8c;font-size:11.5px;font-family:inherit;cursor:pointer;white-space:nowrap;letter-spacing:.1px;display:flex;align-items:center;justify-content:center;gap:5px;transition:.16s}
+#gen-panel .seg-mini button:hover{color:var(--on-variant);background:rgba(255,255,255,.025)}
+#gen-panel .seg-mini button.on{background:linear-gradient(180deg,rgba(91,156,255,.16),rgba(91,156,255,.06));color:#a8c5ff;box-shadow:inset 0 0 0 1px rgba(91,156,255,.5)}
+#gen-panel .seg-mini .lv-tag{font-weight:600;letter-spacing:.4px}
+#gen-panel .seg-mini .lv-name{font-size:10.5px;opacity:.78;letter-spacing:.1px}
+#gen-panel .level-desc{display:flex;align-items:baseline;gap:8px;padding:9px 12px;background:#10151d;border:1px solid var(--line-strong);border-radius:9px;font-size:11.5px;line-height:1.55;min-height:36px}
+#gen-panel .level-desc-name{flex:0 0 auto;color:var(--primary-dim);font-weight:600;letter-spacing:.2px}
+#gen-panel .level-desc-text{color:var(--on-mute,#6b7889)}
+#gen-panel .tooltip{position:fixed;z-index:300;max-width:260px;padding:9px 12px;border-radius:9px;background:#242c39;border:1px solid var(--line-strong);color:#c8d2e0;font-size:11.5px;line-height:1.62;letter-spacing:.2px;box-shadow:0 12px 30px rgba(0,0,0,.55);opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .16s,transform .16s}
+#gen-panel .tooltip.show{opacity:1;transform:translateY(0)}
+#gen-panel .tooltip.above{transform:translateY(4px)}
+#gen-panel .tooltip.above.show{transform:translateY(0)}
+#gen-panel .tooltip::after{content:'';position:absolute;left:var(--arrow-x,50%);bottom:-4px;width:7px;height:7px;transform:translateX(-50%) rotate(45deg);background:#242c39;border-right:1px solid var(--line-strong);border-bottom:1px solid var(--line-strong);border-radius:1px}
+#gen-panel .tooltip.above::after{bottom:auto;top:-4px;border-right:none;border-bottom:none;border-left:1px solid var(--line-strong);border-top:1px solid var(--line-strong)}
+#gen-panel .cancel-btn{flex:0 0 auto;height:38px;padding:0 16px;border-radius:10px;border:1px solid var(--line-strong);background:transparent;color:var(--on-mute,#6b7889);font-size:12.5px;font-family:inherit;letter-spacing:.2px;cursor:pointer;transition:.18s}
+#gen-panel .cancel-btn:hover{color:var(--on-variant);border-color:#33404f;background:var(--surface-high)}
+#gen-panel .cancel-btn:active{transform:translateY(1px)}
+/* ===== V2 palette alignment (scoped to the new-material panel) ===== */
+#gen-panel{
+  --surface-low:#141922;          /* panel bg -> V2 --panel */
+  --surface:#1a2029;              /* panel-2 / hover -> V2 --panel-2 */
+  --surface-high:#1f2733;         /* chip bg -> V2 --surface */
+  --surface-highest:#252d3a;      /* strong border -> V2 --border */
+  --line:rgba(37,45,58,.55);
+  --line-strong:#252d3a;
+  --primary-dim:#5b9cff;          /* accent -> V2 */
+  --on-surface:#e8edf5;
+  --on-variant:#9aa7b8;
+  --outline-variant:#6b7889;
+}
+#gen-panel #fmt-seg .seg-item.active{
+  background:linear-gradient(180deg,rgba(91,156,255,.14),rgba(91,156,255,.05));
+  border-color:rgba(91,156,255,.5);
+  box-shadow:0 2px 10px -4px rgba(91,156,255,.5);
+}
+#gen-panel #fmt-seg .seg-item.active .seg-glyph{color:#5b9cff}
+#gen-panel .chip{background:#1f2733;border-color:#252d3a;color:#8f9bab}
+#gen-panel .chip:hover{border-color:#333f4f;color:#c6cfdb}
+#gen-panel .chip.active{background:rgba(91,156,255,.13);border-color:rgba(91,156,255,.5);color:#a8c5ff}
+#gen-panel .chip-row.managing .chip:not(.active){border-color:#39434f}
+#gen-panel .seg-mini{background:#10151d;border-color:#252d3a}
+#gen-panel .seg-mini .seg-item{color:#6e7a8c}
+#gen-panel .seg-mini .seg-item.active,
+#gen-panel .seg-mini .seg-item.on{background:linear-gradient(180deg,rgba(91,156,255,.16),rgba(91,156,255,.06));color:#a8c5ff;box-shadow:inset 0 0 0 1px rgba(91,156,255,.5)}
+#gen-panel .level-desc{background:#10151d;border-color:#252d3a}
+#gen-panel .level-desc-name{color:#5b9cff}
+#gen-panel .context-input{background:#10151d;border-color:#252d3a}
+#gen-panel .context-input:focus{border-color:rgba(91,156,255,.5);background:#131923;box-shadow:0 0 0 3px rgba(91,156,255,.1)}
+#gen-panel .gen-card-body::-webkit-scrollbar-thumb{background:#232b37;border-radius:5px;border:2px solid #141922}
+#gen-panel .gen-card-body::-webkit-scrollbar-thumb:hover{background:#2f3846}
+#gen-panel .btn-generate-full{background:linear-gradient(180deg,#5b9cff,#3f7cf0);box-shadow:0 5px 16px -5px rgba(63,124,240,.65)}
+#gen-panel #fmt-seg{background:#1a2029;border-color:#1f2632}
+#gen-panel .chip{background:#1a2029;border-color:#242c37}
+#gen-panel .chip-add:hover{color:#5b9cff;border-color:rgba(91,156,255,.5);background:rgba(91,156,255,.13)}
+#gen-panel .icon-manage.active{background:rgba(91,156,255,.13);color:#5b9cff;border-color:rgba(91,156,255,.5)}
+/* ===== compact gen panel: no-scroll fit ===== */
+#gen-panel .gen-card-head{padding:14px 18px 12px}
+#gen-panel .gen-card-head .t-17{font-size:17px;font-weight:650;letter-spacing:.2px}
+#gen-panel .gen-card-body{padding:13px 16px 16px;gap:11px;max-height:78vh}
+#gen-panel .field{gap:6px}
+#gen-panel #fmt-seg .seg-item{height:36px}
+#gen-panel .seg-glyph svg{height:17px;width:auto}
+#gen-panel .seg-text{font-size:11.5px}
+#gen-panel .chip{height:30px;padding:0 11px;font-size:12px}
+#gen-panel .chip-add{height:30px;padding:0 10px;font-size:12px}
+#gen-panel #gen-context{min-height:74px;padding:11px 13px}
+#gen-panel .context-note{margin-top:1px}
+#gen-panel .seg-mini button{height:30px}
+#gen-panel .level-desc{min-height:32px;padding:7px 10px;font-size:11px}
+#gen-panel .engine-strip{padding:10px 12px}
+#gen-panel .sec-head h3{font-size:12px}
+#gen-panel .sec-head{margin-bottom:-2px}
+#gen-panel .seg-mini .seg-item{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:32px;flex:1 1 0;padding:0 4px;border-radius:6px;border:none;background:transparent;color:#6e7a8c;font-size:11.5px;font-family:inherit;cursor:pointer;white-space:nowrap;letter-spacing:.1px;transition:.16s}
+#gen-panel .seg-mini .seg-item:hover{color:var(--on-variant);background:rgba(255,255,255,.025)}
+#gen-panel .seg-mini .seg-item.active,
+#gen-panel .seg-mini .seg-item.on{background:linear-gradient(180deg,rgba(91,156,255,.16),rgba(91,156,255,.06));color:#a8c5ff;box-shadow:inset 0 0 0 1px rgba(91,156,255,.5)}
+#gen-panel .seg-mini .seg-item.active .lv-name,
+#gen-panel .seg-mini .seg-item.on .lv-name{color:inherit}
 .gen-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:300px;padding:24px}
 .gen-progress{display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px}
 @media (max-width:720px){
@@ -768,6 +894,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
   <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
   <symbol id="i-bolt" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4.5 8h15M4.5 16h15"/><circle cx="9" cy="8" r="2.6" fill="var(--surface-low,#141922)"/><circle cx="15" cy="16" r="2.6" fill="var(--surface-low,#141922)"/></symbol>
   <symbol id="i-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></symbol>
   <symbol id="i-subtitles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="7" y1="12" x2="10" y2="12"/><line x1="13" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="12" y2="16"/><line x1="15" y1="16" x2="17" y2="16"/></symbol>
   <symbol id="i-panel-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="15" y1="4" x2="15" y2="20"/></symbol>
@@ -1030,115 +1157,94 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   <div class="gen-backdrop" id="gen-backdrop"></div>
   <div class="gen-card">
     <div class="gen-card-head">
-      <div style="display:flex;align-items:center;gap:10px">
-        <svg class="icon accent" style="width:15px;height:15px"><use href="#i-bolt"/></svg>
-        <div style="display:flex;flex-direction:column;gap:1px">
-          <span class="t-12 bold" data-i18n="gen.title">Generate New Material</span>
-          <span class="t-10 dim" data-i18n="gen.sub">Synthesize a technical listening material from a real engineering scenario.</span>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px">
-        <span class="kbd">Esc</span>
-        <button class="btn-icon" id="btn-gen-close" title="Close (Esc)"><svg class="icon"><use href="#i-close"/></svg></button>
-      </div>
+      <span class="t-17 bold" data-i18n="gen.title">Generate New Material</span>
     </div>
     <div class="gen-card-body">
-      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
-        <span class="t-10 uc faint" style="margin-right:2px" data-i18n="gen.presets">Presets:</span>
-        <button class="preset-tag" data-topic="Tire Burst Stability Control">Tire Burst Stability Control</button>
-        <button class="preset-tag" data-topic="Torque Vectoring in Turn-in">Torque Vectoring in Turn-in</button>
-        <button class="preset-tag" data-topic="CAN Bus Jitter Debugging">CAN Bus Jitter Debugging</button>
-        <button class="preset-tag" data-topic="HIL Test Failure Analysis">HIL Test Failure Analysis</button>
+      <div class="sec-head">
+        <h3 data-i18n="gen.sceneSec">场景模拟</h3>
+        <span>Scene Simulation</span>
       </div>
-      <div class="param-grid" style="grid-template-columns:1fr;gap:14px">
-        <div class="gen-scene-sec" style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface-low)">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-            <svg class="icon accent" style="width:14px;height:14px"><use href="#i-bolt"/></svg>
-            <span class="t-11 bold" data-i18n="gen.sceneSec">场景模拟设置</span>
-            <span class="t-10 dim" data-i18n="gen.sceneSub">模拟专业的沉浸式听力场景——选择对话形态、感兴趣方向与出场角色，场景语境自由描述。</span>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-            <label class="flabel" style="margin-bottom:0" data-i18n="gen.fmt">对话形态</label>
-            <span class="t-10" id="fmt-hint" style="color:var(--primary)"></span>
-          </div>
-          <div class="seg" id="fmt-seg" style="grid-template-columns:repeat(3,1fr);max-width:560px">
-            <button class="seg-item" data-fmt="solo" data-i18n="gen.fmtSolo">单人讲解</button>
-            <button class="seg-item" data-fmt="dialogue" data-i18n="gen.fmtDialogue">双人对话</button>
-            <button class="seg-item active" data-fmt="discussion" data-i18n="gen.fmtDiscussion">多人讨论</button>
-          </div>
-          <div style="margin-top:12px">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px">
-              <label class="flabel" style="margin-bottom:0" data-i18n="gen.domain">练习领域</label>
-              <div style="display:flex;align-items:center;gap:6px">
-                <button type="button" class="icon-btn chip-mgr" id="btn-mgr-domains" title="Manage domains"><svg class="icon icon-sm"><use href="#i-settings"/></svg></button>
-                <button type="button" class="chip quick-chip" id="btn-add-domain" data-key="domains" title="Add custom domain"><svg class="icon icon-sm"><use href="#i-plus"/></svg>&nbsp;<span data-i18n="gen.custom">自定义</span></button>
-              </div>
-            </div>
-            <div class="chip-row" id="gen-domains"></div>
-          </div>
-          <div id="gen-roles-wrap" style="margin-top:12px"></div>
-          <div style="margin-top:12px">
-            <div class="flabel" style="margin-bottom:6px" data-i18n="gen.context">场景语境</div>
-            <textarea id="gen-context" rows="2" class="inp" style="width:100%;resize:vertical" data-i18n-ph="gen.contextPh" placeholder="描述场合与主题，如：试驾环节，销售介绍车辆性能并回应客户顾虑"></textarea>
-            <div class="chip-row" style="margin-top:6px" id="gen-context-sugs"></div>
-          </div>
+      <div class="field">
+        <div class="field-head"><span class="field-label" data-tip="gen.tipFormat" data-i18n="gen.fmt">对话形态</span></div>
+        <div class="seg" id="fmt-seg" style="grid-template-columns:repeat(3,1fr)">
+          <button class="seg-item" data-fmt="solo"><span class="seg-glyph"><svg width="11" height="15" viewBox="0 0 9 12" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"><circle cx="4.5" cy="3.4" r="2.1"/><path d="M1.15 10.6c0-1.9 1.5-3.1 3.35-3.1s3.35 1.2 3.35 3.1"/></svg></span><span class="seg-text" data-i18n="gen.fmtSolo">单人讲解</span></button>
+          <button class="seg-item" data-fmt="dialogue"><span class="seg-glyph"><svg width="17" height="15" viewBox="0 0 17.6 12" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"><g transform="translate(0,0)"><circle cx="4.5" cy="3.4" r="2.1"/><path d="M1.15 10.6c0-1.9 1.5-3.1 3.35-3.1s3.35 1.2 3.35 3.1"/></g><g transform="translate(8.6,0)"><circle cx="4.5" cy="3.4" r="2.1"/><path d="M1.15 10.6c0-1.9 1.5-3.1 3.35-3.1s3.35 1.2 3.35 3.1"/></g></svg></span><span class="seg-text" data-i18n="gen.fmtDialogue">双人对话</span></button>
+          <button class="seg-item active" data-fmt="discussion"><span class="seg-glyph"><svg width="23" height="15" viewBox="0 0 26.2 12" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"><g transform="translate(0,0)"><circle cx="4.5" cy="3.4" r="2.1"/><path d="M1.15 10.6c0-1.9 1.5-3.1 3.35-3.1s3.35 1.2 3.35 3.1"/></g><g transform="translate(8.6,0)"><circle cx="4.5" cy="3.4" r="2.1"/><path d="M1.15 10.6c0-1.9 1.5-3.1 3.35-3.1s3.35 1.2 3.35 3.1"/></g><g transform="translate(17.2,0)"><circle cx="4.5" cy="3.4" r="2.1"/><path d="M1.15 10.6c0-1.9 1.5-3.1 3.35-3.1s3.35 1.2 3.35 3.1"/></g></svg></span><span class="seg-text" data-i18n="gen.fmtDiscussion">多人讨论</span></button>
         </div>
       </div>
-      <div class="two-col">
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <label class="flabel" style="margin:0" data-i18n="gen.complex">Complexity / Terminology Density</label>
-            <span class="t-10 accent mono" id="diff-label">Level 3 of 5</span>
-          </div>
-          <div class="seg" id="diff-seg" style="grid-template-columns:repeat(5,1fr)">
-            <button class="seg-item" data-level="1">L1</button>
-            <button class="seg-item" data-level="2">L2</button>
-            <button class="seg-item active" data-level="3">L3</button>
-            <button class="seg-item" data-level="4">L4</button>
-            <button class="seg-item" data-level="5">L5</button>
-          </div>
-          <p class="t-10 dim" style="margin-top:8px" id="diff-hint">Pragmatic engineering dialogue with real domain terminology and trade-off reasoning.</p>
+      <div class="field">
+        <div class="field-head">
+          <span class="field-label" data-tip="gen.tipDomain" data-i18n="gen.domain">练习领域</span>
+          <button type="button" class="icon-manage" id="btn-mgr-domains" title="Manage domains"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><use href="#i-sliders"/></svg></button>
         </div>
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <label class="flabel" style="margin:0" data-i18n="gen.duration">Target Audio Duration</label>
-            <span class="t-10 accent mono" id="len-hint">~240 words · 145 wpm</span>
-          </div>
-          <div class="seg" id="len-seg" style="grid-template-columns:repeat(5,1fr)">
-            <button class="seg-item" data-length="60">60s</button>
-            <button class="seg-item" data-length="90">90s</button>
-            <button class="seg-item active" data-length="120">120s</button>
-            <button class="seg-item" data-length="180">180s</button>
-            <button class="seg-item" data-length="240">240s</button>
-          </div>
-          <p class="t-10 dim" style="margin-top:8px">Paced at ~145 wpm baseline speech cadence.</p>
-        </div>
+        <div id="gen-domains"></div>
       </div>
-      <div class="two-col">
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <label class="flabel" style="margin:0" data-i18n="gen.depth">Technical Depth</label>
-            <span class="t-10 accent mono" id="depth-label">Mechanism + trade-offs</span>
+      <div class="field">
+        <div class="field-head">
+          <span class="field-label" data-tip="gen.tipRole" data-i18n="gen.roles">对话角色</span>
+          <button type="button" class="icon-manage" id="btn-mgr-roles" title="Manage speakers"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><use href="#i-sliders"/></svg></button>
+        </div>
+        <div id="gen-roles-wrap"></div>
+        <p class="field-hint" id="gen-role-hint"></p>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="field-label" data-tip="gen.tipContext" data-i18n="gen.context">场景语境</span></div>
+        <textarea id="gen-context" data-i18n-ph="gen.contextPh" placeholder="描述场合与主题，如：试驾环节，销售介绍车辆性能并回应客户顾虑"></textarea>
+        <p class="context-note">
+          <span class="hint-dot"></span>
+          <span data-i18n="gen.contextNote">场景语境是生成素材的主要依据，描述越具体越好。当与上述选项设置冲突时，将优先以场景语境为准。</span>
+        </p>
+
+      </div>
+      <div style="border-top:1px solid var(--line);margin:2px 0 0"></div>
+      <div class="sec-head" style="margin-top:2px">
+        <h3 data-i18n="gen.outputSec">输出参数</h3>
+        <span>Output</span>
+      </div>
+      <div class="output-stack">
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label" data-tip="gen.tipDuration" data-i18n="gen.labelDuration">Dialogue Duration</span>
           </div>
-          <div class="seg" id="depth-seg" style="grid-template-columns:repeat(5,1fr)">
-            <button class="seg-item" data-depth="1">D1</button>
-            <button class="seg-item" data-depth="2">D2</button>
-            <button class="seg-item active" data-depth="3">D3</button>
-            <button class="seg-item" data-depth="4">D4</button>
-            <button class="seg-item" data-depth="5">D5</button>
+          <div class="seg seg-mini" id="len-seg" style="grid-template-columns:repeat(5,1fr)">
+            <button class="seg-item" data-length="120">2 min</button>
+            <button class="seg-item active" data-length="300">5 min</button>
+            <button class="seg-item" data-length="480">8 min</button>
+            <button class="seg-item" data-length="720">12 min</button>
+            <button class="seg-item" data-length="900">15 min</button>
+          </div>
+          <div class="level-desc"><span class="level-desc-name" id="len-hint">~725 words · 145 wpm</span></div>
+        </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label" data-tip="gen.tipVocab" data-i18n="gen.labelVocab">Vocabulary Level</span>
+          </div>
+          <div class="seg seg-mini" id="diff-seg" style="grid-template-columns:repeat(5,1fr)">
+            <button class="seg-item" data-level="1"><span class="lv-tag">L1</span><span class="lv-name" data-i18n="gen.vocab1">Life-style</span></button>
+            <button class="seg-item" data-level="2"><span class="lv-tag">L2</span><span class="lv-name" data-i18n="gen.vocab2">Workplace</span></button>
+            <button class="seg-item active" data-level="3"><span class="lv-tag">L3</span><span class="lv-name" data-i18n="gen.vocab3">Technical</span></button>
+            <button class="seg-item" data-level="4"><span class="lv-tag">L4</span><span class="lv-name" data-i18n="gen.vocab4">Specialized</span></button>
+            <button class="seg-item" data-level="5"><span class="lv-tag">L5</span><span class="lv-name" data-i18n="gen.vocab5">Academic</span></button>
+          </div>
+          <div class="level-desc">
+            <span class="level-desc-name" id="diff-hint-name">Technical</span>
+            <span class="level-desc-text" id="diff-hint">Pragmatic engineering dialogue with real domain terminology and trade-off reasoning.</span>
           </div>
         </div>
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <label class="flabel" style="margin:0" data-i18n="gen.breadth">Breadth</label>
-            <span class="t-10 accent mono" id="breadth-label">Multi-role discussion</span>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label" data-tip="gen.tipSyntax" data-i18n="gen.labelSyntax">Syntax Complexity</span>
           </div>
-          <div class="seg" id="breadth-seg" style="grid-template-columns:repeat(5,1fr)">
-            <button class="seg-item" data-breadth="1">B1</button>
-            <button class="seg-item" data-breadth="2">B2</button>
-            <button class="seg-item active" data-breadth="3">B3</button>
-            <button class="seg-item" data-breadth="4">B4</button>
-            <button class="seg-item" data-breadth="5">B5</button>
+          <div class="seg seg-mini" id="depth-seg" style="grid-template-columns:repeat(5,1fr)">
+            <button class="seg-item" data-depth="1"><span class="lv-tag">L1</span><span class="lv-name" data-i18n="gen.syntax1">Simple</span></button>
+            <button class="seg-item" data-depth="2"><span class="lv-tag">L2</span><span class="lv-name" data-i18n="gen.syntax2">Basic</span></button>
+            <button class="seg-item active" data-depth="3"><span class="lv-tag">L3</span><span class="lv-name" data-i18n="gen.syntax3">Common</span></button>
+            <button class="seg-item" data-depth="4"><span class="lv-tag">L4</span><span class="lv-name" data-i18n="gen.syntax4">Complex</span></button>
+            <button class="seg-item" data-depth="5"><span class="lv-tag">L5</span><span class="lv-name" data-i18n="gen.syntax5">Academic</span></button>
+          </div>
+          <div class="level-desc">
+            <span class="level-desc-name" id="depth-label">Mechanism + trade-offs</span>
+            <span class="level-desc-text" id="depth-hint"></span>
           </div>
         </div>
       </div>
@@ -1191,13 +1297,11 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
       </div>
     </div>
     <div class="gen-card-foot">
-      <div class="t-10 faint mono">⌘⏎ Generate</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="btn btn-ghost" id="btn-reset" data-i18n="gen.reset">Reset Defaults</button>
-        <button class="btn btn-primary btn-lg" id="btn-generate">
-          <svg class="icon" style="width:16px;height:16px"><use href="#i-bolt"/></svg>
-          <span data-i18n="gen.generate">Generate</span>
-        </button>
+      <button class="btn btn-ghost" id="btn-cancel-gen" data-i18n="gen.cancel">Cancel</button>
+
+      <button class="btn-generate-full" id="btn-generate">
+        <span data-i18n="gen.generate">Generate</span>
+      </button>
       </div>
     </div>
   </div>
@@ -1951,7 +2055,7 @@ const CONFIG = {
     4: 'Dense technical exchange with implicit reasoning and advanced syntax.',
     5: 'Principal-level review: implicit meaning, rapid turn-taking, cross-domain references.'
   },
-  lenHints: { '60': '~120 words', '90': '~180 words', '120': '~240 words', '180': '~360 words', '240': '~480 words' },
+  lenHints: { '60': '~120 words', '90': '~180 words', '120': '~240 words', '180': '~360 words', '240': '~480 words', '300': '~725 words', '480': '~1160 words', '720': '~1740 words', '900': '~2175 words' },
   depthLabels: { 1: 'Overview level', 2: 'Core concepts', 3: 'Mechanism + trade-offs', 4: 'Deep-dive · math & formulas', 5: 'Principal · research-level' }
 };
 /* Phase-scoped mock. Two independent switches, both gated by Developer Mode,
@@ -2834,26 +2938,17 @@ const I18N = {
     'tab.grounding': 'Grounding', 'tab.vocab': 'Vocabulary', 'tab.quiz': 'Quiz', 'tab.patterns': 'Patterns',
     'tr.header': 'Synchronized Technical Dialogue', 'tr.zh': 'CN',
     'tr.synth': 'Corpus generated — audio not synthesized yet.',
-    'gen.title': 'New Material', 'gen.sub': 'Synthesize a technical listening material from a real engineering scenario.',
-    'gen.topicHint': 'Type any engineering topic in English or Chinese — the more specific, the better. Enter for a new line · click Generate (or ⌘⏎) to run.',
-    'gen.topicPh': 'e.g. Asymmetric Yaw Damping, CAN Bus Phase Jitter, FOC Inverter Faults...',
-    'gen.presets': 'Presets:', 'gen.domain': 'Domain', 'gen.role': 'Role', 'gen.scenario': 'Scenario', 'gen.add': 'Add', 'gen.addCustom': 'Add custom…', 'gen.addedRec': 'Added, synced to Settings → Recommended Defaults', 'gen.dupRec': 'This item already exists',
-    'gen.sceneSec': 'Scene Simulation', 'gen.sceneSub': 'Simulate an immersive listening scene — pick the conversation format, your practice domain and speakers; describe the context freely.', 'gen.manageChips': 'Manage custom',
+    'gen.title': 'New Material', 'gen.domain': 'Domain', 'gen.add': 'Add', 'gen.addCustom': 'Add custom…', 'gen.addedRec': 'Added, synced to Settings → Recommended Defaults', 'gen.dupRec': 'This item already exists',
+    'gen.tipFormat': 'The structure and speaker count of the scene: solo talk, two-person dialogue or group discussion. Switching formats adjusts how roles are picked.', 'gen.labelDuration': 'Dialogue Duration', 'gen.labelVocab': 'Vocabulary Level', 'gen.labelSyntax': 'Syntax Complexity', 'gen.vocab1': 'Life-style', 'gen.vocab2': 'Workplace', 'gen.vocab3': 'Technical', 'gen.vocab4': 'Specialized', 'gen.vocab5': 'Academic', 'gen.syntax1': 'Simple', 'gen.syntax2': 'Basic', 'gen.syntax3': 'Common', 'gen.syntax4': 'Complex', 'gen.syntax5': 'Academic', 'gen.tipDuration': 'Rough duration of the generated audio — longer means more content.', 'gen.tipVocab': 'Vocabulary range, from L1 everyday language to L5 academic terminology.', 'gen.tipSyntax': 'Syntactic complexity, from L1 simple sentences to L5 academic passages.', 'gen.tipDomain': 'Technical domain of the material — steers terminology and context. Custom domains can be added or removed.', 'gen.tipRole': 'Pick the people in the conversation: 1 for a solo talk, 2 for a dialogue; for a discussion these act as a candidate pool and AI picks who appears.', 'gen.tipContext': 'Primary basis for the material. Be specific — occasion, participants and topic all matter.', 'gen.contextNote': 'The scene context is the primary basis for generation — the more specific, the better. If it conflicts with the options above, the scene context wins.', 'gen.cancel': 'Cancel', 'gen.vocabNames': ['','Everyday','Workplace','Technical','Specialized','Academic'], 'gen.vocabDescs': ['','Casual daily language, close to real life','Basic business communication, common workplace phrases','Core technical terms, common engineering expressions','Domain-specific vocabulary, precise technical wording','Academic-grade vocabulary, close to papers and lectures'], 'gen.syntaxNames': ['','Simple','Basic','Common','Complex','Academic'], 'gen.syntaxDescs': ['','Short sentences, straightforward structure','Simple coordinated structures, basic connectors','Common subordinate clauses, layered expression','Multiple nested clauses, varied sentence patterns','Frequent long complex sentences, academic style'],'gen.sceneSec': 'Scene Simulation', 'gen.outputSec': 'Output', 'gen.roleHint': 'The selected roles are a candidate pool — AI picks 3–5 speakers based on the context.',
     'gen.fmt': 'Conversation Format', 'gen.fmtSolo': 'Solo Talk', 'gen.fmtDialogue': 'Dialogue', 'gen.fmtDiscussion': 'Discussion',
-    'gen.fmtHintSolo': 'Single technical presentation / lecture', 'gen.fmtHintDialogue': 'Two-person conversation', 'gen.fmtHintDiscussion': 'Multi-party discussion (3–5 speakers)',
-    'gen.custom': 'Custom', 'gen.roles': 'Speakers', 'gen.roleSoloHint': 'pick 1 speaker', 'gen.roleDlgHint': 'pick exactly 2', 'gen.roleAsymHint': 'lead / respond', 'gen.roleDiscHint': 'optionally specify who appears in this scene',
-    'gen.removedRec': 'Removed',
-    'gen.asymOff': 'Symmetric (peer-to-peer)', 'gen.asymOn': 'Asymmetric (lead / respond)',
-    'gen.lead': 'Lead · drives & asks', 'gen.leadPh': 'e.g. 4S store sales consultant', 'gen.respond': 'Respond · answers, may ask back', 'gen.respondPh': 'e.g. test-drive customer',
-    'gen.speakerCount': 'Speakers:', 'gen.context': 'Scene Context', 'gen.contextPh': 'Describe the occasion and topic — e.g. test drive: the sales consultant presents vehicle performance and answers customer concerns',
+    'gen.custom': 'Custom', 'gen.roles': 'Speakers',
+    'gen.removedRec': 'Removed', 'gen.context': 'Scene Context', 'gen.contextPh': 'Describe the occasion and topic — e.g. test drive: the sales consultant presents vehicle performance and answers customer concerns',
     'ctxSolo': ['Technical presentation of a new solution', 'Deep-dive into one failure mechanism', 'Classroom-style lecture with brief Q&A'],
     'ctxDialogue': ['Interview: recruiter asks a candidate', 'Sales: consultant presents and handles concerns', 'Collaboration: two engineers align on a design'],
     'ctxDiscussion': ['Review meeting on a recent quality issue', 'Cross-team trade-off discussion', 'Supplier review with multiple stakeholders'],
-    'gen.complex': 'Complexity / Terminology Density', 'gen.duration': 'Target Audio Duration',
-    'gen.depth': 'Technical Depth', 'gen.breadth': 'Breadth',
     'depthLabels': { 1: 'Overview level', 2: 'Core concepts', 3: 'Mechanism + trade-offs', 4: 'Deep-dive · math & formulas', 5: 'Principal · research-level' },
     'breadthLabels': { 1: 'Single perspective', 2: 'Two-role exchange', 3: 'Multi-role discussion', 4: 'Cross-team review', 5: 'Full-chain stakeholders' },
-    'gen.advanced': 'Advanced Directives', 'gen.reset': 'Reset Defaults', 'gen.generate': 'Generate',
+    'gen.advanced': 'Advanced Directives', 'gen.generate': 'Generate',
     'gen.llmNa': 'Not configured — set in Settings', 'gen.llmNaHint': 'Add an LLM provider and API key in Settings to enable generation.',
     'pb.details': 'Details',
     'settings.title': 'Settings',
@@ -3052,26 +3147,17 @@ const I18N = {
     'tab.grounding': '技术接地', 'tab.vocab': '词汇', 'tab.quiz': '测验', 'tab.patterns': '句型',
     'tr.header': '同步技术对话', 'tr.zh': '中文',
     'tr.synth': '语料已生成 — 音频尚未合成。',
-    'gen.title': '新建素材', 'gen.sub': '从真实工程场景合成一段技术英语听力素材。',
-    'gen.topicHint': '用中文或英文输入任意工程主题——越具体越好。回车换行 · 点击生成（或按 ⌘⏎）开始。',
-    'gen.topicPh': '例如：不对称横摆阻尼、CAN 总线相位抖动、FOC 逆变器故障…',
-    'gen.presets': '预设：', 'gen.domain': '领域', 'gen.role': '角色', 'gen.scenario': '场景', 'gen.add': '添加', 'gen.addCustom': '添加自定义…', 'gen.addedRec': '已添加，并同步到 设置 → 推荐设置', 'gen.dupRec': '该项已存在',
-    'gen.sceneSec': '场景模拟设置', 'gen.sceneSub': '模拟专业的沉浸式听力场景——选择对话形态、感兴趣方向与出场角色，场景语境自由描述。', 'gen.manageChips': '管理自定义',
+    'gen.title': '新建素材', 'gen.domain': '领域', 'gen.add': '添加', 'gen.addCustom': '添加自定义…', 'gen.addedRec': '已添加，并同步到 设置 → 推荐设置', 'gen.dupRec': '该项已存在',
+    'gen.tipFormat': '决定对话的结构与出场人数：单人讲解、双人对话或多人讨论。切换形态会同步调整角色选择方式。', 'gen.labelDuration': '对话时长', 'gen.labelVocab': '词汇专业度', 'gen.labelSyntax': '句式复杂度', 'gen.vocab1': '生活化', 'gen.vocab2': '职场化', 'gen.vocab3': '技术化', 'gen.vocab4': '专业化', 'gen.vocab5': '学术化', 'gen.syntax1': '简单', 'gen.syntax2': '基础', 'gen.syntax3': '常用', 'gen.syntax4': '复杂', 'gen.syntax5': '学术', 'gen.tipDuration': '生成音频的大致时长，时间越长内容越充分。', 'gen.tipVocab': '词汇难度范围，从 L1 生活化日常用语到 L5 学术级专业词汇。', 'gen.tipSyntax': '句法复杂程度，从 L1 简单短句到 L5 学术长难句。', 'gen.tipDomain': '素材所属的技术领域，影响术语选择与语境倾向。可添加或删除自定义领域。', 'gen.tipRole': '选择参与对话的人物：单人讲解选 1 位，双人对话选 2 位；多人讨论时作为候选名单，由 AI 依据语境挑选出场。', 'gen.tipContext': '生成素材的主要依据。描述越具体越好，包括场合、参与方、讨论话题等。', 'gen.contextNote': '场景语境是生成素材的主要依据，描述越具体越好。当与上述选项设置冲突时，将优先以场景语境为准。', 'gen.cancel': '取消', 'gen.vocabNames': ['','生活化','职场化','技术化','专业化','学术化'], 'gen.vocabDescs': ['','日常聊天用语，贴近生活场景','基础商务沟通，通用职场表达','基础技术术语，常见工程表达','领域专业词汇，准确的技术用语','学术级词汇，接近论文与讲座'], 'gen.syntaxNames': ['','简单','基础','常用','复杂','学术'], 'gen.syntaxDescs': ['','短句为主，结构直白清晰','简单并列复合，连接词基础','含常用从句，表达有层次','多从句嵌套，句式富有变化','长难句频繁，学术式行文'],'gen.sceneSec': '场景模拟', 'gen.outputSec': '输出参数', 'gen.roleHint': '所选角色为候选名单，AI 会依据语境从中挑选 3–5 位出场。',
     'gen.fmt': '对话形态', 'gen.fmtSolo': '单人讲解', 'gen.fmtDialogue': '双人对话', 'gen.fmtDiscussion': '多人讨论',
-    'gen.fmtHintSolo': '单人技术讲解 / 汇报 / 课程', 'gen.fmtHintDialogue': '双人对话（面试 / 销售 / 协作）', 'gen.fmtHintDiscussion': '多人讨论（3–5 人，如评审会）',
-    'gen.custom': '自定义', 'gen.roles': '对话角色', 'gen.roleSoloHint': '单选 1 位讲者', 'gen.roleDlgHint': '恰好选 2 位', 'gen.roleAsymHint': '主导方 / 应答方', 'gen.roleDiscHint': '手动指定场景里出现的角色（非必选）',
-    'gen.removedRec': '已删除',
-    'gen.asymOff': '对等双方', 'gen.asymOn': '一方主导（lead / respond）',
-    'gen.lead': '主导方 lead · 掌控话题', 'gen.leadPh': '如：4S 店销售顾问', 'gen.respond': '应答方 respond · 回应可反问', 'gen.respondPh': '如：试驾客户',
-    'gen.speakerCount': '出场人数：', 'gen.context': '场景语境', 'gen.contextPh': '描述场合与主题，如：试驾环节，销售介绍车辆性能并回应客户顾虑',
+    'gen.custom': '自定义', 'gen.roles': '对话角色',
+    'gen.removedRec': '已删除', 'gen.context': '场景语境', 'gen.contextPh': '描述场合与主题，如：试驾环节，销售介绍车辆性能并回应客户顾虑',
     'ctxSolo': ['新技术方案的技术演讲', '深挖某个失效机理的讲解', '课堂教学式讲解（带简短问答）'],
     'ctxDialogue': ['面试：面试官提问候选人', '销售：顾问介绍产品并回应顾虑', '协作：两位工程师对齐设计方案'],
     'ctxDiscussion': ['近期质量问题的评审会', '跨团队方案权衡讨论', '多方参与的供应商评审'],
-    'gen.complex': '复杂度 / 术语密度', 'gen.duration': '目标音频时长',
-    'gen.depth': '技术深度', 'gen.breadth': '谈论广度',
     'depthLabels': { 1: '概览级', 2: '核心概念', 3: '机制与权衡', 4: '深入 — 公式与推导', 5: '专家级 — 研究深度' },
     'breadthLabels': { 1: '单一视角', 2: '双角色交流', 3: '多角色讨论', 4: '跨团队评审', 5: '全链路多方' },
-    'gen.advanced': '高级指令', 'gen.reset': '恢复默认', 'gen.generate': '生成',
+    'gen.advanced': '高级指令', 'gen.generate': '生成',
     'gen.llmNa': '未配置 — 前往设置添加', 'gen.llmNaHint': '在设置中添加 LLM 提供商与 API Key 后即可生成。',
     'pb.details': '详情',
     'settings.title': '设置',
@@ -3271,6 +3357,8 @@ function applyLang() {
     const t = dict[el.dataset.i18nPh];
     if (t !== undefined) el.placeholder = t;
   });
+  /* JS-rendered texts (level descriptors) must follow the language too */
+  try { if (typeof updateDiff === 'function') updateDiff(); if (typeof updateLen === 'function') updateLen(); if (typeof updateDepth === 'function') updateDepth(); } catch (e) {}
 }
 
 /* ---------------- SETTINGS persistence ---------------- */
@@ -3974,6 +4062,75 @@ function applyProfileToGenPanel() {
   }
   renderGenScene();
 }
+
+/* =========================================================
+   V2 hover tooltips (field labels with data-tip)
+   ========================================================= */
+const tipEl = (() => {
+  const d = document.createElement('div');
+  d.className = 'tooltip';
+  document.body.appendChild(d);
+  return d;
+})();
+let tipAnchor = null;
+function tipText(key) {
+  const L = I18N[state.lang] || {};
+  return (key && L[key]) || key || '';
+}
+function positionTip(anchor) {
+  const r  = anchor.getBoundingClientRect();
+  const tw = tipEl.offsetWidth;
+  const th = tipEl.offsetHeight;
+  let left = r.left + r.width / 2 - tw / 2;
+  left = Math.max(12, Math.min(left, window.innerWidth - tw - 12));
+  let top = r.bottom + 10;
+  let above = false;
+  if (top + th > window.innerHeight - 12) { top = r.top - th - 10; above = true; }
+  tipEl.style.left = left + 'px';
+  tipEl.style.top  = top + 'px';
+  tipEl.classList.toggle('above', above);
+  const ax = r.left + r.width / 2 - left;
+  tipEl.style.setProperty('--arrow-x', Math.max(14, Math.min(tw - 14, ax)) + 'px');
+}
+function showTip(anchor) {
+  tipAnchor = anchor;
+  tipEl.textContent = tipText(anchor.dataset.tip);
+  tipEl.classList.add('show');
+  positionTip(anchor);
+}
+function hideTip() {
+  tipAnchor = null;
+  tipEl.classList.remove('show');
+}
+document.addEventListener('mouseover', e => {
+  const t = e.target.closest('#gen-panel [data-tip]');
+  if (!t || t === tipAnchor) return;
+  showTip(t);
+});
+document.addEventListener('mouseout', e => {
+  const t = e.target.closest('#gen-panel [data-tip]');
+  if (!t) return;
+  const to = e.relatedTarget;
+  if (to && t.contains(to)) return;
+  if (tipAnchor === t) hideTip();
+});
+document.addEventListener('mousedown', hideTip);
+const HINT_SVG =
+  '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" ' +
+  'stroke-width="1.2" stroke-linecap="round">' +
+  '<circle cx="6" cy="6" r="4.75"/>' +
+  '<path d="M6 5.5v2.9"/>' +
+  '<circle cx="6" cy="3.85" r="0.62" fill="currentColor" stroke="none"/>' +
+  '</svg>';
+function decorateTips() {
+  document.querySelectorAll('#gen-panel [data-tip]').forEach(el => {
+    if (el.querySelector('.hint-ico')) return;
+    const ico = document.createElement('span');
+    ico.className = 'hint-ico';
+    ico.innerHTML = HINT_SVG;
+    el.appendChild(ico);
+  });
+}
 function renderGenScene() {
   const L = I18N[state.lang];
   const sc = state.genScene;
@@ -3981,48 +4138,50 @@ function renderGenScene() {
   document.querySelectorAll('#fmt-seg .seg-item').forEach(b => b.classList.toggle('active', b.dataset.fmt === sc.format));
   const hintEl = $('fmt-hint');
   if (hintEl) hintEl.textContent = L['gen.fmtHint' + ({ solo: 'Solo', dialogue: 'Dialogue', discussion: 'Discussion' }[sc.format])] || '';
-  /* domain chips (single-select); custom entries get a × only in manage mode */
+  /* domain chips (single-select); delete badges are CSS-controlled, +Custom always at row end */
   const domMgr = $('btn-mgr-domains');
   if (domMgr) domMgr.classList.toggle('active', sc.manageDomains);
   const ds = genDomainCandidates();
-  $('gen-domains').innerHTML = ds.map(d => {
+  const customDom = '<button type="button" class="chip-add" data-key="domains"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 1.5v7M1.5 5h7"/></svg><span>' + escapeHtml(L['gen.custom'] || 'Custom') + '</span></button>';
+  $('gen-domains').innerHTML = '<div class="chip-row' + (sc.manageDomains ? ' managing' : '') + '">' + ds.map(d => {
     const act = sc.domain && (d.id === sc.domain.id || d.name === sc.domain.name);
     return '<button type="button" class="chip' + (act ? ' active' : '') + '" data-domain="' + escapeHtml(d.name) + '">' + escapeHtml(d.name) +
-      (sc.manageDomains ? '<span class="chip-x" data-del-domain="' + escapeHtml(d.id) + '"><svg class="icon icon-xs"><use href="#i-close"/></svg></span>' : '') + '</button>';
-  }).join('');
+      '<span class="chip-x" data-del-domain="' + escapeHtml(d.id) + '"><svg viewBox="0 0 8 8" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.9 1.9l4.2 4.2M6.1 1.9L1.9 6.1"/></svg></span></button>';
+  }).join('') + customDom + '</div>';
   renderGenRoles();
   /* context input + suggestion chips */
   const ctxEl = $('gen-context');
   if (ctxEl && document.activeElement !== ctxEl) ctxEl.value = sc.context || '';
   const sugs = contextSuggestions(sc.format, sc.domain);
-  $('gen-context-sugs').innerHTML = sugs.map(s =>
-    '<button type="button" class="chip" data-ctxsug="1">' + escapeHtml(s) + '</button>'
-  ).join('');
   updateGenerateBtn();
 }
 function renderGenRoles() {
   const wrap = $('gen-roles-wrap'); if (!wrap) return;
   const L = I18N[state.lang];
   const sc = state.genScene;
-  const mgrBtn = '<button type="button" class="icon-btn chip-mgr" id="btn-mgr-roles" title="Manage speakers"><svg class="icon icon-sm"><use href="#i-settings"/></svg></button>';
   const pool = genRoleCandidates();
-  const customChip = '<button type="button" class="chip quick-chip" data-key="roles"><svg class="icon icon-sm"><use href="#i-plus"/></svg>&nbsp;<span>' + escapeHtml(L['gen.custom'] || 'Custom') + '</span></button>';
+  const customChip = '<button type="button" class="chip-add" data-key="roles"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 1.5v7M1.5 5h7"/></svg><span>' + escapeHtml(L['gen.custom'] || 'Custom') + '</span></button>';
   /* the +Custom chip is always visible at the end of the row */
   const customRow = customChip;
-  /* in manage mode every chip gets a delete × (all candidates are user data) */
+  /* in manage mode every chip gets a delete badge (CSS-controlled visibility) */
   const chipHTML = r => {
     return '<button type="button" class="chip' + (sc.roles.includes(r) ? ' active' : '') + '" data-role="' + escapeHtml(r) + '">' + escapeHtml(r) +
-      (sc.manageRoles ? '<span class="chip-x" data-del-role="' + escapeHtml(r) + '"><svg class="icon icon-xs"><use href="#i-close"/></svg></span>' : '') + '</button>';
+      '<span class="chip-x" data-del-role="' + escapeHtml(r) + '"><svg viewBox="0 0 8 8" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.9 1.9l4.2 4.2M6.1 1.9L1.9 6.1"/></svg></span></button>';
   };
-  let h = '';
-  if (sc.format === 'solo' || sc.format === 'dialogue' || sc.format === 'discussion') {
-    h += '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;flex-wrap:wrap">' +
-      '<label class="flabel" style="margin-bottom:0">' + L['gen.roles'] + '</label>' + mgrBtn + '</div>';
-    h += '<div class="chip-row">' + pool.map(chipHTML).join('') + customRow + '</div>';
-  }
+  let h = '<div class="chip-row' + (sc.manageRoles ? ' managing' : '') + '">' + pool.map(chipHTML).join('') + customRow + '</div>';
   wrap.innerHTML = h;
   const mgr = $('btn-mgr-roles');
   if (mgr) mgr.classList.toggle('active', sc.manageRoles);
+  const hint = $('gen-role-hint');
+  if (hint) {
+    if (sc.format === 'discussion') {
+      hint.textContent = L['gen.roleHint'] || '所选角色为候选名单，AI 会依据语境从中挑选 3–5 位出场。';
+      hint.classList.add('show');
+    } else {
+      hint.textContent = '';
+      hint.classList.remove('show');
+    }
+  }
 }
 
 function toggleGenRole(name) {
@@ -4113,19 +4272,15 @@ function quickAddItem(key, name) {
     if (!dup) {
       const nid = 'custom-' + Date.now();
       recs.domains.push({ id: nid, name: name, desc: '' });
-      if (key === 'domains') {
-        state.genScene.domain = { id: nid, name: name };
-        renderGenScene();
-      }
+      state.genScene.domain = { id: nid, name: name };
     }
   }
   else if (key === 'roles') { dup = recs.roles.includes(name); if (!dup) recs.roles.push(name); }
   else { dup = recs.scenarios.includes(name); if (!dup) recs.scenarios.push(name); }
   if (dup) { showToast(L['gen.dupRec'], 'warn'); return; }
   writeRecs(recs);
-  if (key === 'roles') {
-    toggleGenRole(name);
-  }
+  if (key === 'domains') renderGenScene();
+  if (key === 'roles') toggleGenRole(name);
   showToast(L['gen.addedRec'] + ' · ' + name, 'ok');
 }
 
@@ -4956,7 +5111,7 @@ function collectParams() {
       vocabDensity: +$('adv-vocab').value,
       style: $('adv-style').value, injections: $('adv-inject').value,
       tone: $('adv-tone').value,
-      breadth: +document.querySelector('#breadth-seg .seg-item.active').dataset.breadth,
+      breadth: (function(){ const el=document.querySelector('#breadth-seg'); return el&&el.querySelector('.seg-item.active')?+el.querySelector('.seg-item.active').dataset.breadth:3; })(),
       directions: []
     }
   };
@@ -5506,10 +5661,9 @@ function resetDefaults() {
   renderGenScene();
   applyProfileToGenPanel();
   setSeg($('diff-seg'), document.querySelector('#diff-seg [data-level="3"]'));
-  setSeg($('len-seg'), document.querySelector('#len-seg [data-length="120"]'));
+  setSeg($('len-seg'), document.querySelector('#len-seg [data-length="300"]'));
   setSeg($('depth-seg'), document.querySelector('#depth-seg [data-depth="3"]'));
-  setSeg($('breadth-seg'), document.querySelector('#breadth-seg [data-breadth="3"]'));
-  updateDiff(); updateLen(); updateDepth(); updateBreadth();
+  updateDiff(); updateLen(); updateDepth();
   $('adv-vocab').value = 28;
   $('adv-style').selectedIndex = 0;
   $('adv-inject').value = 'Stress lateral acceleration and yaw moment feedback';
@@ -5521,8 +5675,13 @@ function setSeg(container, item) {
 }
 function updateDiff() {
   const lv = +document.querySelector('#diff-seg .seg-item.active').dataset.level;
-  $('diff-label').textContent = 'Level ' + lv + ' of 5';
-  $('diff-hint').textContent = CONFIG.diffHints[lv];
+  const i18n = I18N[state.lang] || {};
+  const vNames = i18n['gen.vocabNames'] || i18n.vocabNames || [];
+  const vDescs = i18n['gen.vocabDescs'] || i18n.vocabDescs || [];
+  const name = vNames[lv] || ('L' + lv);
+  const desc = vDescs[lv] || (CONFIG.diffHints[lv] || '');
+  $('diff-hint-name').textContent = name;
+  $('diff-hint').textContent = desc;
 }
 function updateLen() {
   const ln = document.querySelector('#len-seg .seg-item.active').dataset.length;
@@ -5530,13 +5689,21 @@ function updateLen() {
 }
 function updateDepth() {
   const d = +document.querySelector('#depth-seg .seg-item.active').dataset.depth;
-  const labels = I18N[state.lang].depthLabels || CONFIG.depthLabels;
-  $('depth-label').textContent = labels[d] || CONFIG.depthLabels[d];
+  const i18n = I18N[state.lang] || {};
+  const sNames = i18n['gen.syntaxNames'] || i18n.syntaxNames || [];
+  const sDescs = i18n['gen.syntaxDescs'] || i18n.syntaxDescs || [];
+  const name = sNames[d] || (CONFIG.depthLabels && CONFIG.depthLabels[d]) || ('D' + d);
+  const desc = sDescs[d] || '';
+  $('depth-label').textContent = name;
+  $('depth-hint').textContent = desc;
 }
 function updateBreadth() {
-  const b = +document.querySelector('#breadth-seg .seg-item.active').dataset.breadth;
+  const el = document.querySelector('#breadth-seg');
+  if (!el || !el.querySelector('.seg-item.active')) return;
+  const b = +el.querySelector('.seg-item.active').dataset.breadth;
   const labels = I18N[state.lang].breadthLabels;
-  $('breadth-label').textContent = labels[b] || ('B' + b);
+  const lbl = document.querySelector('#breadth-label');
+  if (lbl) lbl.textContent = labels[b] || ('B' + b);
 }
 function toggleAdvanced() {
   const hidden = $('advanced-panel').classList.toggle('hidden');
@@ -6568,7 +6735,7 @@ function onClick(e) {
   if (e.target.closest('.btn-role-test')) { auditionRole(e.target.closest('.btn-role-test')); return; }
   if (!e.target.closest('#speed-menu') && !e.target.closest('#btn-pb-speed')) closeSpeedMenu();
   if (e.target.closest('#gen-llm-tag')) { openModal(); switchMTab('llm', false); return; }
-  if (e.target.closest('#btn-gen-close')) { closeGenPanel(); return; }
+  if (e.target.closest('#btn-cancel-gen')) { closeGenPanel(); return; }
   if (e.target.id === 'gen-backdrop') { closeGenPanel(); return; }
   if (e.target.closest('#btn-theme')) { toggleTheme(); return; }
   if (e.target.closest('#btn-engine-config')) { openModal(); return; }
@@ -6600,10 +6767,7 @@ function onClick(e) {
   if (e.target.closest('#btn-synth')) { openTTSModal(); return; }
   if (e.target.closest('#btn-retry-synth')) { hideSynthError(); synthesizeAudio(); return; }
   if (e.target.closest('#btn-generate')) { runGenerate(); return; }
-  if (e.target.closest('#btn-reset')) { resetDefaults(); return; }
   if (e.target.closest('#toggle-advanced')) { toggleAdvanced(); return; }
-  const preset = e.target.closest('.preset-tag[data-topic]');
-  if (preset) { state.genScene.context = preset.dataset.topic; renderGenScene(); updateGenerateBtn(); return; }
   const diffItem = e.target.closest('#diff-seg .seg-item');
   if (diffItem) { setSeg($('diff-seg'), diffItem); updateDiff(); return; }
   const lenItem = e.target.closest('#len-seg .seg-item');
@@ -6720,10 +6884,9 @@ function onClick(e) {
   }
   const roleChip = e.target.closest('#gen-roles-wrap .chip[data-role]');
   if (roleChip) { toggleGenRole(roleChip.dataset.role); return; }
-  const ctxSug = e.target.closest('#gen-context-sugs .chip[data-ctxsug]');
-  if (ctxSug) { state.genScene.context = ctxSug.textContent.trim(); renderGenScene(); return; }
-  if (e.target.closest('#btn-add-domain')) { openQuickAdd('domains', e.target.closest('#btn-add-domain')); return; }
-  const addRoleChip = e.target.closest('#gen-roles-wrap .chip[data-key="roles"]');
+  const addDomChip = e.target.closest('#gen-domains .chip-add[data-key="domains"]');
+  if (addDomChip) { openQuickAdd('domains', addDomChip); return; }
+  const addRoleChip = e.target.closest('#gen-roles-wrap .chip-add[data-key="roles"]');
   if (addRoleChip) { openQuickAdd('roles', addRoleChip); return; }
   if (e.type === 'input' && e.target.id === 'gen-context') { state.genScene.context = e.target.value; return; }
   const recEl = e.target.closest('#rec-box [data-act]');
@@ -6942,14 +7105,17 @@ function init() {
   $('refine-tone').addEventListener('change', updateRefineToneLabel);
   document.querySelector('.inspector').classList.add('hidden');
   syncDetailBtn();
+  decorateTips();
   bootLive();
 }
 async function bootLive() {
   try {
     const mats = await API.listMaterials();
     if (mats && mats.length) {
-      state.library = mats;
-      state.current = mats[0];
+      /* Never hijack a library the user has already populated (e.g. a material
+         generated while this async boot is still in flight) — seed only on first load. */
+      if (!state.library || !state.library.length) state.library = mats;
+      if (!state.current) state.current = mats[0];
     }
     try {
       const pls = await API.listPlaylists();

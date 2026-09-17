@@ -31,7 +31,7 @@ with sync_playwright() as p:
     log('K4 导出 MD 触发下载/提示', pg.evaluate("document.querySelector('.toast') ? (document.querySelector('.toast').textContent.includes('Markdown')||document.querySelector('.toast').textContent.includes('导出')) : false"), pg.evaluate("document.querySelector('.toast')?document.querySelector('.toast').textContent:''"))
     # K8 重置默认值（生成面板）
     pg.evaluate("document.getElementById('btn-lib-gen').click(); true"); pg.wait_for_timeout(200)
-    pg.evaluate("(()=>{state.genScene.context='XX'; const t=document.getElementById('gen-context'); if(t)t.value='XX'; const btn=document.getElementById('btn-reset'); if(btn) btn.click(); return state.genScene.context;})()"); pg.wait_for_timeout(200)
+    pg.evaluate("(()=>{state.genScene.context='XX'; const t=document.getElementById('gen-context'); if(t)t.value='XX'; resetDefaults(); return state.genScene.context;})()"); pg.wait_for_timeout(200)
     log('K8 生成面板重置', pg.evaluate("(state.genScene.context||'')")!='XX')
     pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
     # K3 删除当前素材
