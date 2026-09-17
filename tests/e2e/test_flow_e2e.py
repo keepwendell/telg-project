@@ -23,7 +23,7 @@ with sync_playwright() as p:
 
     pg.keyboard.press('Control+k'); pg.wait_for_timeout(300)
     log('B1 ⌘K 打开生成面板', not pg.evaluate("document.getElementById('gen-panel').classList.contains('hidden')"))
-    pg.evaluate("document.getElementById('topic-input').value='Brake-by-Wire Failover'; true"); pg.wait_for_timeout(100)
+    pg.evaluate("(()=>{state.genScene.context='Brake-by-Wire Failover'; renderGenScene();})()"); pg.wait_for_timeout(100)
     pg.evaluate("document.getElementById('btn-generate').click(); true"); pg.wait_for_timeout(300)
     steps = pg.evaluate("document.querySelectorAll('#gen-progress-box .gen-step').length")
     log('B2 生成进度 3 步显示', steps==3, f'steps={steps}')
