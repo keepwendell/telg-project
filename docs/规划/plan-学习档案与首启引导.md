@@ -213,7 +213,8 @@ Study
 | 键 | 内容 |
 |---|---|
 | `telg-settings.profile` | 学习档案（结构化，含原始回答引用） |
-| `telg-settings.domains` | 领域档案集合（预设 + 自定义） |
+| `telg-settings.recommendations` | 推荐设置（问卷 + LLM 生成的领域/角色/场景，可增删改） |
+| `telg-settings.domains` | ~~领域档案集合（预设 + 自定义）~~ **已废弃（2026-09-17）**：设置页不再展示/管理，旧自定义项一次性并入 `recommendations.domains`，内置领域库仅作兜底 |
 | `telg-profile-answers` | 问卷原始回答（供重新生成） |
 | `telg-onboarding` | 引导状态 |
 | `telg-auth` | 本地账号（username + 加盐哈希 + 登录态） |
@@ -221,8 +222,8 @@ Study
 ### 6.3 复用与兼容
 
 - `cfg-goal-min`：时长目标唯一来源，问卷第 4 题写入。
-- 生成面板 domain 默认值 = 首选领域档案。
-- 领域档案 `inject` 注入 LLM system prompt（与 roadmap 事项 3 领域自定义共享改造点）。
+- 生成面板 domain 默认值 = 推荐设置的首个领域；无推荐时回退内置领域库（BUILTIN_DOMAINS）。
+- ~~领域档案 `inject` 注入 LLM system prompt~~ **实现变更（2026-09-17）**：设置页独立的「领域档案」区块已并入「推荐设置」（由问卷 + LLM 生成的个性化推荐统一管理，内置预设不再回显）；领域术语知识注入生成 prompt 仍未实现（见 roadmap 事项 3）。
 
 ---
 

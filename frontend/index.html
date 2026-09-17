@@ -1919,12 +1919,8 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <div id="profile-box">
           <div class="t-11 dim" data-i18n="settings.profile.empty">No profile yet — create one to personalize generation.</div>
         </div>
-        <div class="s-sec-title" data-i18n="settings.profile.secDomain">Domain Profiles</div>
-        <div id="domain-box">
-          <div class="t-11 dim" data-i18n="settings.profile.empty">No domains yet.</div>
-        </div>
-        <div class="s-sec-title" data-i18n="settings.rec.sec">Recommendations</div>
-        <p class="t-10 dim" style="margin:2px 0 8px" data-i18n="settings.rec.sub">LLM-generated from your profile — defaults for Domain / Role / Scenario in New Material. Editable below.</p>
+        <div class="s-sec-title" data-i18n="settings.rec.sec">Recommended Defaults</div>
+        <p class="t-10 dim" style="margin:2px 0 8px" data-i18n="settings.rec.sub">LLM-generated from your profile &amp; onboarding answers — defaults for Domain / Role / Scenario in New Material. Editable below.</p>
         <div id="rec-box">
           <div class="t-11 dim" data-i18n="settings.rec.empty">No recommendations yet — generate from your profile, or add your own.</div>
         </div>
@@ -2621,9 +2617,9 @@ const I18N = {
     'settings.study.sub': 'Listening time tracked per day — seconds actually played.',
     'settings.study.total': 'Total', 'settings.study.today': 'Today',
     'settings.study.secGoal': 'Training Goal', 'settings.goal.daily': 'Daily Listening Target', 'settings.goal.hint': 'Minutes of listening per day — tracked in the stats below.',
-    'settings.profile.secProfile': 'Learning Profile', 'settings.profile.secDomain': 'Domain Profiles',
-    'settings.rec.sec': 'Recommendations', 'settings.rec.empty': 'No recommendations yet — generate from your profile, or add your own.',
-    'settings.rec.sub': 'LLM-generated from your profile — defaults for Domain / Role / Scenario in New Material. Editable below.',
+    'settings.profile.secProfile': 'Learning Profile',
+    'settings.rec.sec': 'Recommended Defaults', 'settings.rec.empty': 'No recommendations yet — generate from your profile, or add your own.',
+    'settings.rec.sub': 'LLM-generated from your profile &amp; onboarding answers — defaults for Domain / Role / Scenario in New Material. Editable below.',
     'settings.rec.domains': 'Domains', 'settings.rec.roles': 'Roles', 'settings.rec.scenarios': 'Scenarios',
     'settings.rec.add': 'Add', 'settings.rec.remove': 'Remove', 'settings.rec.gen': 'Generate with LLM', 'settings.rec.genBusy': 'Generating…',
     'settings.rec.save': 'Save', 'settings.rec.reset': 'Reset to Default', 'settings.rec.saved': 'Recommendations saved',
@@ -2643,7 +2639,7 @@ const I18N = {
     'settings.profile.genResult': 'LLM Generated Profile', 'settings.profile.genResultHint': 'AI drafts role portrait, domain profile, focus & tone — editable below.',
     'settings.profile.rolePortrait': 'Role Portrait', 'settings.profile.domainProfile': 'Domain Profile', 'settings.profile.focusTone': 'Focus & Tone',
     'settings.profile.genBtn': 'Generate with LLM', 'settings.profile.generating': 'Generating profile…', 'settings.profile.needInput': 'Enter role or domain first.', 'settings.profile.saveBtn': 'Save Profile',
-    'settings.profile.builtin': 'builtin', 'settings.profile.newDomainName': 'Domain name', 'settings.profile.newDomainDesc': 'Short description (optional)', 'settings.profile.addDomain': 'Add', 'settings.profile.delDomain': 'Remove', 'settings.profile.domainAdded': 'Domain added', 'settings.profile.needDomainName': 'Enter a domain name', 'settings.profile.cleared': 'Profile cleared',
+    'settings.profile.cleared': 'Profile cleared',
     'welcome.create': 'Create & Start', 'welcome.login': 'Log in', 'welcome.switch': 'Already have an account? Log in', 'welcome.switchLogin': 'New here? Create an account',
     'welcome.guest': 'Continue as guest', 'welcome.sub': 'Create a local account to start.', 'welcome.subLogin': 'Sign in to continue.',
     'welcome.needUser': 'Enter a username', 'welcome.pwShort': 'Password too short (min 4)', 'welcome.hasAccount': 'An account already exists on this device', 'welcome.noAccount': 'No local account — create one first',
@@ -2829,9 +2825,9 @@ const I18N = {
     'settings.study.sub': '每日学习时长统计——按实际播放秒数记录。',
     'settings.study.total': '累计', 'settings.study.today': '今日',
     'settings.study.secGoal': '训练目标', 'settings.goal.daily': '每日听力目标', 'settings.goal.hint': '每日学习时长目标（分钟），由下方统计跟踪进度。',
-    'settings.profile.secProfile': '学习档案', 'settings.profile.secDomain': '领域档案',
-    'settings.rec.sec': '推荐配置', 'settings.rec.empty': '暂无推荐——可从学习档案生成，或手动添加。',
-    'settings.rec.sub': '由 LLM 根据学习档案生成——作为新建素材中领域/角色/场景的默认选项，可在此增删改。',
+    'settings.profile.secProfile': '学习档案',
+    'settings.rec.sec': '推荐设置', 'settings.rec.empty': '暂无推荐——可从学习档案生成，或手动添加。',
+    'settings.rec.sub': '由 LLM 根据你的问卷与学习档案生成的个性化推荐，作为新建素材中领域/角色/场景的默认选项，可在此增删改。',
     'settings.rec.domains': '领域', 'settings.rec.roles': '角色', 'settings.rec.scenarios': '场景',
     'settings.rec.add': '添加', 'settings.rec.remove': '删除', 'settings.rec.gen': '由 LLM 生成推荐', 'settings.rec.genBusy': '生成中…',
     'settings.rec.save': '保存', 'settings.rec.reset': '恢复默认', 'settings.rec.saved': '推荐配置已保存',
@@ -2851,7 +2847,7 @@ const I18N = {
     'settings.profile.genResult': 'LLM 生成档案', 'settings.profile.genResultHint': 'AI 草拟角色画像、领域档案、专注与语气——下方可编辑。',
     'settings.profile.rolePortrait': '角色画像', 'settings.profile.domainProfile': '领域档案', 'settings.profile.focusTone': '专注与语气',
     'settings.profile.genBtn': '由 LLM 生成', 'settings.profile.generating': '正在生成档案…', 'settings.profile.needInput': '请先填写角色或领域。', 'settings.profile.saveBtn': '保存档案',
-    'settings.profile.builtin': '内置', 'settings.profile.newDomainName': '领域名称', 'settings.profile.newDomainDesc': '简短描述（可选）', 'settings.profile.addDomain': '添加', 'settings.profile.delDomain': '删除', 'settings.profile.domainAdded': '领域已添加', 'settings.profile.needDomainName': '请输入领域名称', 'settings.profile.cleared': '档案已清除',
+    'settings.profile.cleared': '档案已清除',
     'welcome.create': '创建并开始', 'welcome.login': '登录', 'welcome.switch': '已有账号？登录', 'welcome.switchLogin': '新用户？创建账号',
     'welcome.guest': '以游客身份继续', 'welcome.sub': '创建本地账号开始使用。', 'welcome.subLogin': '登录以继续。',
     'welcome.needUser': '请输入用户名', 'welcome.pwShort': '密码太短（至少 4 位）', 'welcome.hasAccount': '本机已存在账号', 'welcome.noAccount': '本机无账号——请先创建',
@@ -3651,13 +3647,7 @@ const DOMAIN_SCENARIOS = {
 };
 const SCENARIO_TAG_MAP = { interview: 'Staff Technical Interview', meeting: 'Technical Meeting & Discussion', collab: 'Cross-team Collaboration', supplier: 'Supplier Technical Review', class: 'Technical Class / Tutorial' };
 const FALLBACK_ROLES = ['Vehicle Dynamics Engineer', 'Control Algorithm Architect', 'Embedded Kernel Debugger', 'ISO 26262 Safety Architect'];
-function profileDomains() {
-  try {
-    const s = JSON.parse(localStorage.getItem('telg-settings') || 'null');
-    const ds = s && Array.isArray(s.domains) && s.domains.length ? s.domains : BUILTIN_DOMAINS;
-    return ds.length ? ds : BUILTIN_DOMAINS;
-  } catch (e) { return BUILTIN_DOMAINS; }
-}
+function profileDomains() { return BUILTIN_DOMAINS; }
 function applyProfileToGenPanel() {
   const cfg = readStoredCfg() || {};
   const pf = cfg.profile || {};
@@ -3690,7 +3680,24 @@ function renderScenarioOptions() {
   }
   $('scenario-select').innerHTML = opts.map(o => '<option>' + escapeHtml(o) + '</option>').join('');
 }
+/* Legacy migration: user-customized domains from the old "Domain Profiles"
+   panel are folded into recommendations.domains once, then removed. */
+function migrateLegacyDomains() {
+  try {
+    const s = readStoredCfg();
+    const custom = (s && Array.isArray(s.domains)) ? s.domains.filter(d => d && !d.builtin) : [];
+    if (!custom.length) return;
+    const recs = s.recommendations || {};
+    const recD = (Array.isArray(recs.domains) ? recs.domains : []).map(d => ({ id: d.id || '', name: d.name || '', desc: d.desc || '' }));
+    const seen = new Set(recD.map(d => d.id).filter(Boolean));
+    custom.forEach(d => { if (d.id && !seen.has(d.id)) { seen.add(d.id); recD.push({ id: d.id, name: d.name, desc: d.desc || '' }); } });
+    if (recD.length) s.recommendations = Object.assign({}, recs, { domains: recD });
+    delete s.domains;
+    localStorage.setItem('telg-settings', JSON.stringify(s));
+  } catch (e) {}
+}
 function readRecs() {
+  migrateLegacyDomains();
   try { const s = readStoredCfg(); return (s && s.recommendations) || null; } catch (e) { return null; }
 }
 function writeRecs(r) {
@@ -3709,10 +3716,6 @@ function recsOrEmpty() {
 function readProfile() { const s = readStoredCfg(); return (s && s.profile) || null; }
 function writeProfile(p) {
   try { const s = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; if (p) s.profile = p; else delete s.profile; localStorage.setItem('telg-settings', JSON.stringify(s)); } catch (e) {}
-}
-function readDomains() { const s = readStoredCfg(); return (s && s.domains && s.domains.length) ? s.domains : BUILTIN_DOMAINS; }
-function writeDomains(d) {
-  try { const s = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; s.domains = d; localStorage.setItem('telg-settings', JSON.stringify(s)); } catch (e) {}
 }
 function renderProfileBox() {
   const box = $('profile-box'); if (!box) return;
@@ -3743,24 +3746,6 @@ function renderProfileBox() {
         '<button class="btn btn-ghost btn-sm del" id="btn-clear-profile">' + L['settings.profile.clearBtn'] + '</button>' +
       '</div>' +
     '</div></div>';
-}
-function renderDomainBox() {
-  const box = $('domain-box'); if (!box) return;
-  const L = I18N[state.lang];
-  const ds = readDomains();
-  const rows = ds.map(d => '<div class="s-row" style="border-bottom:1px solid var(--line);padding:8px 0">' +
-    '<div class="s-info" style="flex:1;min-width:0">' +
-      '<div class="s-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + escapeHtml(d.name) + (d.builtin ? '<span class="tag">' + L['settings.profile.builtin'] + '</span>' : '') + '</div>' +
-      '<div class="s-desc">' + escapeHtml(d.desc || '') + '</div>' +
-    '</div>' +
-    (!d.builtin ? '<button class="btn btn-ghost btn-sm del" data-act="del-domain" data-id="' + escapeHtml(d.id) + '">' + L['settings.profile.delDomain'] + '</button>' : '') +
-  '</div>').join('');
-  box.innerHTML = '<div style="margin-bottom:6px">' + rows + '</div>' +
-    '<div class="s-row" style="align-items:flex-end;gap:8px;flex-wrap:wrap">' +
-      '<div style="flex:1 1 120px;min-width:0"><input class="input" id="new-domain-name" style="width:100%" placeholder="' + L['settings.profile.newDomainName'] + '"/></div>' +
-      '<div style="flex:2 1 200px;min-width:0"><input class="input" id="new-domain-desc" style="width:100%" placeholder="' + L['settings.profile.newDomainDesc'] + '"/></div>' +
-      '<button class="btn btn-primary btn-sm" id="btn-add-domain">' + L['settings.profile.addDomain'] + '</button>' +
-    '</div>';
 }
 function openProfileEditor(regenerate) {
   const eng = $('engine-modal');
@@ -3959,23 +3944,6 @@ function doClearProfile() {
   writeProfile(null);
   renderProfileBox();
   showToast(I18N[state.lang]['settings.profile.cleared']);
-}
-function addCustomDomain() {
-  const name = $('new-domain-name').value.trim();
-  const desc = $('new-domain-desc').value.trim();
-  if (!name) { showToast(I18N[state.lang]['settings.profile.needDomainName'], 'warn'); return; }
-  const ds = readDomains().filter(d => !d.builtin);
-  const id = 'custom-' + Date.now();
-  ds.push({ id: id, name: name, builtin: false, desc: desc, inject: 'Custom domain: ' + name + (desc ? ' — ' + desc : '') });
-  const all = readDomains().filter(d => d.builtin).concat(ds);
-  writeDomains(all);
-  $('new-domain-name').value = ''; $('new-domain-desc').value = '';
-  renderDomainBox();
-  showToast(I18N[state.lang]['settings.profile.domainAdded']);
-}
-function delCustomDomain(id) {
-  writeDomains(readDomains().filter(d => d.id !== id));
-  renderDomainBox();
 }
 /* ---------------- CONFIRM MODAL (delete) ---------------- */
 function openConfirmModal(type, id, title, text) {
@@ -5943,7 +5911,6 @@ function openModal() {
   renderUsage();
   renderStudy();
   renderProfileBox();
-  renderDomainBox();
   renderRecsBox();
   refreshAboutAccount();
   updateEngineBadge();
@@ -6335,9 +6302,6 @@ function onClick(e) {
   if (e.target.closest('#btn-edit-profile')) { openProfileEditor(false); return; }
   if (e.target.closest('#btn-regen-profile')) { openProfileEditor(true); return; }
   if (e.target.closest('#btn-clear-profile')) { openConfirmModal('profile', null, I18N[state.lang]['settings.profile.clearBtn'], I18N[state.lang]['settings.profile.cleared']); return; }
-  if (e.target.closest('#btn-add-domain')) { addCustomDomain(); return; }
-  const delDom = e.target.closest('[data-act="del-domain"]');
-  if (delDom) { delCustomDomain(delDom.dataset.id); return; }
   const recEl = e.target.closest('#rec-box [data-act]');
   if (recEl) { onRecsAction(recEl); return; }
   if (e.target.closest('#ob-skip-llm')) { obIdx = 1; obSub = 0; renderObStep(); return; }
@@ -6461,6 +6425,8 @@ function onKey(e) {
 function init() {
   /* first-run gate: welcome -> local account -> onboarding -> main UI */
   initGate();
+  /* fold legacy settings.domains into recommendations once (idempotent) */
+  migrateLegacyDomains();
   /* restore persisted volume, phrase bookmarks and today's stats */
   try {
     const sv = parseFloat(localStorage.getItem('telg-volume'));
