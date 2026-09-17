@@ -1433,94 +1433,6 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   </div>
 </div>
 
-<!-- ===================== PROFILE MODAL ===================== -->
-      <div class="modal-overlay hidden" id="profile-modal">
-        <div class="modal-card" style="width:560px;max-width:94vw">
-          <div class="modal-head">
-            <div class="t-15 bold" data-i18n="settings.profile.editorTitle">Learning Profile</div>
-            <button class="btn-icon" id="btn-profile-close" title="Close"><svg class="icon"><use href="#i-close"/></svg></button>
-          </div>
-          <div class="modal-body" id="profile-editor-body">
-            <div class="t-11 dim" style="margin-bottom:12px" data-i18n="settings.profile.editorHint">Tell us about your role, domain and goals — we will generate a profile that drives default generation settings.</div>
-            <div class="s-row">
-              <div class="s-info">
-                <div class="s-name" data-i18n="settings.profile.role">Your Role / Position</div>
-                <div class="s-desc" data-i18n="settings.profile.roleHint">e.g. Controls Algorithm Engineer, Student</div>
-              </div>
-              <div class="s-ctrl" style="flex:1;max-width:260px">
-                <input class="inp" id="pf-role" style="width:100%" placeholder="Controls Algorithm Engineer"/>
-              </div>
-            </div>
-            <div class="s-row">
-              <div class="s-info">
-                <div class="s-name" data-i18n="settings.profile.domain">Primary Practice Domain</div>
-                <div class="s-desc" data-i18n="settings.profile.domainHint">Pick a preset or type your own.</div>
-              </div>
-              <div class="s-ctrl" style="flex:1;max-width:260px">
-                <input class="inp" id="pf-domain" style="width:100%" placeholder="Semiconductor" list="pf-domain-list"/>
-                <datalist id="pf-domain-list"></datalist>
-              </div>
-            </div>
-            <div class="s-row">
-              <div class="s-info">
-                <div class="s-name" data-i18n="settings.profile.lang">Language Direction</div>
-                <div class="s-desc" data-i18n="settings.profile.langHint">Learning language + translation.</div>
-              </div>
-              <div class="s-ctrl">
-                <div class="seg" id="pf-lang" style="grid-template-columns:repeat(3,1fr);max-width:300px">
-                  <button class="seg-item active" data-lang="en-zh" data-i18n="settings.profile.langEnZh">EN ↔ ZH</button>
-                  <button class="seg-item" data-lang="ja-zh" data-i18n="settings.profile.langJaZh">JA ↔ ZH</button>
-                  <button class="seg-item" data-lang="other" data-i18n="settings.profile.langOther">Other</button>
-                </div>
-              </div>
-            </div>
-            <div class="s-row" style="align-items:flex-start">
-              <div class="s-info">
-                <div class="s-name" data-i18n="settings.profile.scenario">Practice Scenarios</div>
-                <div class="s-desc" data-i18n="settings.profile.scenarioHint">Multiple select.</div>
-              </div>
-              <div class="s-ctrl" style="flex-wrap:wrap;justify-content:flex-end;gap:6px;max-width:340px">
-                <button class="chip" data-sc="interview" data-i18n="settings.profile.scInterview">Interview</button>
-                <button class="chip" data-sc="meeting" data-i18n="settings.profile.scMeeting">Meeting</button>
-                <button class="chip" data-sc="collab" data-i18n="settings.profile.scCollab">Collaboration</button>
-                <button class="chip" data-sc="supplier" data-i18n="settings.profile.scSupplier">Supplier</button>
-                <button class="chip" data-sc="class" data-i18n="settings.profile.scClass">Classroom</button>
-              </div>
-            </div>
-            <div class="s-row">
-              <div class="s-info">
-                <div class="s-name" data-i18n="settings.profile.focus">Focus Areas</div>
-                <div class="s-desc" data-i18n="settings.profile.focusHint">Optional — what you want to improve.</div>
-              </div>
-              <div class="s-ctrl" style="flex:1;max-width:260px">
-                <input class="inp" id="pf-focus" style="width:100%" placeholder="Technical vocabulary, interview fluency"/>
-              </div>
-            </div>
-            <div class="s-row" style="margin-top:4px">
-              <div class="s-info">
-                <div class="s-name" data-i18n="settings.profile.genResult">LLM Generated Profile</div>
-                <div class="s-desc" data-i18n="settings.profile.genResultHint">AI drafts role portrait, domain profile, focus &amp; tone — editable below.</div>
-              </div>
-            </div>
-            <div id="pf-gen-result" style="display:none">
-              <div class="m-panel" style="padding:12px;margin-bottom:10px">
-                <div class="flabel" style="margin-bottom:6px" data-i18n="settings.profile.rolePortrait">Role Portrait</div>
-                <textarea class="inp" id="pf-out-role" rows="2" style="width:100%;resize:vertical"></textarea>
-                <div class="flabel" style="margin:10px 0 6px" data-i18n="settings.profile.domainProfile">Domain Profile</div>
-                <textarea class="inp" id="pf-out-domain" rows="3" style="width:100%;resize:vertical"></textarea>
-                <div class="flabel" style="margin:10px 0 6px" data-i18n="settings.profile.focusTone">Focus &amp; Tone</div>
-                <textarea class="inp" id="pf-out-focus" rows="2" style="width:100%;resize:vertical"></textarea>
-              </div>
-            </div>
-            <div id="pf-gen-status" class="t-10 dim" style="margin:8px 0"></div>
-            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
-              <button class="btn btn-ghost" id="btn-pf-generate" data-i18n="settings.profile.genBtn">Generate with LLM</button>
-              <button class="btn btn-ghost" id="btn-pf-clear" data-i18n="settings.profile.clearBtn">Clear</button>
-              <button class="btn btn-primary" id="btn-pf-save" data-i18n="settings.profile.saveBtn">Save Profile</button>
-            </div>
-          </div>
-        </div>
-      </div>
 <!-- ===================== BOOKMARKS MODAL ===================== -->
 <div class="modal-overlay hidden" id="bookmark-modal">
   <div class="modal modal-settings">
@@ -2627,8 +2539,7 @@ const I18N = {
     'settings.rec.generated': 'Recommendations generated from your profile', 'settings.rec.noKey': 'Configure an LLM key first (Settings · LLM · Apply)',
     'settings.rec.genAuto': 'Generated recommendations from your profile — edit them anytime in Settings · Study',
     'settings.profile.empty': 'Nothing here yet.', 'settings.profile.emptyTitle': 'Build your learning profile', 'settings.profile.emptyDesc': 'Tell us your role, domain and goals — generation defaults follow automatically.',
-    'settings.profile.createBtn': 'Create Profile', 'settings.profile.editBtn': 'Edit', 'settings.profile.regenBtn': 'Re-generate', 'settings.profile.clearBtn': 'Clear',
-    'settings.profile.editorTitle': 'Learning Profile', 'settings.profile.editorHint': 'Tell us about your role, domain and goals — AI drafts a profile that drives default generation settings.',
+    'settings.profile.clearBtn': 'Clear',
     'settings.profile.role': 'Your Role / Position', 'settings.profile.roleHint': 'e.g. Controls Algorithm Engineer, Student',
     'settings.profile.domain': 'Primary Practice Domain', 'settings.profile.domainHint': 'Pick a preset or type your own.',
     'settings.profile.lang': 'Language Direction', 'settings.profile.langHint': 'Learning language + translation.',
@@ -2835,8 +2746,7 @@ const I18N = {
     'settings.rec.generated': '已根据学习档案生成推荐', 'settings.rec.noKey': '请先在设置 LLM 中配置密钥并应用',
     'settings.rec.genAuto': '已根据学习档案生成推荐——可在设置·学习页随时增删改',
     'settings.profile.empty': '这里还没有内容。', 'settings.profile.emptyTitle': '建立你的学习档案', 'settings.profile.emptyDesc': '告诉我们你的职位、领域与目标，生成默认值将自动跟随。',
-    'settings.profile.createBtn': '建立档案', 'settings.profile.editBtn': '编辑', 'settings.profile.regenBtn': '重新生成', 'settings.profile.clearBtn': '清除',
-    'settings.profile.editorTitle': '学习档案', 'settings.profile.editorHint': '告诉我们你的职位、领域与目标，AI 将生成驱动默认生成设置的档案。',
+    'settings.profile.clearBtn': '清除',
     'settings.profile.role': '你的角色 / 职位', 'settings.profile.roleHint': '例如：控制算法工程师、学生',
     'settings.profile.domain': '主要练习领域', 'settings.profile.domainHint': '选择预设或自行输入。',
     'settings.profile.lang': '语言方向', 'settings.profile.langHint': '学习语言 + 翻译语言。',
@@ -3720,67 +3630,49 @@ function writeProfile(p) {
 function renderProfileBox() {
   const box = $('profile-box'); if (!box) return;
   const L = I18N[state.lang];
-  const p = readProfile();
-  if (!p || (!p.role && !p.primaryDomain)) {
-    box.innerHTML = '<div class="s-empty">' +
-      '<div class="t-12" style="font-weight:600">' + L['settings.profile.emptyTitle'] + '</div>' +
-      '<div class="t-11 dim" style="margin:4px 0 10px">' + L['settings.profile.emptyDesc'] + '</div>' +
-      '<button class="btn btn-primary btn-sm" id="btn-create-profile">' + L['settings.profile.createBtn'] + '</button></div>';
-    return;
-  }
-  const langs = { 'en-zh': 'EN ↔ ZH', 'ja-zh': 'JA ↔ ZH', other: L['settings.profile.langOther'] };
-  const scMap = { interview: L['settings.profile.scInterview'], meeting: L['settings.profile.scMeeting'], collab: L['settings.profile.scCollab'], supplier: L['settings.profile.scSupplier'], class: L['settings.profile.scClass'] };
-  const chips = (p.scenarios || []).map(sc => '<span class="tag">' + escapeHtml(scMap[sc] || sc) + '</span>').join('');
-  box.innerHTML = '<div class="m-panel" style="padding:12px">' +
-    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">' +
-      '<div style="min-width:0">' +
-        '<div class="t-13 bold">' + escapeHtml(p.role || '—') + '</div>' +
-        '<div class="t-11 dim" style="margin-top:3px">' + escapeHtml(p.primaryDomain || '') + (p.focus ? ' · ' + escapeHtml(p.focus) : '') + '</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">' +
-          '<span class="tag">' + escapeHtml(langs[p.language] || p.language || 'EN ↔ ZH') + '</span>' + chips +
-        '</div>' +
-      '</div>' +
-      '<div style="display:flex;gap:6px;flex-shrink:0">' +
-        '<button class="btn btn-ghost btn-sm" id="btn-edit-profile">' + L['settings.profile.editBtn'] + '</button>' +
-        '<button class="btn btn-ghost btn-sm" id="btn-regen-profile">' + L['settings.profile.regenBtn'] + '</button>' +
-        '<button class="btn btn-ghost btn-sm del" id="btn-clear-profile">' + L['settings.profile.clearBtn'] + '</button>' +
-      '</div>' +
-    '</div></div>';
-}
-function openProfileEditor(regenerate) {
-  const eng = $('engine-modal');
-  if (eng && !eng.classList.contains('hidden')) { eng.classList.add('hidden'); state.settingsWasOpen = true; }
   const p = readProfile() || {};
-  $('pf-role').value = p.role || '';
-  $('pf-domain').value = p.primaryDomain || '';
-  $('pf-domain-list').innerHTML = BUILTIN_DOMAINS.map(d => '<option value="' + escapeHtml(d.name) + '"></option>').join('');
-  const lang = p.language || 'en-zh';
-  document.querySelectorAll('#pf-lang .seg-item').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
-  const sc = p.scenarios || [];
-  document.querySelectorAll('#profile-modal .chip[data-sc]').forEach(c => c.classList.toggle('active', sc.includes(c.dataset.sc)));
-  $('pf-focus').value = p.focus || '';
-  if (p.generated && p.rolePortrait) {
-    $('pf-gen-result').style.display = '';
-    $('pf-out-role').value = p.rolePortrait || '';
-    $('pf-out-domain').value = p.domainProfile || '';
-    $('pf-out-focus').value = p.focusTone || '';
-  } else { $('pf-gen-result').style.display = 'none'; }
-  $('pf-gen-status').textContent = '';
-  const ov = $('profile-modal');
-  ov.classList.remove('hidden');
-  ov.querySelector('.modal-body').scrollTop = 0;
-  if (regenerate) generateProfile();
-}
-function closeProfileModal() {
-  $('profile-modal').classList.add('hidden');
-  if (state.settingsWasOpen) { const eng = $('engine-modal'); if (eng) eng.classList.remove('hidden'); state.settingsWasOpen = false; }
+  const seg = (v) => 'class="seg-item' + ((p.language || 'en-zh') === v ? ' active' : '') + '" data-lang="' + v + '"';
+  box.innerHTML = '<div class="m-panel" style="padding:12px">' +
+    '<div class="s-row" style="align-items:center;gap:10px;flex-wrap:wrap">' +
+      '<div style="flex:1 1 220px;min-width:0"><div class="flabel" style="margin-bottom:5px">' + L['settings.profile.role'] + '</div>' +
+        '<input class="inp" id="pf-role" style="width:100%" placeholder="Controls Algorithm Engineer" value="' + escapeHtml(p.role || '') + '"/></div>' +
+      '<div style="flex:1 1 220px;min-width:0"><div class="flabel" style="margin-bottom:5px">' + L['settings.profile.domain'] + '</div>' +
+        '<input class="inp" id="pf-domain" style="width:100%" placeholder="Semiconductor" list="pf-domain-list" value="' + escapeHtml(p.primaryDomain || '') + '"/>' +
+        '<datalist id="pf-domain-list"></datalist></div>' +
+    '</div>' +
+    '<div class="s-row" style="align-items:flex-end;gap:10px;margin-top:12px;flex-wrap:wrap">' +
+      '<div style="flex:1 1 220px;min-width:0"><div class="flabel" style="margin-bottom:5px">' + L['settings.profile.lang'] + '</div>' +
+        '<div class="seg" id="pf-lang" style="grid-template-columns:repeat(3,1fr);max-width:300px">' +
+          '<button ' + seg('en-zh') + '>' + L['settings.profile.langEnZh'] + '</button>' +
+          '<button ' + seg('ja-zh') + '>' + L['settings.profile.langJaZh'] + '</button>' +
+          '<button ' + seg('other') + '>' + L['settings.profile.langOther'] + '</button>' +
+        '</div></div>' +
+      '<div style="flex:1 1 220px;min-width:0"><div class="flabel" style="margin-bottom:5px">' + L['settings.profile.focus'] + '</div>' +
+        '<input class="inp" id="pf-focus" style="width:100%" placeholder="Technical vocabulary, interview fluency" value="' + escapeHtml(p.focus || '') + '"/></div>' +
+    '</div>' +
+    '<div class="t-11 dim" style="margin:14px 0 6px">' + L['settings.profile.genResult'] + '</div>' +
+    '<div class="flabel" style="margin-bottom:4px">' + L['settings.profile.rolePortrait'] + '</div>' +
+    '<textarea class="inp" id="pf-out-role" rows="2" style="width:100%;resize:vertical">' + escapeHtml(p.rolePortrait || '') + '</textarea>' +
+    '<div class="flabel" style="margin:10px 0 4px">' + L['settings.profile.domainProfile'] + '</div>' +
+    '<textarea class="inp" id="pf-out-domain" rows="3" style="width:100%;resize:vertical">' + escapeHtml(p.domainProfile || '') + '</textarea>' +
+    '<div class="flabel" style="margin:10px 0 4px">' + L['settings.profile.focusTone'] + '</div>' +
+    '<textarea class="inp" id="pf-out-focus" rows="2" style="width:100%;resize:vertical">' + escapeHtml(p.focusTone || '') + '</textarea>' +
+    '<div id="pf-gen-status" class="t-10 dim" style="margin:8px 0"></div>' +
+    '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;flex-wrap:wrap">' +
+      '<button class="btn btn-ghost" id="btn-pf-generate">' + L['settings.profile.genBtn'] + '</button>' +
+      '<button class="btn btn-ghost" id="btn-pf-clear">' + L['settings.profile.clearBtn'] + '</button>' +
+      '<button class="btn btn-primary" id="btn-pf-save">' + L['settings.profile.saveBtn'] + '</button>' +
+    '</div>' +
+  '</div>';
+  const dl = $('pf-domain-list'); if (dl) dl.innerHTML = BUILTIN_DOMAINS.map(d => '<option value="' + escapeHtml(d.name) + '"></option>').join('');
 }
 function collectProfileForm() {
+  const prev = readProfile() || {};
   return {
     role: $('pf-role').value.trim(),
     primaryDomain: $('pf-domain').value.trim(),
     language: (document.querySelector('#pf-lang .seg-item.active') || {}).dataset ? document.querySelector('#pf-lang .seg-item.active').dataset.lang : 'en-zh',
-    scenarios: Array.from(document.querySelectorAll('#profile-modal .chip.active')).map(c => c.dataset.sc),
+    scenarios: prev.scenarios || [],
     focus: $('pf-focus').value.trim()
   };
 }
@@ -3789,10 +3681,9 @@ async function generateProfile() {
   if (st) st.textContent = I18N[state.lang]['settings.profile.generating'];
   const payload = collectProfileForm();
   payload.llm_config = buildLLMConfig();
-  if (!payload.role && !payload.primaryDomain) { if (st) st.textContent = I18N[state.lang]['settings.profile.needInput']; return; }
+  if (!payload.role && !payload.primaryDomain) { if (st) st.textContent = I18N[state.lang]['settings.profile.needInput']; return null; }
   try {
     const r = await apiFetch('/config/profile/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }, 120000);
-    $('pf-gen-result').style.display = '';
     $('pf-out-role').value = r.role_portrait || '';
     $('pf-out-domain').value = r.domain_profile || '';
     $('pf-out-focus').value = r.focus_tone || '';
@@ -3807,17 +3698,22 @@ async function generateProfile() {
 function saveProfile() {
   const p = collectProfileForm();
   if (!p.role && !p.primaryDomain) { showToast(I18N[state.lang]['settings.profile.needInput'], 'warn'); return; }
-  const genShown = $('pf-gen-result').style.display !== 'none';
-  p.generated = genShown;
+  p.generated = true;
   p.rolePortrait = $('pf-out-role').value.trim();
   p.domainProfile = $('pf-out-domain').value.trim();
   p.focusTone = $('pf-out-focus').value.trim();
   writeProfile(p);
-  closeProfileModal();
   renderProfileBox();
   renderGenLlmTag();
   if (!$('gen-panel').classList.contains('hidden')) applyProfileToGenPanel();
   showToast(I18N[state.lang]['settings.saved']);
+}
+function clearProfileForm() {
+  ['pf-role', 'pf-domain', 'pf-focus', 'pf-out-role', 'pf-out-domain', 'pf-out-focus'].forEach(id => { const el = $(id); if (el) el.value = ''; });
+  document.querySelectorAll('#pf-lang .seg-item').forEach(b => b.classList.remove('active'));
+  const first = document.querySelector('#pf-lang .seg-item[data-lang="en-zh"]');
+  if (first) first.classList.add('active');
+  const st = $('pf-gen-status'); if (st) st.textContent = '';
 }
 function renderRecsBox() {
   const box = $('rec-box'); if (!box) return;
@@ -3931,20 +3827,6 @@ async function genRecs(silent) {
     if (btn && !silent) { btn.disabled = false; btn.textContent = L['settings.rec.gen']; }
   }
 }
-function clearProfileForm() {
-  $('pf-role').value = ''; $('pf-domain').value = ''; $('pf-focus').value = '';
-  document.querySelectorAll('#profile-modal .chip').forEach(c => c.classList.remove('active'));
-  document.querySelectorAll('#pf-lang .seg-item').forEach(b => b.classList.remove('active'));
-  const first = document.querySelector('#pf-lang .seg-item[data-lang="en-zh"]');
-  if (first) first.classList.add('active');
-  $('pf-gen-result').style.display = 'none';
-  $('pf-gen-status').textContent = '';
-}
-function doClearProfile() {
-  writeProfile(null);
-  renderProfileBox();
-  showToast(I18N[state.lang]['settings.profile.cleared']);
-}
 /* ---------------- CONFIRM MODAL (delete) ---------------- */
 function openConfirmModal(type, id, title, text) {
   state.confirm = { type: type, id: id };
@@ -3963,7 +3845,6 @@ function confirmDelete() {
   closeConfirmModal();
   if (c.type === 'material') doDeleteMaterial(c.id);
   else if (c.type === 'playlist') doDeletePlaylist(c.id);
-  else if (c.type === 'profile') doClearProfile();
 }
 
 /* ---------------- SIDEBAR STATS / FILTERS / DRAWER ---------------- */
@@ -6298,10 +6179,9 @@ function onClick(e) {
   if (e.target.closest('#btn-pb-fwd10')) { if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; } seek(state.time + state.seekStep * 1000, true); return; }
   if (e.target.closest('#btn-pb-loop')) { toggleLoop(); return; }
   if (e.target.closest('#btn-pb-bookmark')) { if (!isPlayable(currentArtifact())) { toastNeedSynth(); return; } openBookmarkModal(); return; }
-  if (e.target.closest('#btn-create-profile')) { openProfileEditor(false); return; }
-  if (e.target.closest('#btn-edit-profile')) { openProfileEditor(false); return; }
-  if (e.target.closest('#btn-regen-profile')) { openProfileEditor(true); return; }
-  if (e.target.closest('#btn-clear-profile')) { openConfirmModal('profile', null, I18N[state.lang]['settings.profile.clearBtn'], I18N[state.lang]['settings.profile.cleared']); return; }
+  if (e.target.closest('#btn-pf-generate')) { generateProfile(); return; }
+  if (e.target.closest('#btn-pf-clear')) { clearProfileForm(); return; }
+  if (e.target.closest('#btn-pf-save')) { saveProfile(); return; }
   const recEl = e.target.closest('#rec-box [data-act]');
   if (recEl) { onRecsAction(recEl); return; }
   if (e.target.closest('#ob-skip-llm')) { obIdx = 1; obSub = 0; renderObStep(); return; }
@@ -6325,8 +6205,6 @@ function onClick(e) {
   }
   if (e.target.closest('#btn-account-login')) { location.href = 'onboarding.html'; return; }
   if (e.target.closest('#btn-account-logout')) { AuthAPI.logout(); state.user = null; refreshAboutAccount(); $('engine-modal').classList.add('hidden'); location.href = 'onboarding.html'; return; }
-  if (e.target.closest('#profile-modal') && e.target.id === 'profile-modal') { closeProfileModal(); return; }
-  if (e.target.closest('#profile-modal .chip[data-sc]')) { const c = e.target.closest('#profile-modal .chip[data-sc]'); c.classList.toggle('active'); return; }
   if (e.target.closest('#pf-lang .seg-item')) { const b = e.target.closest('#pf-lang .seg-item'); document.querySelectorAll('#pf-lang .seg-item').forEach(x => x.classList.remove('active')); b.classList.add('active'); return; }
   if (e.target.closest('#btn-pb-queue')) { toggleQueuePlay(); return; }
   const spItem = e.target.closest('#speed-menu [data-speed]');
