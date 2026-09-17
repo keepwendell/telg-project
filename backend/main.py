@@ -170,8 +170,66 @@ def init_db():
     migrate_bilingual_columns(conn)
     conn.commit()
     seed(conn)
+    sync_seed_bilingual(conn)
     migrate_audio_status(conn)
     conn.close()
+
+
+def sync_seed_bilingual(conn: sqlite3.Connection) -> int:
+    """Upgrade pre-bilingual seed rows (m1/m2/m3) with the *_zh fields defined
+    in seed_materials.json when they are missing. Idempotent: rows that already
+    carry zh (or that no longer exist) are left untouched. The zh upgrade only
+    fills the bilingual columns; dialogue/vocabulary zh already existed."""
+    data = json.loads(SEED_PATH.read_text(encoding="utf-8"))
+    changed = 0
+    for art in data:
+        mid = art["id"]
+        row = conn.execute(
+            "SELECT technical_background_zh FROM materials WHERE id = ?", (mid,)
+        ).fetchone()
+        if row is None or row["technical_background_zh"] is not None:
+            continue
+        bg = art.get("background", {})
+        conn.execute(
+            """UPDATE materials SET technical_background_zh = ?, technical_principle_zh = ?,
+               engineering_scenario_zh = ?, updated_at = ? WHERE id = ?""",
+            (
+                bg.get("technical_background_zh"),
+                bg.get("technical_principle_zh"),
+                bg.get("engineering_scenario_zh"),
+                int(time.time()),
+                mid,
+            ),
+        )
+        qids = [r["id"] for r in conn.execute(
+            "SELECT id FROM listening_questions WHERE material_id = ? ORDER BY id", (mid,)
+        ).fetchall()]
+        for pos, q in enumerate(art.get("listening_questions") or []):
+            if pos >= len(qids):
+                break
+            conn.execute(
+                "UPDATE listening_questions SET q_zh = ?, options_zh = ?, explain_zh = ? WHERE id = ?",
+                (
+                    q.get("q_zh"),
+                    json.dumps(q.get("options_zh") or [], ensure_ascii=False),
+                    q.get("explain_zh"),
+                    qids[pos],
+                ),
+            )
+        pids = [r["id"] for r in conn.execute(
+            "SELECT id FROM core_sentence_patterns WHERE material_id = ? ORDER BY id", (mid,)
+        ).fetchall()]
+        for pos, p in enumerate(art.get("core_sentence_patterns") or []):
+            if pos >= len(pids):
+                break
+            conn.execute(
+                "UPDATE core_sentence_patterns SET title_zh = ?, pattern_zh = ?, example_zh = ? WHERE id = ?",
+                (p.get("title_zh"), p.get("pattern_zh"), p.get("example_zh"), pids[pos]),
+            )
+        changed += 1
+    if changed:
+        conn.commit()
+    return changed
 
 
 def migrate_bilingual_columns(conn: sqlite3.Connection) -> None:
