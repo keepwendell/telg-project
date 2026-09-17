@@ -200,6 +200,23 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .pill{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:4px;background:var(--surface-high);color:var(--on-variant);font-size:10px;line-height:1.5}
 .pill.accent-pill{color:var(--primary);font-weight:500}
 .pill.mono{font-family:var(--font-mono)}
+/* font-size levels: right-hand inspector panels follow the transcript font control */
+#inspector[data-fs="0"] .tab-panel .t-10{font-size:10px;line-height:14px}
+#inspector[data-fs="0"] .tab-panel .t-11{font-size:11px;line-height:16px}
+#inspector[data-fs="0"] .tab-panel .t-12{font-size:12px;line-height:19px}
+#inspector[data-fs="0"] .tab-panel .t-13{font-size:13px;line-height:20px}
+#inspector[data-fs="1"] .tab-panel .t-10{font-size:11px;line-height:14px}
+#inspector[data-fs="1"] .tab-panel .t-11{font-size:12.5px;line-height:18px}
+#inspector[data-fs="1"] .tab-panel .t-12{font-size:14px;line-height:22px}
+#inspector[data-fs="1"] .tab-panel .t-13{font-size:15px;line-height:23px}
+#inspector[data-fs="1"] .tab-panel .q-opt,#inspector[data-fs="1"] .tab-panel .p-eg{font-size:14px}
+#inspector[data-fs="1"] .tab-panel .pill{font-size:11px}
+#inspector[data-fs="2"] .tab-panel .t-10{font-size:12px;line-height:15px}
+#inspector[data-fs="2"] .tab-panel .t-11{font-size:14px;line-height:20px}
+#inspector[data-fs="2"] .tab-panel .t-12{font-size:16px;line-height:25px}
+#inspector[data-fs="2"] .tab-panel .t-13{font-size:17px;line-height:26px}
+#inspector[data-fs="2"] .tab-panel .q-opt,#inspector[data-fs="2"] .tab-panel .p-eg{font-size:16px}
+#inspector[data-fs="2"] .tab-panel .pill{font-size:12px}
 
 /* ---------- panels ---------- */
 .panel{background:var(--bg-lowest);border:1px solid var(--line);border-radius:8px}
@@ -4374,7 +4391,7 @@ function vocabHTML(art) {
     '<div class="vocab-card">' +
       '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="t-13 bold">' + escapeHtml(v.en) + '</span><span class="mono t-10 accent">' + v.symbol + '</span></div>' +
       '<div class="t-11 accent">' + v.zh + '</div>' +
-      '<div class="t-11 dim" style="line-height:16px">' + v.def + '</div>' +
+      '<div class="t-11 dim">' + v.def + '</div>' +
     '</div>').join('');
 }
 function questionsHTML(art) {
@@ -4400,9 +4417,9 @@ function patternsHTML(art) {
 }
 function groundingHTML(art) {
   return [
-    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 accent uc">01 · Engineering Background</span><p class="t-12" style="line-height:19px">' + art.background.technical_background + '</p></div>',
-    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 accent uc">02 · Technical Principle</span><p class="t-12" style="line-height:19px">' + art.background.technical_principle + '</p></div>',
-    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 faint uc">03 · Engineering Scenario</span><p class="t-12 dim" style="line-height:19px">' + art.background.engineering_scenario + '</p></div>'
+    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 accent uc">01 · Engineering Background</span><p class="t-12">' + art.background.technical_background + '</p></div>',
+    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 accent uc">02 · Technical Principle</span><p class="t-12">' + art.background.technical_principle + '</p></div>',
+    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 faint uc">03 · Engineering Scenario</span><p class="t-12 dim">' + art.background.engineering_scenario + '</p></div>'
   ].join('');
 }
 
@@ -4439,6 +4456,8 @@ function renderMaterial() {
   }
   if (tabbar) tabbar.style.display = '';
   setActionsDisabled(false);
+  const ins = $('inspector');
+  if (ins) ins.dataset.fs = state.fontIdx;
   const meta = art.meta;
   $('m-title').textContent = meta.title;
   $('m-tag').textContent = meta.tag || '';
@@ -4471,6 +4490,8 @@ function cycleFont() {
   state.fontIdx = (state.fontIdx + 1) % CONFIG.fontSizes.length;
   const fs = CONFIG.fontSizes[state.fontIdx];
   $('font-label').textContent = fs;
+  const ins = $('inspector');
+  if (ins) ins.dataset.fs = state.fontIdx;
   document.querySelectorAll('#transcript-list .trow-en, #transcript-list .trow-zh').forEach(el => {
     el.style.fontSize = fs; el.style.lineHeight = (parseInt(fs) + 9) + 'px';
   });
