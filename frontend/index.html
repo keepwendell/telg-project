@@ -713,14 +713,14 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 /* ===== V2 palette alignment (scoped to the new-material panel) ===== */
 #gen-panel{
   /* semantic tokens (V2 palette, dark default) */
-  --g-panel:#141922;          /* card bg -> V2 --panel */
-  --g-panel-2:#1a2029;        /* segmented bg / chip bg -> V2 --panel-2 */
-  --g-surface:#1f2733;        /* chip bg / hover -> V2 --surface */
-  --g-line-strong:#252d3a;    /* strong border -> V2 --border */
-  --g-line:#242c37;           /* soft border */
-  --g-line-soft:#1f2632;      /* inner border */
-  --g-deep:#10151d;           /* input / seg-mini / level-desc bg */
-  --g-deep-focus:#131923;     /* input focus bg */
+  --g-panel:#0c0e12;          /* card bg — near black */
+  --g-panel-2:#12151a;        /* segmented bg / chip bg */
+  --g-surface:#161a20;        /* chip bg / hover */
+  --g-line-strong:#262b33;    /* strong border */
+  --g-line:#1e2229;           /* soft border */
+  --g-line-soft:#181c22;      /* inner border */
+  --g-deep:#080a0d;           /* input / seg-mini / level-desc bg */
+  --g-deep-focus:#0d1015;     /* input focus bg */
   --g-on:#e8edf5;             /* primary text */
   --g-on-strong:#cdd5e0;      /* section titles */
   --g-on-variant:#9aa7b8;     /* field labels */
@@ -746,12 +746,12 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   --g-scrollbar-hover:#2f3846;
   --g-danger:#ff5c6c;
   /* legacy aliases (gen-card etc.) */
-  --surface-low:#141922;
-  --surface:#1a2029;
-  --surface-high:#1f2733;
-  --surface-highest:#252d3a;
-  --line:rgba(37,45,58,.55);
-  --line-strong:#252d3a;
+  --surface-low:#0c0e12;
+  --surface:#12151a;
+  --surface-high:#161a20;
+  --surface-highest:#20242b;
+  --line:rgba(38,43,51,.55);
+  --line-strong:#262b33;
   --primary-dim:#5b9cff;
   --on-surface:#e8edf5;
   --on-variant:#9aa7b8;
@@ -4080,7 +4080,8 @@ function applyProfileToGenPanel() {
 const tipEl = (() => {
   const d = document.createElement('div');
   d.className = 'tooltip';
-  document.body.appendChild(d);
+  /* mount inside #gen-panel so the scoped `.tooltip` rules and --g-* tokens apply */
+  (document.getElementById('gen-panel') || document.body).appendChild(d);
   return d;
 })();
 let tipAnchor = null;
