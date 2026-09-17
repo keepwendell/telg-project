@@ -257,6 +257,7 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .playing-flag.paused{color:var(--warning)}
 .playing-flag.paused .dot{background:var(--warning)}
 .blind-mode .trow-zh{opacity:0}
+.blind-mode.zh-on .trow-zh{opacity:1}
 .blind-mode .trow-en{filter:blur(5px);transition:filter .2s var(--ease)}
 .blind-mode .trow-en:hover{filter:none}
 
@@ -3289,7 +3290,14 @@ function updateSeekStep() {
   const ff = $('btn-pb-fwd10'); if (ff) ff.title = 'Forward ' + s + 's';
 }
 function applyTranscriptLang() {
-  document.querySelectorAll('#transcript-list .trow-zh').forEach(el => el.style.display = state.zhVisible ? '' : 'none');
+  const blind = state.listenMode === 'blind';
+  document.querySelectorAll('#transcript-list .trow-zh').forEach(el => {
+    /* In blind mode the zh row keeps its layout slot (opacity-driven via
+       .blind-mode.zh-on), so display must stay '' there; otherwise the CN
+       toggle controls visibility through display:none as before. */
+    el.style.display = blind ? '' : (state.zhVisible ? '' : 'none');
+  });
+  const pane = $('transcript-pane'); if (pane) pane.classList.toggle('zh-on', state.zhVisible);
   const ins = $('inspector'); if (ins) ins.classList.toggle('zh-off', !state.zhVisible);
   $('btn-zh-toggle').classList.toggle('on', state.zhVisible);
 }
@@ -4792,6 +4800,7 @@ function renderMaterial() {
 function applyListenMode() {
   $('transcript-pane').classList.toggle('blind-mode', state.listenMode === 'blind');
   document.querySelectorAll('.seg-item[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === state.listenMode));
+  applyTranscriptLang();
 }
 function setListenMode(mode) {
   state.listenMode = mode;
