@@ -673,9 +673,9 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 #gen-panel .chip-x svg{display:block}
 #gen-panel .chip-add{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:9px;border:1px dashed var(--g-line);background:transparent;color:var(--g-mute);font-size:12.5px;cursor:pointer;white-space:nowrap;transition:.18s}
 #gen-panel .chip-add:hover{color:var(--primary-dim);border-color:var(--g-accent-border);background:var(--g-accent-soft)}
-#gen-panel .field-hint{display:flex;align-items:flex-start;gap:6px;margin:0;padding:0 2px;font-size:11px;color:var(--g-accent);opacity:0;letter-spacing:.2px;line-height:1.5;min-height:0;transition:opacity .22s}
-#gen-panel .field-hint::before{content:'';flex:0 0 auto;width:4px;height:4px;border-radius:50%;background:var(--g-accent);opacity:.65;margin-top:6px}
-#gen-panel .field-hint.show{opacity:.9}
+#gen-panel .field-hint{display:flex;align-items:flex-start;gap:6px;margin:0;padding:0 2px;font-size:11px;color:var(--on-mute,var(--g-on-mute));opacity:0;letter-spacing:.2px;line-height:1.5;min-height:0;transition:opacity .22s}
+#gen-panel .field-hint::before{content:'';flex:0 0 auto;width:4px;height:4px;border-radius:50%;background:var(--primary-dim);opacity:.65;margin-top:7px}
+#gen-panel .field-hint.show{opacity:1}
 #gen-panel #gen-context{width:100%;min-height:98px;resize:vertical;padding:13px 14px;border-radius:12px;background:var(--surface-low);border:1px solid var(--line-strong);color:var(--on-surface);font-size:13px;line-height:1.68;outline:none;transition:border-color .2s,box-shadow .2s,background .2s}
 #gen-panel #gen-context:focus{border-color:var(--g-accent-border);background:var(--surface);box-shadow:0 0 0 3px var(--g-accent-faint)}
 #gen-panel .btn-generate-full{flex:1.4;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;border-radius:11px;border:1px solid var(--g-accent-border);background:linear-gradient(180deg,#5a94ff,#3f7cf0);color:#fff;font-size:13.5px;font-weight:600;letter-spacing:.4px;cursor:pointer;box-shadow:0 5px 16px -5px rgba(63,124,240,.7);transition:.18s}
@@ -687,14 +687,54 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 #gen-panel .btn-generate-full:disabled{opacity:.45;cursor:not-allowed;filter:none}
 
 /* ===== V2 refinements: tooltips, context note, level blocks, cancel ===== */
-#gen-panel .field-label{display:inline-flex;align-items:center;cursor:default}
+html[data-theme='dark'] #adjust-modal{--on-mute:#6b7889}
+html[data-theme='light'] #adjust-modal{--on-mute:#5f5f68}
+#adjust-modal .refine-inject-title{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--on-mute);letter-spacing:.3px;margin-bottom:9px}
+#adjust-modal .refine-inject-title::before{content:'';width:3px;height:13px;border-radius:2px;background:var(--primary)}
+#adjust-modal #refine-inject{min-height:86px;font-size:12.5px;line-height:1.65;padding:12px 13px;border-radius:11px;background:var(--surface-low,#0a0d11)}
+html[data-theme='dark'] #adjust-modal #refine-inject{background:#0a0d11;border-color:#262b33}
+html[data-theme='light'] #adjust-modal #refine-inject{background:#ffffff;border-color:var(--line-strong)}
+#adjust-modal .field{display:flex;flex-direction:column;gap:9px}
+#adjust-modal .field-head{display:flex;align-items:baseline;gap:10px;height:22px}
+#adjust-modal .field-label{display:inline-flex;align-items:center;font-size:12.5px;color:var(--on-mute,#6b7889);font-weight:500;letter-spacing:.2px;cursor:help;white-space:nowrap}
+#adjust-modal .hint-ico{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;margin-left:5px;color:#66748a;transition:color .18s,transform .18s}
+#adjust-modal .field-label:hover .hint-ico{color:var(--primary-dim,#4d8eff);transform:scale(1.08)}
+#adjust-modal .field-inline-hint{font-size:10.5px;line-height:1.6;color:var(--primary);letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#adjust-modal .field-inline-hint #refine-len-hint-name,#adjust-modal .field-inline-hint #refine-diff-hint-name,#adjust-modal .field-inline-hint #refine-depth-hint-name,#adjust-modal .field-inline-hint #refine-dir-hint-name{color:var(--primary);font-weight:600}
+#adjust-modal .field-inline-hint #refine-len-hint,#adjust-modal .field-inline-hint #refine-diff-hint,#adjust-modal .field-inline-hint #refine-depth-hint,#adjust-modal .field-inline-hint #refine-dir-hint{color:var(--on-mute,#6b7889)}
+#adjust-modal .seg-mini{display:grid;gap:3px;padding:3px;border-radius:9px;width:100%}
+html[data-theme='dark'] #adjust-modal .seg-mini{background:#12151a;border:1px solid #1e2229}
+html[data-theme='light'] #adjust-modal .seg-mini{background:var(--surface-low);border:1px solid var(--line-strong)}
+#adjust-modal .seg-mini .seg-item{height:32px;padding:0 4px;border-radius:6px;border:none;background:transparent;color:#6e7a8c;font-size:11.5px;font-family:inherit;cursor:pointer;white-space:nowrap;letter-spacing:.1px;display:flex;align-items:center;justify-content:center;gap:5px;transition:.16s}
+#adjust-modal .seg-mini .seg-item:hover{color:var(--on-variant);background:rgba(255,255,255,.03)}
+#adjust-modal .seg-mini .seg-item.active{background:var(--primary);color:var(--on-primary);font-weight:600}
+#adjust-modal .seg-mini .lv-tag{font-weight:600;letter-spacing:.4px;font-size:11px}
+#adjust-modal .seg-mini .lv-name{font-size:11px;opacity:.82}
+#adjust-modal .modal{max-width:100%;max-height:min(84vh,760px);border-radius:16px;overflow-y:auto}
+#adjust-modal .modal-head{padding:18px 20px 14px}
+#adjust-modal .modal-head .t-15{font-size:15px}
+#adjust-modal .modal-head .t-11{color:var(--on-mute)}
+#adjust-modal .modal-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:17px}
+#adjust-modal .modal-foot{padding:14px 20px 16px;gap:18px}
+#telg-tip{position:fixed;z-index:300;max-width:260px;padding:9px 12px;border-radius:9px;background:var(--surface-high);border:1px solid var(--line-strong);color:var(--on-surface);font-size:11.5px;line-height:1.62;letter-spacing:.2px;box-shadow:0 12px 30px rgba(0,0,0,.55);opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .16s,transform .16s}
+#telg-tip.show{opacity:1;transform:translateY(0)}
+#telg-tip.above{transform:translateY(4px)}
+#telg-tip.above.show{transform:translateY(0)}
+#adjust-modal .modal-foot .btn{height:40px;border-radius:9px;font-size:13px;font-weight:500}
+#adjust-modal #btn-adjust-cancel{flex:0 0 auto;padding:0 16px;background:transparent;border:1px solid var(--line-strong);color:var(--on-mute)}
+#adjust-modal #btn-adjust-cancel:hover{color:var(--on-surface);border-color:var(--outline)}
+#adjust-modal #btn-adjust-apply{flex:1.4;border:1px solid transparent;background:var(--primary);color:var(--on-primary);font-weight:600}
+#adjust-modal #btn-adjust-apply:hover{background:var(--primary-dim)}
+html[data-theme='dark'] #adjust-modal .modal{background:#0c0e12;border-color:#1e2229;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+html[data-theme='light'] #adjust-modal .modal{background:#f4f4f6;border-color:var(--line-strong);box-shadow:0 30px 70px rgba(20,30,50,.18)}
+#gen-panel .field-label{display:inline-flex;align-items:center;cursor:default;white-space:nowrap}
 #gen-panel .field-label[data-tip]{cursor:help}
 #gen-panel .hint-ico{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;margin-left:5px;color:var(--g-hint-ico);transition:color .18s,transform .18s}
 #gen-panel .field-label:hover .hint-ico{color:var(--primary-dim);transform:scale(1.08)}
 #gen-panel .context-note{display:flex;align-items:flex-start;gap:6px;margin:-2px 0 0;padding:0 2px;font-size:11px;line-height:1.6;letter-spacing:.2px;color:var(--on-mute,var(--g-on-mute))}
 #gen-panel .context-note .hint-dot{flex:0 0 auto;width:4px;height:4px;border-radius:50%;background:var(--primary-dim);opacity:.65;margin-top:7px}
 #gen-panel .context-note em{font-style:normal;color:var(--g-em);font-weight:500}
-#gen-panel .output-stack{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 14px;align-items:start}
+#gen-panel .output-stack{display:flex;flex-direction:column;gap:16px}
 #gen-panel .seg-mini{display:inline-flex;gap:3px;padding:3px;background:var(--g-deep);border:1px solid var(--line-strong);border-radius:9px;width:100%}
 #gen-panel .seg-mini button{flex:1 1 0;height:32px;padding:0 4px;border-radius:6px;border:none;background:transparent;color:var(--g-on-weak);font-size:11.5px;font-family:inherit;cursor:pointer;white-space:nowrap;letter-spacing:.1px;display:flex;align-items:center;justify-content:center;gap:5px;transition:.16s}
 #gen-panel .seg-mini button:hover{color:var(--on-variant);background:var(--g-hover-overlay)}
@@ -705,8 +745,8 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 #gen-panel .level-desc-name{flex:0 0 auto;color:var(--g-accent);font-weight:600;letter-spacing:.2px}
 #gen-panel .level-desc-text{color:var(--g-accent);opacity:.82}
 #gen-panel .field-inline-hint{font-size:10.5px;line-height:1.6;color:var(--g-accent);letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-#gen-panel .field-inline-hint #diff-hint-name,#gen-panel .field-inline-hint #depth-label{color:var(--g-accent);font-weight:600;opacity:1}
-#gen-panel .field-inline-hint #diff-hint,#gen-panel .field-inline-hint #depth-hint{color:var(--g-on-mute,var(--on-mute))}
+#gen-panel .field-inline-hint #len-hint-name,#gen-panel .field-inline-hint #diff-hint-name,#gen-panel .field-inline-hint #depth-label{color:var(--g-accent);font-weight:600}
+#gen-panel .field-inline-hint #len-hint,#gen-panel .field-inline-hint #diff-hint,#gen-panel .field-inline-hint #depth-hint{color:var(--g-on-mute,var(--on-mute))}
 #gen-panel .tooltip{position:fixed;z-index:300;max-width:260px;padding:9px 12px;border-radius:9px;background:var(--g-tooltip-bg);border:1px solid var(--line-strong);color:var(--g-tooltip-fg);font-size:11.5px;line-height:1.62;letter-spacing:.2px;box-shadow:0 12px 30px rgba(0,0,0,.55);opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .16s,transform .16s}
 #gen-panel .tooltip.show{opacity:1;transform:translateY(0)}
 #gen-panel .tooltip.above{transform:translateY(4px)}
@@ -817,7 +857,7 @@ html[data-theme="light"] #gen-panel{
 #gen-panel .seg-mini{background:var(--g-deep);border-color:var(--g-line-strong)}
 #gen-panel .seg-mini .seg-item{color:var(--g-on-weak)}
 #gen-panel .seg-mini .seg-item.active,
-#gen-panel .seg-mini .seg-item.on{background:linear-gradient(180deg,var(--g-accent-soft),var(--g-accent-soft));color:var(--g-on-accent);box-shadow:inset 0 0 0 1px var(--g-accent-border)}
+#gen-panel .seg-mini .seg-item.on{background:var(--primary);color:var(--on-primary);font-weight:600}
 #gen-panel .level-desc-name{color:var(--g-accent)}
 #gen-panel .context-input{background:var(--g-deep);border-color:var(--g-line-strong)}
 #gen-panel .context-input:focus{border-color:var(--g-accent-border);background:var(--g-deep-focus);box-shadow:0 0 0 3px var(--g-accent-faint)}
@@ -1283,7 +1323,7 @@ html[data-theme="light"] #gen-panel{
         <div class="field">
           <div class="field-head" style="gap:10px;justify-content:flex-start">
             <span class="field-label" data-tip="gen.tipDuration" data-i18n="gen.labelDuration">Dialogue Duration</span>
-            <span class="field-inline-hint" id="len-hint">~725 words · 145 wpm</span>
+            <span class="field-inline-hint"><span id="len-hint-name">5 min</span><span id="len-hint">（约 725 词 · 145 词/分）</span></span>
           </div>
           <div class="seg seg-mini" id="len-seg" style="grid-template-columns:repeat(5,1fr)">
             <button class="seg-item" data-length="120">2 min</button>
@@ -1296,7 +1336,7 @@ html[data-theme="light"] #gen-panel{
         <div class="field">
           <div class="field-head" style="gap:10px;justify-content:flex-start">
             <span class="field-label" data-tip="gen.tipVocab" data-i18n="gen.labelVocab">Vocabulary Level</span>
-            <span class="field-inline-hint"><span id="diff-hint-name">Technical</span> <span id="diff-hint">Pragmatic engineering dialogue with real domain terminology and trade-off reasoning.</span></span>
+            <span class="field-inline-hint"><span id="diff-hint-name">Technical</span> <span id="diff-hint">（Pragmatic engineering dialogue with real domain terminology and trade-off reasoning.）</span></span>
           </div>
           <div class="seg seg-mini" id="diff-seg" style="grid-template-columns:repeat(5,1fr)">
             <button class="seg-item" data-level="1"><span class="lv-tag">L1</span><span class="lv-name" data-i18n="gen.vocab1">Life-style</span></button>
@@ -1421,7 +1461,7 @@ html[data-theme="light"] #gen-panel{
 
 <!-- ===================== ADJUST MODAL (Text + Voice) ===================== -->
 <div class="modal-overlay hidden" id="adjust-modal">
-  <div class="modal modal-settings" style="width:min(680px,94vw);height:auto;max-height:min(84vh,760px)">
+  <div class="modal modal-settings" style="width:min(520px,94vw);height:auto;max-height:min(84vh,760px)">
     <div class="modal-head">
       <div>
         <div class="t-15" id="adjust-title">Adjust Material</div>
@@ -1431,102 +1471,61 @@ html[data-theme="light"] #gen-panel{
     </div>
     <div class="modal-body">
       <div class="m-panel" id="ap-text">
-        <div class="m-section-head">
-          <div class="t-12 bold" data-i18n="adjust.textSub">Corpus Text</div>
-          <div class="t-11 dim" data-i18n="adjust.textHint">Adjust parameters, then regenerate the corpus.</div>
-        </div>
-        <div class="two-col">
-          <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <label class="flabel" style="margin:0" data-i18n="refine.difficulty">Difficulty</label>
-              <span class="t-10 accent mono" id="refine-diff-label">Level 3 of 5</span>
-            </div>
-            <div class="seg" id="refine-diff" style="grid-template-columns:repeat(5,1fr)">
-              <button class="seg-item" data-level="1">L1</button>
-              <button class="seg-item" data-level="2">L2</button>
-              <button class="seg-item active" data-level="3">L3</button>
-              <button class="seg-item" data-level="4">L4</button>
-              <button class="seg-item" data-level="5">L5</button>
-            </div>
-            <p class="t-10 dim" style="margin-top:8px" data-i18n="refine.difficultyDesc">Language complexity &amp; terminology density.</p>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label" data-tip="gen.tipDuration" data-i18n="refine.length">对话时长</span>
+            <span class="field-inline-hint"><span id="refine-len-hint-name">5 min</span><span id="refine-len-hint">（约 725 词 · 145 词/分）</span></span>
           </div>
-          <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <label class="flabel" style="margin:0" data-i18n="refine.length">Length</label>
-              <span class="t-10 faint mono" id="refine-len-label">120s</span>
-            </div>
-            <div class="seg" id="refine-len" style="grid-template-columns:repeat(5,1fr)">
-              <button class="seg-item" data-length="60">60s</button>
-              <button class="seg-item" data-length="90">90s</button>
-              <button class="seg-item active" data-length="120">120s</button>
-              <button class="seg-item" data-length="180">180s</button>
-              <button class="seg-item" data-length="240">240s</button>
-            </div>
-            <p class="t-10 dim" style="margin-top:8px" data-i18n="refine.lengthDesc">Target audio duration of the dialogue.</p>
+          <div class="seg seg-mini" id="refine-len" style="grid-template-columns:repeat(5,1fr)">
+            <button class="seg-item" data-length="120">2 min</button>
+            <button class="seg-item active" data-length="300">5 min</button>
+            <button class="seg-item" data-length="480">8 min</button>
+            <button class="seg-item" data-length="720">12 min</button>
+            <button class="seg-item" data-length="900">15 min</button>
           </div>
         </div>
-        <div class="two-col">
-          <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <label class="flabel" style="margin:0" data-i18n="refine.depth">Technical Depth</label>
-              <span class="t-10 faint mono" id="refine-depth-label">Depth 3 of 5</span>
-            </div>
-            <div class="seg" id="refine-depth" style="grid-template-columns:repeat(5,1fr)">
-              <button class="seg-item" data-depth="1">D1</button>
-              <button class="seg-item" data-depth="2">D2</button>
-              <button class="seg-item active" data-depth="3">D3</button>
-              <button class="seg-item" data-depth="4">D4</button>
-              <button class="seg-item" data-depth="5">D5</button>
-            </div>
-            <p class="t-10 dim" style="margin-top:8px" data-i18n="refine.depthDesc">How deeply the underlying principle is explained.</p>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label" data-tip="gen.tipVocab" data-i18n="refine.difficulty">词汇专业度</span>
+            <span class="field-inline-hint"><span id="refine-diff-hint-name">技术化</span><span id="refine-diff-hint">（基础技术术语，常见工程表达）</span></span>
           </div>
-          <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <label class="flabel" style="margin:0" data-i18n="refine.breadth">Breadth</label>
-              <span class="t-10 faint mono" id="refine-breadth-label">Breadth 3 of 5</span>
-            </div>
-            <div class="seg" id="refine-breadth" style="grid-template-columns:repeat(5,1fr)">
-              <button class="seg-item" data-breadth="1">B1</button>
-              <button class="seg-item" data-breadth="2">B2</button>
-              <button class="seg-item active" data-breadth="3">B3</button>
-              <button class="seg-item" data-breadth="4">B4</button>
-              <button class="seg-item" data-breadth="5">B5</button>
-            </div>
-            <p class="t-10 dim" style="margin-top:8px" data-i18n="refine.breadthDesc">How many related aspects the discussion touches.</p>
+          <div class="seg seg-mini" id="refine-diff" style="grid-template-columns:repeat(5,1fr)">
+            <button class="seg-item" data-level="1"><span class="lv-tag">L1</span><span class="lv-name" data-i18n="gen.vocab1">生活化</span></button>
+            <button class="seg-item" data-level="2"><span class="lv-tag">L2</span><span class="lv-name" data-i18n="gen.vocab2">职场化</span></button>
+            <button class="seg-item active" data-level="3"><span class="lv-tag">L3</span><span class="lv-name" data-i18n="gen.vocab3">技术化</span></button>
+            <button class="seg-item" data-level="4"><span class="lv-tag">L4</span><span class="lv-name" data-i18n="gen.vocab4">专业化</span></button>
+            <button class="seg-item" data-level="5"><span class="lv-tag">L5</span><span class="lv-name" data-i18n="gen.vocab5">学术化</span></button>
           </div>
         </div>
-        <div class="two-col">
-          <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <label class="flabel" style="margin:0" data-i18n="refine.tone">Tone &amp; Mood</label>
-              <span class="t-10 faint mono" id="refine-tone-label">Neutral professional</span>
-            </div>
-            <div class="select-wrap">
-              <select class="select" id="refine-tone">
-                <option value="neutral" data-i18n="tone.neutral">Neutral professional</option>
-                <option value="urgent" data-i18n="tone.urgent">Urgent · deadline pressure</option>
-                <option value="interview" data-i18n="tone.interview">Interview · high-pressure Q&amp;A</option>
-                <option value="collaborative" data-i18n="tone.collaborative">Collaborative &amp; calm</option>
-                <option value="debate" data-i18n="tone.debate">Confrontational debate</option>
-                <option value="mentoring" data-i18n="tone.mentoring">Explanatory mentorship</option>
-              </select>
-              <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
-            </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label" data-tip="gen.tipSyntax" data-i18n="refine.depth">句式复杂度</span>
+            <span class="field-inline-hint"><span id="refine-depth-hint-name">常用</span><span id="refine-depth-hint">（含常用从句，表达有层次）</span></span>
           </div>
-          <div>
-            <label class="flabel" style="margin:0 0 8px" data-i18n="refine.dir">Direction</label>
-            <div style="display:flex;flex-direction:column;gap:6px">
-              <label class="radio-row"><input type="radio" name="refine-dir" value="rephrase" checked><span data-i18n="refine.dirRephrase">Rewrite — keep the same scope</span></label>
-              <label class="radio-row"><input type="radio" name="refine-dir" value="expand"><span data-i18n="refine.dirExpand">Expand — add more technical depth</span></label>
-              <label class="radio-row"><input type="radio" name="refine-dir" value="narrow"><span data-i18n="refine.dirNarrow">Narrow — focus on a single aspect</span></label>
-              <label class="radio-row"><input type="radio" name="refine-dir" value="re-angle"><span data-i18n="refine.dirAngle">Re-angle — different engineering perspective</span></label>
-            </div>
+          <div class="seg seg-mini" id="refine-depth" style="grid-template-columns:repeat(5,1fr)">
+            <button class="seg-item" data-depth="1"><span class="lv-tag">L1</span><span class="lv-name" data-i18n="gen.syntax1">简单</span></button>
+            <button class="seg-item" data-depth="2"><span class="lv-tag">L2</span><span class="lv-name" data-i18n="gen.syntax2">基础</span></button>
+            <button class="seg-item active" data-depth="3"><span class="lv-tag">L3</span><span class="lv-name" data-i18n="gen.syntax3">常用</span></button>
+            <button class="seg-item" data-depth="4"><span class="lv-tag">L4</span><span class="lv-name" data-i18n="gen.syntax4">复杂</span></button>
+            <button class="seg-item" data-depth="5"><span class="lv-tag">L5</span><span class="lv-name" data-i18n="gen.syntax5">学术</span></button>
           </div>
         </div>
-        <div>
-          <label class="flabel" style="margin:0 0 8px" data-i18n="refine.inject">Improvement Directives</label>
-          <textarea class="input" id="refine-inject" rows="3" data-i18n-ph="refine.injectPh" placeholder="e.g. Add concrete numbers and measurements, make it more conversational…"></textarea>
-          <p class="t-10 dim" style="margin-top:6px" data-i18n="refine.injectHint">Optional — injected into the generation prompt.</p>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label" data-tip="refine.tipDir" data-i18n="refine.dir">生成方向</span>
+            <span class="field-inline-hint"><span id="refine-dir-hint-name">重写</span><span id="refine-dir-hint">（保持范围不变，仅调整措辞）</span></span>
+          </div>
+          <div class="seg seg-mini" id="refine-dir" style="grid-template-columns:repeat(4,1fr)">
+            <button class="seg-item active" data-dir="rephrase" data-i18n="refine.dirRephrase">重写</button>
+            <button class="seg-item" data-dir="expand" data-i18n="refine.dirExpand">扩写</button>
+            <button class="seg-item" data-dir="narrow" data-i18n="refine.dirNarrow">聚焦</button>
+            <button class="seg-item" data-dir="re-angle" data-i18n="refine.dirAngle">发散</button>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--line);padding-top:14px;margin-top:2px">
+          <label class="flabel refine-inject-title" data-i18n="refine.inject">改进指令</label>
+          <textarea class="input" id="refine-inject" rows="4" data-i18n-ph="refine.injectPh" placeholder="例如：加入具体数值与测量数据、让对话更自然…"></textarea>
+          <p class="t-10 dim" style="margin-top:6px" data-i18n="refine.injectHint">可选 — 注入生成提示，指导本次语料调整方向。</p>
         </div>
       </div>
       <div class="m-panel hidden" id="ap-voice">
@@ -3013,7 +3012,7 @@ const I18N = {
     'tr.header': 'Synchronized Technical Dialogue', 'tr.zh': 'CN',
     'tr.synth': 'Corpus generated — audio not synthesized yet.',
     'gen.title': 'New Material', 'gen.domain': 'Domain', 'gen.add': 'Add', 'gen.addCustom': 'Add custom…', 'gen.addedRec': 'Added, synced to Settings → Recommended Defaults', 'gen.dupRec': 'This item already exists',
-    'gen.tipFormat': 'The structure and speaker count of the scene: solo talk, two-person dialogue or group discussion. Switching formats adjusts how roles are picked.', 'gen.labelDuration': 'Dialogue Duration', 'gen.labelVocab': 'Vocabulary Level', 'gen.labelSyntax': 'Syntax Complexity', 'gen.vocab1': 'Life-style', 'gen.vocab2': 'Workplace', 'gen.vocab3': 'Technical', 'gen.vocab4': 'Specialized', 'gen.vocab5': 'Academic', 'gen.syntax1': 'Simple', 'gen.syntax2': 'Basic', 'gen.syntax3': 'Common', 'gen.syntax4': 'Complex', 'gen.syntax5': 'Academic', 'gen.tipDuration': 'Rough duration of the generated audio — longer means more content.', 'gen.tipVocab': 'Vocabulary range, from L1 everyday language to L5 academic terminology.', 'gen.tipSyntax': 'Syntactic complexity, from L1 simple sentences to L5 academic passages.', 'gen.tipDomain': 'Technical domain of the material — steers terminology and context. Custom domains can be added or removed.', 'gen.tipRole': 'Pick the people in the conversation: 1 for a solo talk, 2 for a dialogue; for a discussion these act as a candidate pool and AI picks who appears.', 'gen.tipContext': 'Primary basis for the material. Be specific — occasion, participants and topic all matter.', 'gen.contextNote': 'The scene context is the primary basis for generation — the more specific, the better. If it conflicts with the options above, the scene context wins.', 'gen.cancel': 'Cancel', 'gen.vocabNames': ['','Everyday','Workplace','Technical','Specialized','Academic'], 'gen.vocabDescs': ['','Casual daily language, close to real life','Basic business communication, common workplace phrases','Core technical terms, common engineering expressions','Domain-specific vocabulary, precise technical wording','Academic-grade vocabulary, close to papers and lectures'], 'gen.syntaxNames': ['','Simple','Basic','Common','Complex','Academic'], 'gen.syntaxDescs': ['','Short sentences, straightforward structure','Simple coordinated structures, basic connectors','Common subordinate clauses, layered expression','Multiple nested clauses, varied sentence patterns','Frequent long complex sentences, academic style'],'gen.sceneSec': 'Scene Simulation', 'gen.outputSec': 'Output', 'gen.roleHint': '3–5 speakers will be picked from the roles below for a group discussion.', 'gen.roleHintSolo': 'One speaker will be picked from the roles below for a solo talk.', 'gen.roleHintDialogue': 'Two speakers will be picked from the roles below for a dialogue.',
+    'gen.tipFormat': 'The structure and speaker count of the scene: solo talk, two-person dialogue or group discussion. Switching formats adjusts how roles are picked.', 'gen.labelDuration': 'Dialogue Duration', 'gen.labelVocab': 'Vocabulary Level', 'gen.labelSyntax': 'Syntax Complexity', 'gen.vocab1': 'Life-style', 'gen.vocab2': 'Workplace', 'gen.vocab3': 'Technical', 'gen.vocab4': 'Specialized', 'gen.vocab5': 'Academic', 'gen.syntax1': 'Simple', 'gen.syntax2': 'Basic', 'gen.syntax3': 'Common', 'gen.syntax4': 'Complex', 'gen.syntax5': 'Academic', 'gen.tipDuration': 'Rough duration of the generated audio — longer means more content.', 'gen.tipVocab': 'Vocabulary range, from L1 everyday language to L5 academic terminology.', 'gen.tipSyntax': 'Syntactic complexity, from L1 simple sentences to L5 academic passages.', 'gen.tipDomain': 'Technical domain of the material — steers terminology and context. Custom domains can be added or removed.', 'gen.tipRole': 'Pick the people in the conversation: 1 for a solo talk, 2 for a dialogue; for a discussion these act as a candidate pool and AI picks who appears.', 'gen.tipContext': 'Primary basis for the material. Be specific — occasion, participants and topic all matter.', 'gen.contextNote': 'The scene context is the primary basis for generation — the more specific, the better. If it conflicts with the options above, the scene context wins.', 'gen.lenHints': {'120':'~240 words','300':'~725 words','480':'~1160 words','720':'~1740 words','900':'~2175 words'}, 'gen.cancel': 'Cancel', 'gen.vocabNames': ['','Everyday','Workplace','Technical','Specialized','Academic'], 'gen.vocabDescs': ['','Casual daily language, close to real life','Basic business communication, common workplace phrases','Core technical terms, common engineering expressions','Domain-specific vocabulary, precise technical wording','Academic-grade vocabulary, close to papers and lectures'], 'gen.syntaxNames': ['','Simple','Basic','Common','Complex','Academic'], 'gen.syntaxDescs': ['','Short sentences, straightforward structure','Simple coordinated structures, basic connectors','Common subordinate clauses, layered expression','Multiple nested clauses, varied sentence patterns','Frequent long complex sentences, academic style'],'gen.sceneSec': 'Scene Simulation', 'gen.outputSec': 'Output', 'gen.roleHint': '3–5 speakers will be picked from the roles below for a group discussion.', 'gen.roleHintSolo': 'One speaker will be picked from the roles below for a solo talk.', 'gen.roleHintDialogue': 'Two speakers will be picked from the roles below for a dialogue.',
     'gen.fmt': 'Conversation Format', 'gen.fmtSolo': 'Solo Talk', 'gen.fmtDialogue': 'Dialogue', 'gen.fmtDiscussion': 'Discussion',
     'gen.custom': 'Custom', 'gen.roles': 'Speakers',
     'gen.removedRec': 'Removed', 'gen.context': 'Scene Context', 'gen.contextPh': 'Describe the occasion and topic — e.g. test drive: the sales consultant presents vehicle performance and answers customer concerns',
@@ -3126,7 +3125,7 @@ const I18N = {
     'tts.rateDesc': 'Playback cadence of the synthesized audio.',
     'tts.styleDesc': 'Emotional color applied to the voices.',
     'adjust.open': 'Adjust', 'adjust.title': 'Adjust Material',
-    'adjust.titleCorpus': 'Edit Corpus', 'adjust.subCorpus': 'Adjust the corpus parameters, then regenerate.',
+    'adjust.titleCorpus': 'Edit Corpus', 'adjust.subCorpus': 'Adjust the parameters, then regenerate the corpus.',
     'adjust.titleVoice': 'Voice Settings', 'adjust.subVoice': 'Configure TTS voice, rate and style for this material.',
     'adjust.tabText': 'Text', 'adjust.tabVoice': 'Voice',
     'adjust.textSub': 'Corpus Text', 'adjust.textHint': 'Adjust parameters or add directives, then regenerate the corpus.',
@@ -3140,25 +3139,28 @@ const I18N = {
     'tr.regenerate': 'Regenerate', 'tr.refine': 'Edit Corpus…', 'tr.editAudio': 'Edit Audio Settings', 'tr.audioReady': 'Audio ready — review and publish.',
     'refine.title': 'Refine Generation', 'refine.sub': 'Adjust parameters or add directives, then regenerate the corpus.',
     'refine.topic': 'Topic', 'refine.domain': 'Domain', 'refine.role': 'Role', 'refine.scenario': 'Scenario',
-    'refine.difficulty': 'Difficulty', 'refine.difficultyDesc': 'Language complexity & terminology density.',
-    'refine.length': 'Length', 'refine.lengthDesc': 'Target audio duration of the dialogue.',
-    'refine.depth': 'Technical Depth', 'refine.depthDesc': 'How deeply the underlying principle is explained.',
-    'refine.breadth': 'Breadth · Topic Coverage', 'refine.breadthDesc': 'How many related aspects the discussion touches.',
-    'refine.tone': 'Tone & Mood', 'refine.toneDesc': 'Emotional color of the conversation.',
-    'refine.secCore': 'Core', 'refine.secScope': 'Depth & Scope', 'refine.secDirectives': 'Directives', 'refine.secDir': 'Direction',
+    'refine.difficulty': 'Vocabulary Level', 'refine.difficultyDesc': 'Vocabulary range, from L1 everyday language to L5 academic terminology.',
+    'refine.length': 'Dialogue Duration', 'refine.lengthDesc': 'Rough duration of the generated audio — longer means more content.',
+    'refine.depth': 'Syntax Complexity', 'refine.depthDesc': 'Syntactic complexity, from L1 simple sentences to L5 academic passages.',
+            'refine.secCore': 'Core', 'refine.secScope': 'Depth & Scope', 'refine.secDirectives': 'Directives', 'refine.secDir': 'Direction',
     'refine.inject': 'Improvement Directives', 'refine.injectPh': 'e.g. Add concrete numbers and measurements, make it more conversational…',
     'refine.injectHint': 'Optional — injected into the generation prompt.',
     'refine.dir': 'Generation Direction', 'refine.dirDesc': 'Which way to steer the rewrite.',
-    'refine.dirRephrase': 'Rewrite — keep the same scope',
-    'refine.dirExpand': 'Expand — add more technical depth',
-    'refine.dirNarrow': 'Narrow — focus on a single aspect',
-    'refine.dirAngle': 'Re-angle — different engineering perspective',
+    'refine.dirRephrase': 'Rewrite',
+    'refine.dirExpand': 'Expand',
+    'refine.dirNarrow': 'Focus',
+    'refine.dirAngle': 'Diverge',
+    'refine.dirRephraseDesc': 'Keep the same scope, only adjust wording',
+    'refine.dirExpandDesc': 'Add more technical detail',
+    'refine.dirNarrowDesc': 'Focus on a single aspect',
+    'refine.dirAngleDesc': 'Diverge to different engineering perspectives',
+    'refine.tipDir': 'Rewrite: keep the same scope; Expand: more technical depth; Focus: single aspect; Diverge: explore different engineering perspectives.',
     'refine.apply': 'Refine & Regenerate',
     'save.title': 'Save', 'save.saved': 'Saved', 'save.done': 'Saved to My Materials — ',
     'lib.rename': 'Rename', 'lib.delete': 'Delete', 'lib.draft': 'Draft', 'lib.unsynth': 'No audio', 'lib.clearFilters': 'Clear filters',
     'lib.renamed': 'Renamed — ', 'lib.deleted': 'Deleted — ', 'lib.empty': 'No materials yet',
     'lib.emptyTitle': 'No materials yet', 'lib.emptySub': 'Generate a technical listening material from a real engineering scenario.',
-    'gen.tone': 'Tone & Mood', 'refine.tone': 'Tone & Mood',
+    'gen.tone': 'Tone & Mood',
     'tone.neutral': 'Neutral professional', 'tone.urgent': 'Urgent · deadline pressure', 'tone.interview': 'Interview · high-pressure Q&A',
     'tone.collaborative': 'Collaborative & calm', 'tone.debate': 'Confrontational debate', 'tone.mentoring': 'Explanatory mentorship',
     'tts.styleLabel': 'Emotion / Style',
@@ -3192,7 +3194,7 @@ const I18N = {
     'tr.header': '同步技术对话', 'tr.zh': '中文',
     'tr.synth': '语料已生成 — 音频尚未合成。',
     'gen.title': '新建素材', 'gen.domain': '领域', 'gen.add': '添加', 'gen.addCustom': '添加自定义…', 'gen.addedRec': '已添加，并同步到 设置 → 推荐设置', 'gen.dupRec': '该项已存在',
-    'gen.tipFormat': '决定对话的结构与出场人数：单人讲解、双人对话或多人讨论。切换形态会同步调整角色选择方式。', 'gen.labelDuration': '对话时长', 'gen.labelVocab': '词汇专业度', 'gen.labelSyntax': '句式复杂度', 'gen.vocab1': '生活化', 'gen.vocab2': '职场化', 'gen.vocab3': '技术化', 'gen.vocab4': '专业化', 'gen.vocab5': '学术化', 'gen.syntax1': '简单', 'gen.syntax2': '基础', 'gen.syntax3': '常用', 'gen.syntax4': '复杂', 'gen.syntax5': '学术', 'gen.tipDuration': '生成音频的大致时长，时间越长内容越充分。', 'gen.tipVocab': '词汇难度范围，从 L1 生活化日常用语到 L5 学术级专业词汇。', 'gen.tipSyntax': '句法复杂程度，从 L1 简单短句到 L5 学术长难句。', 'gen.tipDomain': '素材所属的技术领域，影响术语选择与语境倾向。可添加或删除自定义领域。', 'gen.tipRole': '选择参与对话的人物：单人讲解选 1 位，双人对话选 2 位；多人讨论时作为候选名单，由 AI 依据语境挑选出场。', 'gen.tipContext': '生成素材的主要依据。描述越具体越好，包括场合、参与方、讨论话题等。', 'gen.contextNote': '场景语境是生成素材的主要依据，描述越具体越好。当与上述选项设置冲突时，将优先以场景语境为准。', 'gen.cancel': '取消', 'gen.vocabNames': ['','生活化','职场化','技术化','专业化','学术化'], 'gen.vocabDescs': ['','日常聊天用语，贴近生活场景','基础商务沟通，通用职场表达','基础技术术语，常见工程表达','领域专业词汇，准确的技术用语','学术级词汇，接近论文与讲座'], 'gen.syntaxNames': ['','简单','基础','常用','复杂','学术'], 'gen.syntaxDescs': ['','短句为主，结构直白清晰','简单并列复合，连接词基础','含常用从句，表达有层次','多从句嵌套，句式富有变化','长难句频繁，学术式行文'],'gen.sceneSec': '场景模拟', 'gen.outputSec': '输出参数', 'gen.roleHint': '将从对话角色中选取 3–5 个角色，生成多人讨论。', 'gen.roleHintSolo': '将从对话角色中选取 1 个角色，生成单人讲解。', 'gen.roleHintDialogue': '将从对话角色中选取 2 个角色，生成双人对话。',
+    'gen.tipFormat': '决定对话的结构与出场人数：单人讲解、双人对话或多人讨论。切换形态会同步调整角色选择方式。', 'gen.labelDuration': '对话时长', 'gen.labelVocab': '词汇专业度', 'gen.labelSyntax': '句式复杂度', 'gen.vocab1': '生活化', 'gen.vocab2': '职场化', 'gen.vocab3': '技术化', 'gen.vocab4': '专业化', 'gen.vocab5': '学术化', 'gen.syntax1': '简单', 'gen.syntax2': '基础', 'gen.syntax3': '常用', 'gen.syntax4': '复杂', 'gen.syntax5': '学术', 'gen.tipDuration': '生成音频的大致时长，时间越长内容越充分。', 'gen.tipVocab': '词汇难度范围，从 L1 生活化日常用语到 L5 学术级专业词汇。', 'gen.tipSyntax': '句法复杂程度，从 L1 简单短句到 L5 学术长难句。', 'gen.tipDomain': '素材所属的技术领域，影响术语选择与语境倾向。可添加或删除自定义领域。', 'gen.tipRole': '选择参与对话的人物：单人讲解选 1 位，双人对话选 2 位；多人讨论时作为候选名单，由 AI 依据语境挑选出场。', 'gen.tipContext': '生成素材的主要依据。描述越具体越好，包括场合、参与方、讨论话题等。', 'gen.contextNote': '场景语境是生成素材的主要依据，描述越具体越好。当与上述选项设置冲突时，将优先以场景语境为准。', 'gen.lenHints': {'120':'约 240 词','300':'约 725 词','480':'约 1160 词','720':'约 1740 词','900':'约 2175 词'}, 'gen.cancel': '取消', 'gen.vocabNames': ['','生活化','职场化','技术化','专业化','学术化'], 'gen.vocabDescs': ['','日常聊天用语，贴近生活场景','基础商务沟通，通用职场表达','基础技术术语，常见工程表达','领域专业词汇，准确的技术用语','学术级词汇，接近论文与讲座'], 'gen.syntaxNames': ['','简单','基础','常用','复杂','学术'], 'gen.syntaxDescs': ['','短句为主，结构直白清晰','简单并列复合，连接词基础','含常用从句，表达有层次','多从句嵌套，句式富有变化','长难句频繁，学术式行文'],'gen.sceneSec': '场景模拟', 'gen.outputSec': '输出参数', 'gen.roleHint': '将从对话角色中选取 3–5 个角色，生成多人讨论。', 'gen.roleHintSolo': '将从对话角色中选取 1 个角色，生成单人讲解。', 'gen.roleHintDialogue': '将从对话角色中选取 2 个角色，生成双人对话。',
     'gen.fmt': '对话形态', 'gen.fmtSolo': '单人讲解', 'gen.fmtDialogue': '双人对话', 'gen.fmtDiscussion': '多人讨论',
     'gen.custom': '自定义', 'gen.roles': '对话角色',
     'gen.removedRec': '已删除', 'gen.context': '场景语境', 'gen.contextPh': '描述场合与主题，如：试驾环节，销售介绍车辆性能并回应客户顾虑',
@@ -3305,7 +3307,7 @@ const I18N = {
     'tts.rateDesc': '合成音频的播放语速。',
     'tts.styleDesc': '应用于音色的情感色彩。',
     'adjust.open': '调整', 'adjust.title': '调整素材',
-    'adjust.titleCorpus': '编辑语料', 'adjust.subCorpus': '调整语料参数后重新生成。',
+    'adjust.titleCorpus': '调整语料', 'adjust.subCorpus': '调整参数后重新生成语料。',
     'adjust.titleVoice': '音频设置', 'adjust.subVoice': '为当前素材配置音色、语速与情感风格。',
     'adjust.tabText': '文本', 'adjust.tabVoice': '音色',
     'adjust.textSub': '语料文本', 'adjust.textHint': '调整参数或添加指令，然后重新生成语料。',
@@ -3319,25 +3321,28 @@ const I18N = {
     'tr.regenerate': '重新生成', 'tr.refine': '编辑语料…', 'tr.editAudio': '编辑音频设置', 'tr.audioReady': '音频已就绪 — 可试听或发布。',
     'refine.title': '改进生成', 'refine.sub': '调整参数或添加指令，然后重新生成语料。',
     'refine.topic': '主题', 'refine.domain': '领域', 'refine.role': '角色', 'refine.scenario': '场景',
-    'refine.difficulty': '难度', 'refine.difficultyDesc': '语言复杂度与术语密度。',
-    'refine.length': '时长', 'refine.lengthDesc': '对话的目标音频时长。',
-    'refine.depth': '技术深度', 'refine.depthDesc': '对底层原理的讲解深度。',
-    'refine.breadth': '广度 · 话题覆盖', 'refine.breadthDesc': '讨论涉及的相关方面数量。',
-    'refine.tone': '语气与氛围', 'refine.toneDesc': '对话的情绪色彩。',
+    'refine.difficulty': '词汇专业度', 'refine.difficultyDesc': '词汇难度范围，从 L1 生活化日常用语到 L5 学术级专业词汇。',
+    'refine.length': '对话时长', 'refine.lengthDesc': '生成音频的大致时长，时间越长内容越充分。',
+    'refine.depth': '句式复杂度', 'refine.depthDesc': '句法复杂程度，从 L1 简单短句到 L5 学术长难句。',
     'refine.secCore': '核心', 'refine.secScope': '深度与范围', 'refine.secDirectives': '指令', 'refine.secDir': '方向',
     'refine.inject': '改进指令', 'refine.injectPh': '例如：加入具体数值与测量数据、让对话更自然…',
     'refine.injectHint': '可选 — 注入生成提示。',
     'refine.dir': '生成方向', 'refine.dirDesc': '重写时希望朝哪个方向调整。',
-    'refine.dirRephrase': '重写 — 保持范围不变',
-    'refine.dirExpand': '扩写 — 增加更多技术细节',
-    'refine.dirNarrow': '收敛 — 聚焦单一问题',
-    'refine.dirAngle': '换角度 — 不同的工程视角',
+    'refine.dirRephrase': '重写',
+    'refine.dirExpand': '扩写',
+    'refine.dirNarrow': '聚焦',
+    'refine.dirAngle': '发散',
+    'refine.dirRephraseDesc': '保持范围不变，仅调整措辞',
+    'refine.dirExpandDesc': '增加更多技术细节',
+    'refine.dirNarrowDesc': '聚焦单一侧面',
+    'refine.dirAngleDesc': '发散到不同的工程视角',
+    'refine.tipDir': '重写：保持范围不变；扩写：增加技术细节；聚焦：单一侧面；发散：探索不同工程视角。',
     'refine.apply': '改进并重新生成',
     'save.title': '保存', 'save.saved': '已保存', 'save.done': '已保存到我的素材 — ',
     'lib.rename': '重命名', 'lib.delete': '删除', 'lib.draft': '草稿', 'lib.unsynth': '未合成', 'lib.clearFilters': '清除筛选',
     'lib.renamed': '已重命名 — ', 'lib.deleted': '已删除 — ', 'lib.empty': '暂无素材',
     'lib.emptyTitle': '暂无素材', 'lib.emptySub': '从真实工程场景生成一份技术听力素材，即刻开始练习。',
-    'gen.tone': '语气与情绪', 'refine.tone': '语气与情绪',
+    'gen.tone': '语气与情绪',
     'tone.neutral': '中性专业', 'tone.urgent': '紧急 · 时间压力', 'tone.interview': '面试 · 高压问答',
     'tone.collaborative': '协作 · 冷静', 'tone.debate': '对抗性辩论', 'tone.mentoring': '讲解式指导',
     'tts.styleLabel': '情绪 / 风格',
@@ -3373,6 +3378,7 @@ function applyLang() {
   });
   /* JS-rendered texts (level descriptors) must follow the language too */
   try { if (typeof updateDiff === 'function') updateDiff(); if (typeof updateLen === 'function') updateLen(); if (typeof updateDepth === 'function') updateDepth(); } catch (e) {}
+  try { decorateTips(); } catch (e) {}
 }
 
 /* ---------------- SETTINGS persistence ---------------- */
@@ -4082,9 +4088,9 @@ function applyProfileToGenPanel() {
    ========================================================= */
 const tipEl = (() => {
   const d = document.createElement('div');
+  d.id = 'telg-tip';
   d.className = 'tooltip';
-  /* mount inside #gen-panel so the scoped `.tooltip` rules and --g-* tokens apply */
-  (document.getElementById('gen-panel') || document.body).appendChild(d);
+  document.body.appendChild(d);
   return d;
 })();
 let tipAnchor = null;
@@ -4118,12 +4124,12 @@ function hideTip() {
   tipEl.classList.remove('show');
 }
 document.addEventListener('mouseover', e => {
-  const t = e.target.closest('#gen-panel [data-tip]');
+  const t = e.target.closest('#gen-panel [data-tip], #adjust-modal [data-tip]');
   if (!t || t === tipAnchor) return;
   showTip(t);
 });
 document.addEventListener('mouseout', e => {
-  const t = e.target.closest('#gen-panel [data-tip]');
+  const t = e.target.closest('#gen-panel [data-tip], #adjust-modal [data-tip]');
   if (!t) return;
   const to = e.relatedTarget;
   if (to && t.contains(to)) return;
@@ -4138,7 +4144,7 @@ const HINT_SVG =
   '<circle cx="6" cy="3.85" r="0.62" fill="currentColor" stroke="none"/>' +
   '</svg>';
 function decorateTips() {
-  document.querySelectorAll('#gen-panel [data-tip]').forEach(el => {
+  document.querySelectorAll('#gen-panel [data-tip], #adjust-modal [data-tip]').forEach(el => {
     if (el.querySelector('.hint-ico')) return;
     const ico = document.createElement('span');
     ico.className = 'hint-ico';
@@ -5208,11 +5214,32 @@ function paramsFromArt(art) {
   const m = art.meta;
   const segActive = id => { const el = document.getElementById(id); return el ? el.querySelector('.seg-item.active') : null; };
   const depthEl = segActive('refine-depth'), breadthEl = segActive('refine-breadth');
-  const dirEl = document.querySelector('input[name="refine-dir"]:checked');
+  const dirEl = document.querySelector('#refine-dir .seg-item.active');
+  const roles = m.roles || {};
+  const fmt = m.format || 'discussion';
+  let structure = {};
+  if (fmt === 'solo') {
+    structure.roles = { speaker: roles.speaker || ((m.speakers || [])[0] || {}).role || '' };
+  } else if (fmt === 'dialogue') {
+    if (m.asymmetric && roles.lead) {
+      structure.roles = { lead: roles.lead, respond: roles.respond || '' };
+    } else {
+      const sp = (m.speakers || []).map(x => x.role).filter(Boolean);
+      structure.roles = { a: roles.a || sp[0] || '', b: roles.b || sp[1] || '' };
+    }
+  } else {
+    const sp = (m.speakers || []).map(x => x.role).filter(Boolean);
+    structure.roleSelection = {
+      candidates: Array.isArray(roles.candidates) ? roles.candidates : sp,
+      speakerCount: roles.speakerCount || m.speakerCount || sp.length || 3
+    };
+  }
   return {
     topic: m.topic,
     domain: m.domain, domainLabel: m.domain,
+    format: fmt, asymmetric: !!m.asymmetric, context: m.context || m.scenario || '',
     role: m.role, scenario: m.scenario,
+    ...structure,
     difficulty: parseInt(String(m.difficulty).replace(/\D/g, ''), 10) || 3,
     length: String(parseSec(m.length) || 120),
     llm: llmDisplayLabel(), tts: normalizeTTSProvider((readStoredCfg().tts || {}).provider) || 'edge-tts', voice: m.voice || 'en-US-GuyNeural + en-US-JennyNeural',
@@ -5220,29 +5247,37 @@ function paramsFromArt(art) {
     test_mode: buildTestMode(),
     advanced: {
       depth: depthEl ? +depthEl.dataset.depth : (m.depth || 3),
-      vocabDensity: m.vocabDensity ?? 28,
+      vocabDensity: (m.speechRate != null ? m.speechRate : m.vocabDensity) ?? 28,
       style: m.style ?? 'technical',
       injections: $('refine-inject') ? $('refine-inject').value.trim() : (m.injections || ''),
       tone: $('refine-tone') ? $('refine-tone').value : (m.tone || 'neutral'),
       breadth: breadthEl ? +breadthEl.dataset.breadth : (m.breadth || 3),
-      directions: dirEl && dirEl.value !== 'rephrase' ? [dirEl.value] : []
+      directions: dirEl && dirEl.dataset.dir !== 'rephrase' ? [dirEl.dataset.dir] : []
     }
   };
 }
 function updateRefineLabels() {
+  const i18n = I18N[state.lang] || {};
+  const wpm = state.lang === 'zh' ? '· 145 词/分' : '· 145 wpm';
+  const seg = document.querySelector('#refine-len .seg-item.active');
+  const ln = seg.dataset.length;
+  $('refine-len-hint-name').textContent = seg.textContent.trim();
+  const lenDesc = (i18n['gen.lenHints'] && i18n['gen.lenHints'][ln]) || CONFIG.lenHints[ln] || '';
+  $('refine-len-hint').textContent = lenDesc ? '（' + lenDesc + ' ' + wpm + '）' : '';
   const lv = +document.querySelector('#refine-diff .seg-item.active').dataset.level;
-  $('refine-diff-label').textContent = 'Level ' + lv + ' of 5';
-  const ln = document.querySelector('#refine-len .seg-item.active').dataset.length;
-  $('refine-len-label').textContent = ln + 's · ' + CONFIG.lenHints[ln];
+  const vNames = i18n['gen.vocabNames'] || [], vDescs = i18n['gen.vocabDescs'] || [];
+  $('refine-diff-hint-name').textContent = vNames[lv] || ('L' + lv);
+  $('refine-diff-hint').textContent = vDescs[lv] ? '（' + vDescs[lv] + '）' : '';
   const dp = +document.querySelector('#refine-depth .seg-item.active').dataset.depth;
-  $('refine-depth-label').textContent = 'Depth ' + dp + ' of 5';
-  const br = +document.querySelector('#refine-breadth .seg-item.active').dataset.breadth;
-  $('refine-breadth-label').textContent = 'Breadth ' + br + ' of 5';
-}
-function updateRefineToneLabel() {
-  const sel = $('refine-tone');
-  const lbl = $('refine-tone-label');
-  if (lbl) lbl.textContent = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
+  const sNames = i18n['gen.syntaxNames'] || [], sDescs = i18n['gen.syntaxDescs'] || [];
+  $('refine-depth-hint-name').textContent = sNames[dp] || ('D' + dp);
+  $('refine-depth-hint').textContent = sDescs[dp] ? '（' + sDescs[dp] + '）' : '';
+  const dEl = document.querySelector('#refine-dir .seg-item.active');
+  const dirKey = { rephrase:'dirRephrase', expand:'dirExpand', narrow:'dirNarrow', 're-angle':'dirAngle' }[dEl.dataset.dir] || 'dirRephrase';
+  const dName = (i18n['refine.' + dirKey] || dEl.textContent.trim());
+  const dDesc = i18n['refine.' + dirKey + 'Desc'] || '';
+  $('refine-dir-hint-name').textContent = dName;
+  $('refine-dir-hint').textContent = dDesc ? '（' + dDesc + '）' : '';
 }
 let adjustPanel = 'text';
 function openAdjustModal(tab) {
@@ -5262,7 +5297,7 @@ function openAdjustModal(tab) {
   $('btn-adjust-apply').textContent = L[adjustPanel === 'voice' ? (ready ? 'tts.convert' : 'tts.reconvert') : 'refine.apply'];
   const st = $('tts-status');
   if (st) st.style.display = adjustPanel === 'voice' ? '' : 'none';
-  setTimeout(() => { const f = adjustPanel === 'voice' ? $('adj-tts-provider') : $('refine-tone'); if (f) f.focus(); }, 60);
+  setTimeout(() => { const f = adjustPanel === 'voice' ? $('adj-tts-provider') : $('refine-inject'); if (f) f.focus(); }, 60);
 }
 function closeAdjustModal() {
   stopAuditions();
@@ -5275,14 +5310,15 @@ function closeTTSModal() { closeAdjustModal(); }
 function openRefineModal() {
   const art = currentArtifact();
   $('refine-inject').value = art.meta.injections || '';
-  $('refine-tone').value = art.meta.tone || 'neutral';
-  updateRefineToneLabel();
   const lv = parseInt(String(art.meta.difficulty).replace(/\D/g, ''), 10) || 3;
-  setSeg($('refine-diff'), document.querySelector('#refine-diff [data-level="' + lv + '"]'));
-  setSeg($('refine-len'), document.querySelector('#refine-len [data-length="' + (parseSec(art.meta.length) || 120) + '"]'));
-  setSeg($('refine-depth'), document.querySelector('#refine-depth [data-depth="' + (art.meta.depth || 3) + '"]'));
-  setSeg($('refine-breadth'), document.querySelector('#refine-breadth [data-breadth="' + (art.meta.breadth || 3) + '"]'));
-  document.querySelectorAll('input[name="refine-dir"]').forEach(r => { r.checked = (r.value === 'rephrase'); });
+  const diffItem = document.querySelector('#refine-diff [data-level="' + lv + '"]');
+  if (diffItem) setSeg($('refine-diff'), diffItem); else setSeg($('refine-diff'), $('refine-diff').querySelector('.seg-item'));
+  const lenSeg = $('refine-len');
+  const lenTarget = document.querySelector('#refine-len [data-length="' + (parseSec(art.meta.length) || 300) + '"]');
+  if (lenTarget) setSeg(lenSeg, lenTarget); else setSeg(lenSeg, lenSeg.querySelector('.seg-item'));
+  const depthItem = document.querySelector('#refine-depth [data-depth="' + (art.meta.depth || 3) + '"]');
+  if (depthItem) setSeg($('refine-depth'), depthItem); else setSeg($('refine-depth'), $('refine-depth').querySelector('.seg-item'));
+  setSeg($('refine-dir'), document.querySelector('#refine-dir [data-dir="rephrase"]'));
   updateRefineLabels();
   openAdjustModal('text');
 }
@@ -5292,13 +5328,14 @@ function refineGenerate() {
   if (state.synthesizing) { showToast('Audio synthesis in progress — wait for it to finish', 'warn'); return; }
   const params = paramsFromArt(art);
   params.difficulty = +document.querySelector('#refine-diff .seg-item.active').dataset.level;
-  params.length = document.querySelector('#refine-len .seg-item.active').dataset.length;
-  params.advanced.depth = +document.querySelector('#refine-depth .seg-item.active').dataset.depth;
-  params.advanced.breadth = +document.querySelector('#refine-breadth .seg-item.active').dataset.breadth;
+  const lenItem = document.querySelector('#refine-len .seg-item.active') || document.querySelector('#refine-len .seg-item');
+  params.length = lenItem.dataset.length;
+  const depthItem = document.querySelector('#refine-depth .seg-item.active') || document.querySelector('#refine-depth .seg-item');
+  params.advanced.depth = +depthItem.dataset.depth;
   params.advanced.injections = $('refine-inject').value.trim();
-  params.advanced.tone = $('refine-tone').value;
-  const dirEl = document.querySelector('input[name="refine-dir"]:checked');
-  params.advanced.directions = dirEl && dirEl.value !== 'rephrase' ? [dirEl.value] : [];
+  params.advanced.tone = 'neutral';
+  const dirEl = document.querySelector('#refine-dir .seg-item.active');
+  params.advanced.directions = dirEl && dirEl.dataset.dir !== 'rephrase' ? [dirEl.dataset.dir] : [];
   runGenerate(params, art.id);
 }
 const LLM_PRESETS = {
@@ -5605,11 +5642,17 @@ function updateDiff() {
   const name = vNames[lv] || ('L' + lv);
   const desc = vDescs[lv] || (CONFIG.diffHints[lv] || '');
   $('diff-hint-name').textContent = name;
-  $('diff-hint').textContent = desc;
+  $('diff-hint').textContent = desc ? '（' + desc + '）' : '';
 }
 function updateLen() {
-  const ln = document.querySelector('#len-seg .seg-item.active').dataset.length;
-  $('len-hint').textContent = CONFIG.lenHints[ln] + ' · 145 wpm';
+  const seg = document.querySelector('#len-seg .seg-item.active');
+  const ln = seg.dataset.length;
+  const name = seg.textContent.trim();
+  const i18n = I18N[state.lang] || {};
+  const desc = (i18n['gen.lenHints'] && i18n['gen.lenHints'][ln]) || CONFIG.lenHints[ln] || '';
+  const wpm = state.lang === 'zh' ? '· 145 词/分' : '· 145 wpm';
+  $('len-hint-name').textContent = name;
+  $('len-hint').textContent = desc ? '（' + desc + ' ' + wpm + '）' : '';
 }
 function updateDepth() {
   const d = +document.querySelector('#depth-seg .seg-item.active').dataset.depth;
@@ -5619,7 +5662,7 @@ function updateDepth() {
   const name = sNames[d] || (CONFIG.depthLabels && CONFIG.depthLabels[d]) || ('D' + d);
   const desc = sDescs[d] || '';
   $('depth-label').textContent = name;
-  $('depth-hint').textContent = desc;
+  $('depth-hint').textContent = desc ? '（' + desc + '）' : '';
 }
 function updateBreadth() {
   const el = document.querySelector('#breadth-seg');
@@ -6707,8 +6750,8 @@ function onClick(e) {
   if (rLenItem) { setSeg($('refine-len'), rLenItem); updateRefineLabels(); return; }
   const rDepthItem = e.target.closest('#refine-depth .seg-item');
   if (rDepthItem) { setSeg($('refine-depth'), rDepthItem); updateRefineLabels(); return; }
-  const rBreadthItem = e.target.closest('#refine-breadth .seg-item');
-  if (rBreadthItem) { setSeg($('refine-breadth'), rBreadthItem); updateRefineLabels(); return; }
+  const rDirItem = e.target.closest('#refine-dir .seg-item');
+  if (rDirItem) { setSeg($('refine-dir'), rDirItem); updateRefineLabels(); return; }
   const modeBtn = e.target.closest('.seg-item[data-mode]');
   if (modeBtn) { setListenMode(modeBtn.dataset.mode); return; }
   if (e.target.closest('#btn-font')) { cycleFont(); return; }
@@ -7023,7 +7066,6 @@ function init() {
       else if (t.dataset.plCreate) commitPlCreate(t.value);
     }
   });
-  $('refine-tone').addEventListener('change', updateRefineToneLabel);
   document.querySelector('.inspector').classList.add('hidden');
   syncDetailBtn();
   decorateTips();

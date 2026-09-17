@@ -752,12 +752,15 @@ def mock_generate(p: GenerateIn) -> dict:
         d.pop("speaker", None)
     if fmt == "solo":
         role = request_roles(p)
-        art["speakers"] = [{"id": "speaker_1", "role": role[0] if role else "Technical Presenter", "voiceTag": "neutral"}]
+        art["meta"]["roles"] = {"speaker": (role[0] if role else "Technical Presenter")}
+        art["speakers"] = [{"id": "speaker_1", "role": art["meta"]["roles"]["speaker"], "voiceTag": "neutral"}]
         art["dialogue"] = [{**d, "speakerId": "speaker_1"} for d in art["dialogue"]]
         art["meta"]["speakerCount"] = 1
     elif fmt == "dialogue":
         roles = request_roles(p)
         if p.asymmetric and len(roles) == 2:
+            art["meta"]["roles"] = {"lead": roles[0], "respond": roles[1]}
+            art["meta"]["asymmetric"] = True
             art["speakers"] = [
                 {"id": "speaker_1", "role": roles[0], "voiceTag": "lead"},
                 {"id": "speaker_2", "role": roles[1], "voiceTag": "respond"},
@@ -765,6 +768,8 @@ def mock_generate(p: GenerateIn) -> dict:
         else:
             while len(roles) < 2:
                 roles.append("Engineer %d" % (len(roles) + 1))
+            art["meta"]["roles"] = {"a": roles[0], "b": roles[1]}
+            art["meta"]["asymmetric"] = False
             art["speakers"] = [
                 {"id": "speaker_1", "role": roles[0], "voiceTag": "lead"},
                 {"id": "speaker_2", "role": roles[1], "voiceTag": "respond"},
@@ -787,6 +792,7 @@ def mock_generate(p: GenerateIn) -> dict:
         while len(cands) < n:
             cands.append(fallback[len(cands) % len(fallback)])
         cands = cands[:n]
+        art["meta"]["roles"] = {"candidates": cands[:n], "speakerCount": n}
         art["speakers"] = [
             {"id": "speaker_%d" % (i + 1), "role": cands[i], "voiceTag": "neutral"}
             for i in range(n)
@@ -826,6 +832,12 @@ def mock_generate(p: GenerateIn) -> dict:
 # ----------------------------------------------------------------------------
 # LLM engine (Phase 2 — real generation via OpenAI-compatible API)
 # ----------------------------------------------------------------------------
+DIRECTION_DEFS = {
+    "rephrase": "保持原有范围与结构，仅调整措辞与表达，使其更自然、更专业",
+    "expand":   "在保持主题的前提下扩写：补充更多技术细节、示例与论证，内容更充分",
+    "narrow":   "聚焦到单一侧面或子问题，深入展开该侧面的机理与权衡",
+    "re-angle": "发散到不同的工程视角或切入点，与上一版明显不同，避免雷同",
+}
 LENGTH_WORDS = {60: 140, 90: 215, 120: 290, 180: 435, 240: 580, 300: 725, 480: 1160, 720: 1740, 900: 2175}
 
 DIFFICULTY_DEFS = {
@@ -981,6 +993,14 @@ def build_user_prompt(p: GenerateIn, action: str = "generate") -> str:
         "- 技术深度：" + DEPTH_DEFS.get(depth, DEPTH_DEFS[3]),
         "- 时长 " + str(p.length) + " 秒，目标总词数约 " + str(target_words) + " 词（约 " + str(turns) + " 轮对话，宁精勿灌水）",
         "- 特殊要求：" + (advanced.get("injections") or "无"),
+    ]
+    dirs = advanced.get("directions") or []
+    if isinstance(dirs, str):
+        dirs = [dirs]
+    dirs = [d for d in dirs if isinstance(d, str) and d.strip()]
+    if dirs:
+        lines += ["- 生成方向：" + "；".join(DIRECTION_DEFS.get(d, d) for d in dirs)]
+    lines += [
         "",
         "## 内容看点",
         "请根据主题自行确定一个最有价值的讨论焦点（如某参数/方案的权衡、一次故障排查、一场评审分歧），"

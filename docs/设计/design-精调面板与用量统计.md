@@ -45,8 +45,7 @@
 │   Tone        [Technical Discussion ▾]                      │
 │   Custom      [输入希望强调/加入的内容……]                    │
 │ 生成方向                                                     │
-│   ( ) 保持原主题，重写表达        ( ) 扩充更多技术细节        │
-│   ( ) 收敛，聚焦单一问题          ( ) 换一个工程角度          │
+│   [重写] [扩写] [聚焦] [发散]                                │
 ├─────────────────────────────────────────────────────────────┤
 │  [Cancel]                          [Regenerate]  ⌘⏎         │
 └─────────────────────────────────────────────────────────────┘
@@ -56,32 +55,45 @@
 - 上下文区为**纯信息展示**（label + 值），无交互控件，视觉弱化（faint 文字）；
 - 核心微调 = 首次生成同一控件（Segmented），回填自 `paramsFromArt()` 现有逻辑；
 - 深度方向 = 首次生成 Advanced 内控件直接上移，**取值默认回填素材**（depth/breadth 从 `m.depth/m.breadth` 读，不再固定 3）；injections 保留在素材上（`m.injections` 若存在）；
-- 生成方向 = 单选（radio 组），对应 `advanced.directions` 数组（后端 Prompt 已预留 directions 概念，值为 `expand|narrow|rephrase|re-angle`）。
+- 生成方向 = 分段滑组（与句式复杂度同款），对应 `advanced.directions` 数组，值为 `rephrase|expand|narrow|re-angle`；后端 prompt 已实现消费（`DIRECTION_DEFS` 映射为中文生成指令）。
 
 ### A4. 参数装配（paramsFromArt 增强）
 
 ```js
 function paramsFromArt(art) {
   const m = art.meta;
+  const dirEl = document.querySelector('#refine-dir .seg-item.active');
+  const fmt = m.format || 'discussion';
+  let structure = {};
+  if (fmt === 'solo') {
+    structure.roles = { speaker: m.roles?.speaker || m.speakers?.[0]?.role || '' };
+  } else if (fmt === 'dialogue') {
+    /* asymmetric: lead/respond 槽位；对称：a/b */
+    structure.roles = m.asymmetric ? { lead: m.roles?.lead, respond: m.roles?.respond }
+                                   : { a: m.roles?.a || m.speakers?.[0]?.role, b: m.roles?.b || m.speakers?.[1]?.role };
+  } else {
+    structure.roleSelection = { candidates: m.roles?.candidates || m.speakers.map(x => x.role),
+                                speakerCount: m.roles?.speakerCount || m.speakerCount || 3 };
+  }
   return {
     topic: m.topic,
     domain: m.domain, domainLabel: m.domain,
-    role: m.role, scenario: m.scenario,
+    format: fmt, asymmetric: !!m.asymmetric, context: m.context || m.scenario || '',
+    ...structure,
     difficulty: /* 从 refine-diff 读，回填 m.difficulty */,
-    length:     /* 从 refine-len 读，回填 m.length */,
-    llm: llmDisplayLabel(),               /* 动态：设置中的 Provider · Model，与生成面板 LLM 标签同源 */
-    tts: normalizeTTSProvider((readStoredCfg().tts || {}).provider) || 'edge-tts',  /* 动态：设置中的 TTS Provider */
+    length:     /* 从 refine-len 读，回填 m.length(秒) */,
+    llm: llmDisplayLabel(),
+    tts: normalizeTTSProvider((readStoredCfg().tts || {}).provider) || 'edge-tts',
     voice: m.voice,
-    llm_config: buildLLMConfig(),          /* 已修（regenerate 502） */
-    test_mode:  buildTestMode(),
+    llm_config: buildLLMConfig(), test_mode: buildTestMode(),
     advanced: {
       depth:        /* refine-depth 读，回填 m.depth ?? 3 */,
-      vocabDensity: m.vocabDensity ?? 28,
+      vocabDensity: m.speechRate ?? m.vocabDensity ?? 28,   /* 后端存 meta.speechRate */
       style:        m.style ?? 'technical',
       injections:   /* refine-inject 输入，回填 m.injections */,
-      tone:         /* refine-tone 读，回填 m.tone || 'neutral' */,
-      breadth:      /* refine-breadth 读，回填 m.breadth ?? 3 */,
-      directions:   /* 单选 → ['expand'] | ['narrow'] | ['rephrase'] | ['re-angle'] | [] */
+      tone:         m.tone || 'neutral',
+      breadth:      m.breadth ?? 3,
+      directions:   /* seg active → ['expand'] | ['narrow'] | ['re-angle'] | []（rephrase 不上送） */
     }
   };
 }
@@ -89,7 +101,7 @@ function paramsFromArt(art) {
 
 **关键点**：
 - Refine 打开时**一次性回填**当前素材参数 → 用户看到的是"当前值"，微调后提交；
-- 与首次生成共用 `GenerateIn` schema，后端零改动；
+- 与首次生成共用 `GenerateIn` schema；后端配套改动：生成时把 `format / asymmetric / roles / roleSelection` 持久化进 `meta`（refine 恢复结构用），prompt 消费 `advanced.directions`。
 - refine 提交 = `API.regenerateMaterial(art.id, params)`，成功后**原素材原位替换**（保留 id），TTS 状态回到"未合成"（需重新 Set Voice & Synthesize）——与现有「语料调整后步骤回溯」行为一致。
 
 ### A5. 交互与边界
@@ -99,7 +111,7 @@ function paramsFromArt(art) {
 | 从素材列表进入 Refine | 面板打开即回填该素材全部可调参数 |
 | 已发布素材 | 点 Refine 即"解锁编辑"：发布态 → draft，进度条重新出现（沿用现有解锁语义） |
 | 只改 Length 不动其它 | 参数保持原值提交，LLM 按新长度重写语料 |
-| 生成方向单选 | 提交后 Prompt 追加方向指令；再次打开 Refine 时方向**重置为空**（避免方向叠加） |
+| 生成方向（seg） | 提交后 Prompt 追加方向指令；再次打开 Refine 时方向**重置为空**（避免方向叠加） |
 | 取消 | 不回写任何内容，素材保持原样 |
 
 ---
