@@ -667,14 +667,14 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 #gen-panel .chip:hover{border-color:var(--g-line-strong);color:var(--g-on-hover)}
 #gen-panel .chip.active{background:var(--g-accent-soft);border-color:var(--g-accent-border);color:var(--g-on-accent)}
 #gen-panel .chip-row.managing .chip:not(.active){border-style:dashed;border-color:var(--g-line-strong)}
-#gen-panel .chip-x{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:#232b36;border:1px solid var(--g-line-strong);color:var(--g-on-chip);opacity:0;transform:scale(.45);pointer-events:none;z-index:3;transition:opacity .18s,transform .2s cubic-bezier(.34,1.4,.64,1),background .16s,border-color .16s,color .16s}
+#gen-panel .chip-x{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:var(--g-chipx-bg);border:1px solid var(--g-line-strong);color:var(--g-chipx-fg);opacity:0;transform:scale(.45);pointer-events:none;z-index:3;transition:opacity .18s,transform .2s cubic-bezier(.34,1.4,.64,1),background .16s,border-color .16s,color .16s}
 #gen-panel .chip-row.managing .chip .chip-x{opacity:1;transform:scale(1);pointer-events:auto}
 #gen-panel .chip-x:hover{background:var(--g-danger);border-color:var(--g-danger);color:#fff}
 #gen-panel .chip-x svg{display:block}
 #gen-panel .chip-add{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:9px;border:1px dashed var(--g-line);background:transparent;color:var(--g-mute);font-size:12.5px;cursor:pointer;white-space:nowrap;transition:.18s}
 #gen-panel .chip-add:hover{color:var(--primary-dim);border-color:var(--g-accent-border);background:var(--g-accent-soft)}
-#gen-panel .field-hint{margin:0;font-size:11px;color:var(--g-hint);letter-spacing:.2px;line-height:1.5;min-height:0;opacity:0;transition:opacity .22s}
-#gen-panel .field-hint.show{opacity:1}
+#gen-panel .field-hint{margin:0;font-size:11px;color:var(--g-accent);opacity:0;letter-spacing:.2px;line-height:1.5;min-height:0;transition:opacity .22s}
+#gen-panel .field-hint.show{opacity:.9}
 #gen-panel #gen-context{width:100%;min-height:98px;resize:vertical;padding:13px 14px;border-radius:12px;background:var(--surface-low);border:1px solid var(--line-strong);color:var(--on-surface);font-size:13px;line-height:1.68;outline:none;transition:border-color .2s,box-shadow .2s,background .2s}
 #gen-panel #gen-context:focus{border-color:var(--g-accent-border);background:var(--surface);box-shadow:0 0 0 3px var(--g-accent-faint)}
 #gen-panel .btn-generate-full{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;border-radius:11px;border:none;background:linear-gradient(180deg,#5a94ff,#3f7cf0);color:#fff;font-size:13.5px;font-weight:600;letter-spacing:.4px;cursor:pointer;box-shadow:0 5px 16px -5px rgba(63,124,240,.7);transition:.18s}
@@ -697,9 +697,9 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 #gen-panel .seg-mini button.on{background:linear-gradient(180deg,var(--g-accent-soft),var(--g-accent-soft));color:var(--g-on-accent);box-shadow:inset 0 0 0 1px var(--g-accent-border)}
 #gen-panel .seg-mini .lv-tag{font-weight:600;letter-spacing:.4px}
 #gen-panel .seg-mini .lv-name{font-size:10.5px;opacity:.78;letter-spacing:.1px}
-#gen-panel .level-desc{display:flex;align-items:baseline;gap:8px;padding:9px 12px;background:var(--g-deep);border:1px solid var(--line-strong);border-radius:9px;font-size:11.5px;line-height:1.55;min-height:36px}
-#gen-panel .level-desc-name{flex:0 0 auto;color:var(--primary-dim);font-weight:600;letter-spacing:.2px}
-#gen-panel .level-desc-text{color:var(--on-mute,var(--g-on-mute))}
+#gen-panel .level-desc{display:flex;align-items:baseline;gap:8px;margin:-2px 0 0;font-size:11.5px;line-height:1.5;color:var(--g-accent)}
+#gen-panel .level-desc-name{flex:0 0 auto;color:var(--g-accent);font-weight:600;letter-spacing:.2px}
+#gen-panel .level-desc-text{color:var(--g-accent);opacity:.82}
 #gen-panel .tooltip{position:fixed;z-index:300;max-width:260px;padding:9px 12px;border-radius:9px;background:var(--g-tooltip-bg);border:1px solid var(--line-strong);color:var(--g-tooltip-fg);font-size:11.5px;line-height:1.62;letter-spacing:.2px;box-shadow:0 12px 30px rgba(0,0,0,.55);opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .16s,transform .16s}
 #gen-panel .tooltip.show{opacity:1;transform:translateY(0)}
 #gen-panel .tooltip.above{transform:translateY(4px)}
@@ -743,6 +743,8 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   --g-tooltip-fg:#c8d2e0;
   --g-scrollbar:#232b37;
   --g-scrollbar-hover:#2f3846;
+  --g-chipx-bg:#232b36;
+  --g-chipx-fg:#8a95a5;
   --g-danger:#ff5c6c;
   /* legacy aliases (gen-card etc.) */
   --surface-low:#0c0e12;
@@ -792,6 +794,8 @@ html[data-theme="light"] #gen-panel{
   --g-tooltip-fg:var(--on-surface);
   --g-scrollbar:var(--surface-highest);
   --g-scrollbar-hover:#b9b9c2;
+  --g-chipx-bg:var(--surface-highest);
+  --g-chipx-fg:var(--outline);
   --g-danger:#d9303f;
 }#gen-panel #fmt-seg .seg-item.active{
   background:linear-gradient(180deg,var(--g-accent-soft),var(--g-accent-soft));
@@ -807,7 +811,6 @@ html[data-theme="light"] #gen-panel{
 #gen-panel .seg-mini .seg-item{color:var(--g-on-weak)}
 #gen-panel .seg-mini .seg-item.active,
 #gen-panel .seg-mini .seg-item.on{background:linear-gradient(180deg,var(--g-accent-soft),var(--g-accent-soft));color:var(--g-on-accent);box-shadow:inset 0 0 0 1px var(--g-accent-border)}
-#gen-panel .level-desc{background:var(--g-deep);border-color:var(--g-line-strong)}
 #gen-panel .level-desc-name{color:var(--g-accent)}
 #gen-panel .context-input{background:var(--g-deep);border-color:var(--g-line-strong)}
 #gen-panel .context-input:focus{border-color:var(--g-accent-border);background:var(--g-deep-focus);box-shadow:0 0 0 3px var(--g-accent-faint)}
@@ -831,7 +834,7 @@ html[data-theme="light"] #gen-panel{
 #gen-panel #gen-context{min-height:74px;padding:11px 13px}
 #gen-panel .context-note{margin-top:1px}
 #gen-panel .seg-mini button{height:30px}
-#gen-panel .level-desc{min-height:32px;padding:7px 10px;font-size:11px}
+#gen-panel .level-desc{font-size:11px}
 #gen-panel .engine-strip{padding:10px 12px}
 #gen-panel .sec-head h3{font-size:12px}
 #gen-panel .sec-head{margin-bottom:-2px}
@@ -3007,7 +3010,7 @@ const I18N = {
     'tr.header': 'Synchronized Technical Dialogue', 'tr.zh': 'CN',
     'tr.synth': 'Corpus generated — audio not synthesized yet.',
     'gen.title': 'New Material', 'gen.domain': 'Domain', 'gen.add': 'Add', 'gen.addCustom': 'Add custom…', 'gen.addedRec': 'Added, synced to Settings → Recommended Defaults', 'gen.dupRec': 'This item already exists',
-    'gen.tipFormat': 'The structure and speaker count of the scene: solo talk, two-person dialogue or group discussion. Switching formats adjusts how roles are picked.', 'gen.labelDuration': 'Dialogue Duration', 'gen.labelVocab': 'Vocabulary Level', 'gen.labelSyntax': 'Syntax Complexity', 'gen.vocab1': 'Life-style', 'gen.vocab2': 'Workplace', 'gen.vocab3': 'Technical', 'gen.vocab4': 'Specialized', 'gen.vocab5': 'Academic', 'gen.syntax1': 'Simple', 'gen.syntax2': 'Basic', 'gen.syntax3': 'Common', 'gen.syntax4': 'Complex', 'gen.syntax5': 'Academic', 'gen.tipDuration': 'Rough duration of the generated audio — longer means more content.', 'gen.tipVocab': 'Vocabulary range, from L1 everyday language to L5 academic terminology.', 'gen.tipSyntax': 'Syntactic complexity, from L1 simple sentences to L5 academic passages.', 'gen.tipDomain': 'Technical domain of the material — steers terminology and context. Custom domains can be added or removed.', 'gen.tipRole': 'Pick the people in the conversation: 1 for a solo talk, 2 for a dialogue; for a discussion these act as a candidate pool and AI picks who appears.', 'gen.tipContext': 'Primary basis for the material. Be specific — occasion, participants and topic all matter.', 'gen.contextNote': 'The scene context is the primary basis for generation — the more specific, the better. If it conflicts with the options above, the scene context wins.', 'gen.cancel': 'Cancel', 'gen.vocabNames': ['','Everyday','Workplace','Technical','Specialized','Academic'], 'gen.vocabDescs': ['','Casual daily language, close to real life','Basic business communication, common workplace phrases','Core technical terms, common engineering expressions','Domain-specific vocabulary, precise technical wording','Academic-grade vocabulary, close to papers and lectures'], 'gen.syntaxNames': ['','Simple','Basic','Common','Complex','Academic'], 'gen.syntaxDescs': ['','Short sentences, straightforward structure','Simple coordinated structures, basic connectors','Common subordinate clauses, layered expression','Multiple nested clauses, varied sentence patterns','Frequent long complex sentences, academic style'],'gen.sceneSec': 'Scene Simulation', 'gen.outputSec': 'Output', 'gen.roleHint': 'The selected roles are a candidate pool — AI picks 3–5 speakers based on the context.',
+    'gen.tipFormat': 'The structure and speaker count of the scene: solo talk, two-person dialogue or group discussion. Switching formats adjusts how roles are picked.', 'gen.labelDuration': 'Dialogue Duration', 'gen.labelVocab': 'Vocabulary Level', 'gen.labelSyntax': 'Syntax Complexity', 'gen.vocab1': 'Life-style', 'gen.vocab2': 'Workplace', 'gen.vocab3': 'Technical', 'gen.vocab4': 'Specialized', 'gen.vocab5': 'Academic', 'gen.syntax1': 'Simple', 'gen.syntax2': 'Basic', 'gen.syntax3': 'Common', 'gen.syntax4': 'Complex', 'gen.syntax5': 'Academic', 'gen.tipDuration': 'Rough duration of the generated audio — longer means more content.', 'gen.tipVocab': 'Vocabulary range, from L1 everyday language to L5 academic terminology.', 'gen.tipSyntax': 'Syntactic complexity, from L1 simple sentences to L5 academic passages.', 'gen.tipDomain': 'Technical domain of the material — steers terminology and context. Custom domains can be added or removed.', 'gen.tipRole': 'Pick the people in the conversation: 1 for a solo talk, 2 for a dialogue; for a discussion these act as a candidate pool and AI picks who appears.', 'gen.tipContext': 'Primary basis for the material. Be specific — occasion, participants and topic all matter.', 'gen.contextNote': 'The scene context is the primary basis for generation — the more specific, the better. If it conflicts with the options above, the scene context wins.', 'gen.cancel': 'Cancel', 'gen.vocabNames': ['','Everyday','Workplace','Technical','Specialized','Academic'], 'gen.vocabDescs': ['','Casual daily language, close to real life','Basic business communication, common workplace phrases','Core technical terms, common engineering expressions','Domain-specific vocabulary, precise technical wording','Academic-grade vocabulary, close to papers and lectures'], 'gen.syntaxNames': ['','Simple','Basic','Common','Complex','Academic'], 'gen.syntaxDescs': ['','Short sentences, straightforward structure','Simple coordinated structures, basic connectors','Common subordinate clauses, layered expression','Multiple nested clauses, varied sentence patterns','Frequent long complex sentences, academic style'],'gen.sceneSec': 'Scene Simulation', 'gen.outputSec': 'Output', 'gen.roleHint': 'The selected roles are a candidate pool — AI picks 3–5 speakers based on the context.', 'gen.roleHintSolo': 'One speaker will be picked from the roles below for the talk.', 'gen.roleHintDialogue': 'Two speakers will be picked from the roles below for the conversation.',
     'gen.fmt': 'Conversation Format', 'gen.fmtSolo': 'Solo Talk', 'gen.fmtDialogue': 'Dialogue', 'gen.fmtDiscussion': 'Discussion',
     'gen.custom': 'Custom', 'gen.roles': 'Speakers',
     'gen.removedRec': 'Removed', 'gen.context': 'Scene Context', 'gen.contextPh': 'Describe the occasion and topic — e.g. test drive: the sales consultant presents vehicle performance and answers customer concerns',
@@ -3186,7 +3189,7 @@ const I18N = {
     'tr.header': '同步技术对话', 'tr.zh': '中文',
     'tr.synth': '语料已生成 — 音频尚未合成。',
     'gen.title': '新建素材', 'gen.domain': '领域', 'gen.add': '添加', 'gen.addCustom': '添加自定义…', 'gen.addedRec': '已添加，并同步到 设置 → 推荐设置', 'gen.dupRec': '该项已存在',
-    'gen.tipFormat': '决定对话的结构与出场人数：单人讲解、双人对话或多人讨论。切换形态会同步调整角色选择方式。', 'gen.labelDuration': '对话时长', 'gen.labelVocab': '词汇专业度', 'gen.labelSyntax': '句式复杂度', 'gen.vocab1': '生活化', 'gen.vocab2': '职场化', 'gen.vocab3': '技术化', 'gen.vocab4': '专业化', 'gen.vocab5': '学术化', 'gen.syntax1': '简单', 'gen.syntax2': '基础', 'gen.syntax3': '常用', 'gen.syntax4': '复杂', 'gen.syntax5': '学术', 'gen.tipDuration': '生成音频的大致时长，时间越长内容越充分。', 'gen.tipVocab': '词汇难度范围，从 L1 生活化日常用语到 L5 学术级专业词汇。', 'gen.tipSyntax': '句法复杂程度，从 L1 简单短句到 L5 学术长难句。', 'gen.tipDomain': '素材所属的技术领域，影响术语选择与语境倾向。可添加或删除自定义领域。', 'gen.tipRole': '选择参与对话的人物：单人讲解选 1 位，双人对话选 2 位；多人讨论时作为候选名单，由 AI 依据语境挑选出场。', 'gen.tipContext': '生成素材的主要依据。描述越具体越好，包括场合、参与方、讨论话题等。', 'gen.contextNote': '场景语境是生成素材的主要依据，描述越具体越好。当与上述选项设置冲突时，将优先以场景语境为准。', 'gen.cancel': '取消', 'gen.vocabNames': ['','生活化','职场化','技术化','专业化','学术化'], 'gen.vocabDescs': ['','日常聊天用语，贴近生活场景','基础商务沟通，通用职场表达','基础技术术语，常见工程表达','领域专业词汇，准确的技术用语','学术级词汇，接近论文与讲座'], 'gen.syntaxNames': ['','简单','基础','常用','复杂','学术'], 'gen.syntaxDescs': ['','短句为主，结构直白清晰','简单并列复合，连接词基础','含常用从句，表达有层次','多从句嵌套，句式富有变化','长难句频繁，学术式行文'],'gen.sceneSec': '场景模拟', 'gen.outputSec': '输出参数', 'gen.roleHint': '所选角色为候选名单，AI 会依据语境从中挑选 3–5 位出场。',
+    'gen.tipFormat': '决定对话的结构与出场人数：单人讲解、双人对话或多人讨论。切换形态会同步调整角色选择方式。', 'gen.labelDuration': '对话时长', 'gen.labelVocab': '词汇专业度', 'gen.labelSyntax': '句式复杂度', 'gen.vocab1': '生活化', 'gen.vocab2': '职场化', 'gen.vocab3': '技术化', 'gen.vocab4': '专业化', 'gen.vocab5': '学术化', 'gen.syntax1': '简单', 'gen.syntax2': '基础', 'gen.syntax3': '常用', 'gen.syntax4': '复杂', 'gen.syntax5': '学术', 'gen.tipDuration': '生成音频的大致时长，时间越长内容越充分。', 'gen.tipVocab': '词汇难度范围，从 L1 生活化日常用语到 L5 学术级专业词汇。', 'gen.tipSyntax': '句法复杂程度，从 L1 简单短句到 L5 学术长难句。', 'gen.tipDomain': '素材所属的技术领域，影响术语选择与语境倾向。可添加或删除自定义领域。', 'gen.tipRole': '选择参与对话的人物：单人讲解选 1 位，双人对话选 2 位；多人讨论时作为候选名单，由 AI 依据语境挑选出场。', 'gen.tipContext': '生成素材的主要依据。描述越具体越好，包括场合、参与方、讨论话题等。', 'gen.contextNote': '场景语境是生成素材的主要依据，描述越具体越好。当与上述选项设置冲突时，将优先以场景语境为准。', 'gen.cancel': '取消', 'gen.vocabNames': ['','生活化','职场化','技术化','专业化','学术化'], 'gen.vocabDescs': ['','日常聊天用语，贴近生活场景','基础商务沟通，通用职场表达','基础技术术语，常见工程表达','领域专业词汇，准确的技术用语','学术级词汇，接近论文与讲座'], 'gen.syntaxNames': ['','简单','基础','常用','复杂','学术'], 'gen.syntaxDescs': ['','短句为主，结构直白清晰','简单并列复合，连接词基础','含常用从句，表达有层次','多从句嵌套，句式富有变化','长难句频繁，学术式行文'],'gen.sceneSec': '场景模拟', 'gen.outputSec': '输出参数', 'gen.roleHint': '所选角色为候选名单，AI 会依据语境从中挑选 3–5 位出场。', 'gen.roleHintSolo': '将从对话角色中选取 1 个角色生成讲解。', 'gen.roleHintDialogue': '将从对话角色中选取 2 个角色生成对话。',
     'gen.fmt': '对话形态', 'gen.fmtSolo': '单人讲解', 'gen.fmtDialogue': '双人对话', 'gen.fmtDiscussion': '多人讨论',
     'gen.custom': '自定义', 'gen.roles': '对话角色',
     'gen.removedRec': '已删除', 'gen.context': '场景语境', 'gen.contextPh': '描述场合与主题，如：试驾环节，销售介绍车辆性能并回应客户顾虑',
@@ -4183,13 +4186,9 @@ function renderGenRoles() {
   if (mgr) mgr.classList.toggle('active', sc.manageRoles);
   const hint = $('gen-role-hint');
   if (hint) {
-    if (sc.format === 'discussion') {
-      hint.textContent = L['gen.roleHint'] || '所选角色为候选名单，AI 会依据语境从中挑选 3–5 位出场。';
-      hint.classList.add('show');
-    } else {
-      hint.textContent = '';
-      hint.classList.remove('show');
-    }
+    const key = { solo: 'gen.roleHintSolo', dialogue: 'gen.roleHintDialogue', discussion: 'gen.roleHint' }[sc.format] || 'gen.roleHint';
+    hint.textContent = L[key] || '';
+    hint.classList.add('show');
   }
 }
 
