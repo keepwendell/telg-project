@@ -12,6 +12,9 @@ with sync_playwright() as p:
     pg.add_init_script("try{localStorage.setItem('telg-test-data','tire'); localStorage.setItem('telg-onboarding', JSON.stringify({done:true,at:Date.now()})); localStorage.setItem('telg-llm-mock','1'); localStorage.setItem('telg-tts-mock','1');}catch(e){}")
     pg.goto('file:///home/user/Doubao/chats/38441710896760066/telg-project/frontend/index.html'); pg.wait_for_timeout(500)
     pg.evaluate("localStorage.clear(); localStorage.setItem('telg-test-data','tire'); localStorage.setItem('telg-onboarding', JSON.stringify({done:true,at:Date.now()})); localStorage.setItem('telg-llm-mock','1'); localStorage.setItem('telg-tts-mock','1'); location.reload(); true"); pg.wait_for_timeout(700)
+    for _wl in range(20):
+        if pg.evaluate("state.library.length") > 0: break
+        pg.wait_for_timeout(400)
     # K5 详情 tab
     pg.evaluate("document.querySelector('.tab-btn[data-tab=\\'vocab\\']').click(); true"); pg.wait_for_timeout(200)
     log('K5a 详情 Vocab Tab', not pg.evaluate("document.getElementById('panel-vocab').classList.contains('hidden')"))
@@ -53,7 +56,9 @@ with sync_playwright() as p:
     # K2 生成中切换素材（竞态）
     pg.evaluate("document.getElementById('btn-lib-gen').click(); true"); pg.wait_for_timeout(200)
     pg.evaluate("document.getElementById('btn-generate').click(); true"); pg.wait_for_timeout(200)
-    pg.evaluate("document.querySelectorAll('.lib-item')[0].click(); true"); pg.wait_for_timeout(1200)
-    log('K2 生成中切换素材无崩溃', len(errs)==0)
+    nItems = pg.evaluate("document.querySelectorAll('.lib-item').length")
+    if nItems > 0:
+        pg.evaluate("document.querySelectorAll('.lib-item')[0].click(); true"); pg.wait_for_timeout(1200)
+    log('K2 生成中切换素材无崩溃', len(errs)==0 and nItems>0, f'items={nItems}')
     print('SUMMARY', sum(1 for _,ok in R if ok), '/', len(R), '| errs:', errs, flush=True)
     b.close()
