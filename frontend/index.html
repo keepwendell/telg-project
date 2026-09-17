@@ -700,6 +700,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 #gen-panel .level-desc{display:flex;align-items:baseline;gap:8px;margin:-2px 0 0;font-size:11.5px;line-height:1.5;color:var(--g-accent)}
 #gen-panel .level-desc-name{flex:0 0 auto;color:var(--g-accent);font-weight:600;letter-spacing:.2px}
 #gen-panel .level-desc-text{color:var(--g-accent);opacity:.82}
+#gen-panel .field-inline-hint{font-size:10.5px;line-height:1.6;color:var(--g-accent);opacity:.85;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 #gen-panel .tooltip{position:fixed;z-index:300;max-width:260px;padding:9px 12px;border-radius:9px;background:var(--g-tooltip-bg);border:1px solid var(--line-strong);color:var(--g-tooltip-fg);font-size:11.5px;line-height:1.62;letter-spacing:.2px;box-shadow:0 12px 30px rgba(0,0,0,.55);opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .16s,transform .16s}
 #gen-panel .tooltip.show{opacity:1;transform:translateY(0)}
 #gen-panel .tooltip.above{transform:translateY(4px)}
@@ -737,7 +738,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
   --g-micro:#454f5d;
   --g-hint:#4e5969;
   --g-mute:#5f6b7c;
-  --g-hint-ico:#3f4a5a;
+  --g-hint-ico:#66748a;
   --g-em:#9dbdff;
   --g-tooltip-bg:#242c39;
   --g-tooltip-fg:#c8d2e0;
@@ -788,7 +789,7 @@ html[data-theme="light"] #gen-panel{
   --g-micro:var(--outline-variant);
   --g-hint:var(--outline);
   --g-mute:var(--outline);
-  --g-hint-ico:var(--outline-variant);
+  --g-hint-ico:var(--outline);
   --g-em:var(--primary);
   --g-tooltip-bg:var(--surface-high);
   --g-tooltip-fg:var(--on-surface);
@@ -834,7 +835,7 @@ html[data-theme="light"] #gen-panel{
 #gen-panel #gen-context{min-height:74px;padding:11px 13px}
 #gen-panel .context-note{margin-top:1px}
 #gen-panel .seg-mini button{height:30px}
-#gen-panel .level-desc{font-size:11px}
+
 #gen-panel .engine-strip{padding:10px 12px}
 #gen-panel .sec-head h3{font-size:12px}
 #gen-panel .sec-head{margin-bottom:-2px}
@@ -1274,8 +1275,9 @@ html[data-theme="light"] #gen-panel{
       </div>
       <div class="output-stack">
         <div class="field">
-          <div class="field-head">
+          <div class="field-head" style="gap:10px;justify-content:flex-start">
             <span class="field-label" data-tip="gen.tipDuration" data-i18n="gen.labelDuration">Dialogue Duration</span>
+            <span class="field-inline-hint" id="len-hint">~725 words · 145 wpm</span>
           </div>
           <div class="seg seg-mini" id="len-seg" style="grid-template-columns:repeat(5,1fr)">
             <button class="seg-item" data-length="120">2 min</button>
@@ -1284,11 +1286,11 @@ html[data-theme="light"] #gen-panel{
             <button class="seg-item" data-length="720">12 min</button>
             <button class="seg-item" data-length="900">15 min</button>
           </div>
-          <div class="level-desc"><span class="level-desc-name" id="len-hint">~725 words · 145 wpm</span></div>
         </div>
         <div class="field">
-          <div class="field-head">
+          <div class="field-head" style="gap:10px;justify-content:flex-start">
             <span class="field-label" data-tip="gen.tipVocab" data-i18n="gen.labelVocab">Vocabulary Level</span>
+            <span class="field-inline-hint"><span id="diff-hint-name">Technical</span> <span id="diff-hint">Pragmatic engineering dialogue with real domain terminology and trade-off reasoning.</span></span>
           </div>
           <div class="seg seg-mini" id="diff-seg" style="grid-template-columns:repeat(5,1fr)">
             <button class="seg-item" data-level="1"><span class="lv-tag">L1</span><span class="lv-name" data-i18n="gen.vocab1">Life-style</span></button>
@@ -1297,14 +1299,12 @@ html[data-theme="light"] #gen-panel{
             <button class="seg-item" data-level="4"><span class="lv-tag">L4</span><span class="lv-name" data-i18n="gen.vocab4">Specialized</span></button>
             <button class="seg-item" data-level="5"><span class="lv-tag">L5</span><span class="lv-name" data-i18n="gen.vocab5">Academic</span></button>
           </div>
-          <div class="level-desc">
-            <span class="level-desc-name" id="diff-hint-name">Technical</span>
-            <span class="level-desc-text" id="diff-hint">Pragmatic engineering dialogue with real domain terminology and trade-off reasoning.</span>
-          </div>
+
         </div>
         <div class="field">
-          <div class="field-head">
+          <div class="field-head" style="gap:10px;justify-content:flex-start">
             <span class="field-label" data-tip="gen.tipSyntax" data-i18n="gen.labelSyntax">Syntax Complexity</span>
+            <span class="field-inline-hint"><span id="depth-label">Mechanism + trade-offs</span> <span id="depth-hint"></span></span>
           </div>
           <div class="seg seg-mini" id="depth-seg" style="grid-template-columns:repeat(5,1fr)">
             <button class="seg-item" data-depth="1"><span class="lv-tag">L1</span><span class="lv-name" data-i18n="gen.syntax1">Simple</span></button>
@@ -1313,10 +1313,7 @@ html[data-theme="light"] #gen-panel{
             <button class="seg-item" data-depth="4"><span class="lv-tag">L4</span><span class="lv-name" data-i18n="gen.syntax4">Complex</span></button>
             <button class="seg-item" data-depth="5"><span class="lv-tag">L5</span><span class="lv-name" data-i18n="gen.syntax5">Academic</span></button>
           </div>
-          <div class="level-desc">
-            <span class="level-desc-name" id="depth-label">Mechanism + trade-offs</span>
-            <span class="level-desc-text" id="depth-hint"></span>
-          </div>
+
         </div>
       </div>
       <div class="engine-strip">
