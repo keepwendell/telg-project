@@ -216,6 +216,7 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 #inspector[data-fs="2"] .tab-panel .t-12{font-size:16px;line-height:25px}
 #inspector[data-fs="2"] .tab-panel .t-13{font-size:17px;line-height:26px}
 #inspector[data-fs="2"] .tab-panel .q-opt,#inspector[data-fs="2"] .tab-panel .p-eg{font-size:16px}
+#inspector.zh-off .i-zh{display:none}
 #inspector[data-fs="2"] .tab-panel .pill{font-size:12px}
 
 /* ---------- panels ---------- */
@@ -2132,160 +2133,463 @@ function stopAuditions() {
 
 /* ---------------- MOCK DATA (Generation Artifacts) ---------------- */
 const MOCK_MATERIALS = [
-{
-  id: 'm1',
-  meta: {
-    title: 'Tire Burst Stability Control', topic: 'Tire Burst Stability Control',
-    domain: 'Automotive', role: 'Vehicle Dynamics Engineer',
-    scenario: 'Technical Discussion & Trade-off', dialogue_type: 'technical_discussion',
-    difficulty: 'Level 3', length: 'medium',
-    llm_provider: 'DeepSeek-V3', tts_provider: 'edge-tts',
-    voice: 'en-US-GuyNeural + en-US-JennyNeural',
-    audio_url: '/mock/audio/m1.wav', total_duration_ms: 65000, audioReady: false,
-    tag: 'ESC / VDC', filter: 'Automotive'
+  {
+    "id": "m1",
+    "meta": {
+      "title": "Tire Burst Stability Control",
+      "topic": "Tire Burst Stability Control",
+      "domain": "Automotive",
+      "role": "Vehicle Dynamics Engineer",
+      "scenario": "Technical Discussion & Trade-off",
+      "dialogue_type": "technical_discussion",
+      "difficulty": "Level 3",
+      "length": "medium",
+      "llm_provider": "DeepSeek-V3",
+      "tts_provider": "edge-tts",
+      "voice": "en-US-GuyNeural + en-US-JennyNeural",
+      "audio_url": "/mock/audio/m1.wav",
+      "total_duration_ms": 65000,
+      "audioReady": false,
+      "tag": "ESC / VDC",
+      "filter": "Automotive"
+    },
+    "background": {
+      "technical_background": "A sudden front-axle tire burst causes instantaneous loss of cornering stiffness (C_α) and generates severe rolling resistance disparity. This unbalances longitudinal drag, producing an unexpected disruptive yaw moment that pulls the chassis abruptly toward the blown tire side.",
+      "technical_principle": "The active chassis system uses rapid differential braking (ESC) coupled with e-axle negative torque allocation on the healthy side. By tracking the driver's steering intent via target yaw rate models (r_ref), closed-loop stabilization mitigates sideslip angle buildup within 60 ms.",
+      "engineering_scenario": "120 km/h highway straight-line blowout simulation — ESC calibration review between a Vehicle Dynamics engineer and a Controls lead.",
+      "technical_background_zh": "前轴轮胎突然爆胎导致侧偏刚度（C_α）瞬时丧失，并产生严重的滚动阻力差。这使纵向阻力失衡，产生意外且具有破坏性的横摆力矩，将整车猛然拉向爆胎一侧。",
+      "technical_principle_zh": "主动底盘系统采用快速差动制动（ESC），并结合健康侧的电子轴负扭矩分配。通过目标横摆角速度模型（r_ref）跟踪驾驶员的转向意图，闭环稳定可在60毫秒内抑制质心侧偏角的累积。",
+      "engineering_scenario_zh": "120公里/小时高速直线爆胎仿真——车辆动力学工程师与控制负责人之间的ESC标定评审。"
+    },
+    "dialogue": [
+      {
+        "id": 1,
+        "speaker": "Engineer A",
+        "role": "Vehicle Dynamics",
+        "voice": "GuyNeural",
+        "start_ms": 0,
+        "end_ms": 8000,
+        "text_en": "We noticed an aggressive yaw divergence during the 120 kph straight-line blowout simulation on the left front wheel. The baseline ESC was far too sluggish to counteract the immediate rolling resistance spike.",
+        "text_zh": "我们在左前轮120公里时速直线爆胎仿真中观察到剧烈的横摆发散。基础ESC介入过于迟缓，无法有效抵消瞬时滚动阻力骤增。"
+      },
+      {
+        "id": 2,
+        "speaker": "Engineer B",
+        "role": "Controls Lead",
+        "voice": "JennyNeural",
+        "start_ms": 8000,
+        "end_ms": 19000,
+        "text_en": "Right. Because your lateral cornering stiffness on that corner drops to near zero instantaneously. What did the sideslip angle look like before differential braking kicked in?",
+        "text_zh": "没错。因为该侧车轮的侧偏刚度瞬间跌落至接近零。在差动制动介入之前，质心侧偏角的变化如何？"
+      },
+      {
+        "id": 3,
+        "speaker": "Engineer A",
+        "role": "Vehicle Dynamics",
+        "voice": "GuyNeural",
+        "start_ms": 19000,
+        "end_ms": 32000,
+        "text_en": "Sideslip climbed beyond 3.8 degrees within 180 milliseconds. If we don't apply an opposing compensatory yaw moment across the rear axle via torque vectoring right away, the driver has virtually zero control margin.",
+        "text_zh": "质心侧偏角在180毫秒内攀升超过3.8度。如果不立即通过后桥扭矩矢量分配施加反向补偿横摆力矩，驾驶员几乎没有操纵裕度。"
+      },
+      {
+        "id": 4,
+        "speaker": "Engineer B",
+        "role": "Controls Lead",
+        "voice": "JennyNeural",
+        "start_ms": 32000,
+        "end_ms": 46000,
+        "text_en": "Agreed. Let's calibrate the feedforward compensator based on wheel speed variance and the direct estimated burst drag force, right into the target yaw rate calculation.",
+        "text_zh": "同意。我们基于轮速方差和直接预估的爆胎阻力标定前馈补偿器，直接纳入目标横摆角速度计算。"
+      },
+      {
+        "id": 5,
+        "speaker": "Engineer A",
+        "role": "Vehicle Dynamics",
+        "voice": "GuyNeural",
+        "start_ms": 46000,
+        "end_ms": 57000,
+        "text_en": "And we need to adapt the effective rolling radius estimate in real time, otherwise the wheel speed sensors will trigger false ABS interventions.",
+        "text_zh": "我们还需要实时修正有效滚动半径的估计，否则轮速传感器会触发误报的ABS干预。"
+      },
+      {
+        "id": 6,
+        "speaker": "Engineer B",
+        "role": "Controls Lead",
+        "voice": "JennyNeural",
+        "start_ms": 57000,
+        "end_ms": 65000,
+        "text_en": "Exactly. Let's schedule a closed-loop validation on the HIL rig tomorrow morning and review the yaw error budget.",
+        "text_zh": "正是。明天上午我们在HIL台架上做一轮闭环验证，并复核横摆误差预算。"
+      }
+    ],
+    "vocabulary": [
+      {
+        "en": "cornering stiffness",
+        "zh": "侧偏刚度",
+        "symbol": "C_α",
+        "def": "Ratio of tire lateral force per radian of slip angle within the linear elastic envelope."
+      },
+      {
+        "en": "asymmetric yaw moment",
+        "zh": "不对称横摆力矩",
+        "symbol": "M_z",
+        "def": "Unbalanced rotational moment about the vertical axis that pulls the chassis sideways."
+      },
+      {
+        "en": "differential braking",
+        "zh": "差动制动",
+        "symbol": "Δp",
+        "def": "Applying brake force independently to single wheels to generate a corrective yaw moment."
+      },
+      {
+        "en": "effective rolling radius",
+        "zh": "有效滚动半径",
+        "symbol": "R_eff",
+        "def": "Distance travelled per radian of wheel rotation under load; used to compute slip ratio."
+      }
+    ],
+    "listening_questions": [
+      {
+        "q": "Why was the baseline ESC too slow to react during the burst event?",
+        "options": [
+          "Brake fluid temperature exceeded the thermal limit.",
+          "Its intervention was far too delayed for the instant rolling resistance spike.",
+          "The steering angle sensor lost its calibration frame."
+        ],
+        "answer": 1,
+        "explain": "Segment 00:00 — Engineer A stresses the baseline ESC was \"far too sluggish to counteract the immediate rolling resistance spike.\"",
+        "q_zh": "为什么基线ESC在爆胎事件中反应过慢？",
+        "options_zh": [
+          "制动液温度超过了热限值。",
+          "其介入对瞬时滚动阻力骤增来说过于迟缓。",
+          "转向角传感器丢失了标定基准。"
+        ],
+        "explain_zh": "片段00:00——工程师A强调基线ESC“过于迟缓，无法有效抵消瞬时滚动阻力骤增”。"
+      },
+      {
+        "q": "What does Engineer B propose for the feedforward compensator?",
+        "options": [
+          "Increase total friction braking force symmetrically.",
+          "Use wheel speed variance and estimated burst drag force in the target yaw rate calculation.",
+          "Disconnect the electric powertrain immediately."
+        ],
+        "answer": 1,
+        "explain": "Segment 00:32 — \"calibrate the feedforward compensator based on wheel speed variance and the direct estimated burst drag force...\"",
+        "q_zh": "工程师B对前馈补偿器提出了什么建议？",
+        "options_zh": [
+          "对称地增加总摩擦制动力。",
+          "在目标横摆角速度计算中使用轮速方差和估计的爆胎阻力。",
+          "立即断开电驱动动力总成。"
+        ],
+        "explain_zh": "片段00:32——“基于轮速方差和直接预估的爆胎阻力标定前馈补偿器……”。"
+      }
+    ],
+    "core_sentence_patterns": [
+      {
+        "title": "Root-Cause Deduction",
+        "pattern": "\"That explains the sudden [phenomenon]...\"",
+        "example": "\"That explains the sudden drop in CAN bus voltage when the precharge relay closes.\"",
+        "title_zh": "根因推断",
+        "pattern_zh": "“这就解释了突然的[现象]……”",
+        "example_zh": "“这就解释了预充继电器闭合时CAN总线电压的突然跌落。”"
+      },
+      {
+        "title": "Controller Requirement",
+        "pattern": "\"Our [subsystem] needs to [action] within [timeframe] to generate [effect]...\"",
+        "example": "\"Our torque vectoring controller needs to apply differential braking within 30 ms to generate an opposing restoring moment.\"",
+        "title_zh": "控制器需求",
+        "pattern_zh": "我们的[子系统]需要在[时间范围]内[动作]，以产生[效果]……",
+        "example_zh": "我们的扭矩矢量控制器需要在30毫秒内施加差动制动，以产生对向的恢复力矩……"
+      },
+      {
+        "title": "Adverse Consequence Warning",
+        "pattern": "\"...otherwise the [component] will trigger false [intervention].\"",
+        "example": "\"...otherwise the wheel speed sensors will trigger false ABS interventions.\"",
+        "title_zh": "不利后果预警",
+        "pattern_zh": "……否则[部件]将触发误报的[干预]。",
+        "example_zh": "……否则轮速传感器将触发误报的ABS干预。"
+      }
+    ]
   },
-  background: {
-    technical_background: 'A sudden front-axle tire burst causes instantaneous loss of cornering stiffness (C_α) and generates severe rolling resistance disparity. This unbalances longitudinal drag, producing an unexpected disruptive yaw moment that pulls the chassis abruptly toward the blown tire side.',
-    technical_principle: 'The active chassis system uses rapid differential braking (ESC) coupled with e-axle negative torque allocation on the healthy side. By tracking the driver\'s steering intent via target yaw rate models (r_ref), closed-loop stabilization mitigates sideslip angle buildup within 60 ms.',
-    engineering_scenario: '120 km/h highway straight-line blowout simulation — ESC calibration review between a Vehicle Dynamics engineer and a Controls lead.'
+  {
+    "id": "m2",
+    "meta": {
+      "title": "CAN Bus Jitter & Packet Drop",
+      "topic": "CAN Bus Jitter & Packet Drop",
+      "domain": "Embedded SW & Firmware",
+      "role": "Embedded Kernel Debugger",
+      "scenario": "Root-Cause Failure RCA Meeting",
+      "dialogue_type": "root_cause_analysis",
+      "difficulty": "Level 2",
+      "length": "short",
+      "llm_provider": "DeepSeek-V3",
+      "tts_provider": "edge-tts",
+      "voice": "en-US-GuyNeural + en-US-JennyNeural",
+      "audio_url": "/mock/audio/m2.wav",
+      "total_duration_ms": 60000,
+      "audioReady": false,
+      "tag": "CAN / RTOS",
+      "filter": "Software"
+    },
+    "background": {
+      "technical_background": "Intermittent frame loss on a chassis domain CAN bus appears only at low temperatures. A transceiver that powers up before its reference oscillator stabilizes can produce corrupted or dropped frames during the cold-start window.",
+      "technical_principle": "The bus sample point must sit inside the bit-time tolerance window. If oscillator drift shifts the sample point, bit errors accumulate and the error counter triggers bus-off states, degrading real-time control traffic.",
+      "engineering_scenario": "Morning RCA meeting on cold-start frame loss — embedded lead and kernel debugger reviewing oscilloscope traces and error counters.",
+      "technical_background_zh": "底盘域CAN总线的间歇性帧丢失仅在低温时出现。收发器在其参考振荡器稳定之前上电，会在冷启动窗口内产生损坏或丢失的帧。",
+      "technical_principle_zh": "总线采样点必须落在位时间容差窗口内。若振荡器漂移使采样点偏移，位错误将累积并使错误计数器触发总线关闭状态，降低实时控制通信质量。",
+      "engineering_scenario_zh": "针对冷启动帧丢失的晨间根本原因分析会——嵌入式负责人与内核调试工程师共同查看示波器波形和错误计数器。"
+    },
+    "dialogue": [
+      {
+        "id": 1,
+        "speaker": "Engineer A",
+        "role": "Embedded Lead",
+        "voice": "GuyNeural",
+        "start_ms": 0,
+        "end_ms": 9000,
+        "text_en": "We keep seeing intermittent CAN frame loss on the chassis domain bus during cold starts. It only shows up below minus ten degrees.",
+        "text_zh": "冷启动时我们在底盘域总线上反复看到间歇性的CAN帧丢失。只有零下十度以下才会出现。"
+      },
+      {
+        "id": 2,
+        "speaker": "Engineer B",
+        "role": "Kernel Debugger",
+        "voice": "JennyNeural",
+        "start_ms": 9000,
+        "end_ms": 20000,
+        "text_en": "Could be the transceiver waking up before the oscillator has stabilized. What's the bit-error rate on the trace?",
+        "text_zh": "可能是收发器在晶振稳定之前就唤醒了。轨迹上的误码率是多少？"
+      },
+      {
+        "id": 3,
+        "speaker": "Engineer A",
+        "role": "Embedded Lead",
+        "voice": "GuyNeural",
+        "start_ms": 20000,
+        "end_ms": 32000,
+        "text_en": "Around one point four times ten to the minus four, which is well above our threshold. The jitter on the sync segment also looks suspicious.",
+        "text_zh": "大约1.4×10⁻⁴，远高于我们的阈值。同步段的抖动看起来也很可疑。"
+      },
+      {
+        "id": 4,
+        "speaker": "Engineer B",
+        "role": "Kernel Debugger",
+        "voice": "JennyNeural",
+        "start_ms": 32000,
+        "end_ms": 60000,
+        "text_en": "Let's capture the waveforms with the new scope and compare the sample points against the tolerance window. That will tell us whether to fix it in the driver or in the transceiver.",
+        "text_zh": "我们用新示波器抓取波形，把采样点与容差窗口对比。这能判断该修驱动还是收发器。"
+      }
+    ],
+    "vocabulary": [
+      {
+        "en": "bit error rate",
+        "zh": "误码率",
+        "symbol": "BER",
+        "def": "Ratio of erroneous bits to total transmitted bits over a measurement window."
+      },
+      {
+        "en": "transceiver",
+        "zh": "收发器",
+        "symbol": "PHY",
+        "def": "Physical-layer device that converts between the bus differential signal and digital bits."
+      },
+      {
+        "en": "oscillator",
+        "zh": "晶振",
+        "symbol": "f_clk",
+        "def": "Clock source that must stabilize before reliable bit sampling can start."
+      },
+      {
+        "en": "sample point",
+        "zh": "采样点",
+        "symbol": "t_smp",
+        "def": "Position within the bit time where the receiver samples the bus level."
+      }
+    ],
+    "listening_questions": [
+      {
+        "q": "What is the primary suspect for the cold-start frame loss?",
+        "options": [
+          "A broken cable shield",
+          "The transceiver waking up before the oscillator stabilizes",
+          "A baud rate mismatch between nodes"
+        ],
+        "answer": 1,
+        "explain": "Segment 00:09 — Engineer B hypothesizes: \"Could be the transceiver waking up before the oscillator has stabilized.\"",
+        "q_zh": "冷启动帧丢失的主要嫌疑是什么？",
+        "options_zh": [
+          "电缆屏蔽层破损",
+          "收发器在振荡器稳定之前提前唤醒",
+          "节点间波特率不匹配"
+        ],
+        "explain_zh": "片段00:09——工程师B推测：“可能是收发器在振荡器稳定之前提前唤醒了。”"
+      }
+    ],
+    "core_sentence_patterns": [
+      {
+        "title": "Hypothesis Framing",
+        "pattern": "\"Could be [cause A] before [condition B]...\"",
+        "example": "\"Could be the watchdog firing before the scheduler is ready.\"",
+        "title_zh": "假设构建",
+        "pattern_zh": "可能是[原因A]先于[条件B]……",
+        "example_zh": "可能是看门狗在调度器就绪之前触发。"
+      },
+      {
+        "title": "Measurement Request",
+        "pattern": "\"Let's capture [signal] and compare [measure] against [reference].\"",
+        "example": "\"Let's capture the voltage rail and compare the ripple against the spec.\"",
+        "title_zh": "测量请求",
+        "pattern_zh": "让我们采集[信号]，并将[测量值]与[参考值]进行比较。",
+        "example_zh": "让我们采集电压轨，并将纹波与规格进行比较。"
+      }
+    ]
   },
-  dialogue: [
-    { id: 1, speaker: 'Engineer A', role: 'Vehicle Dynamics', voice: 'GuyNeural', start_ms: 0, end_ms: 8000,
-      text_en: 'We noticed an aggressive yaw divergence during the 120 kph straight-line blowout simulation on the left front wheel. The baseline ESC was far too sluggish to counteract the immediate rolling resistance spike.',
-      text_zh: '我们在左前轮120公里时速直线爆胎仿真中观察到剧烈的横摆发散。基础ESC介入过于迟缓，无法有效抵消瞬时滚动阻力骤增。' },
-    { id: 2, speaker: 'Engineer B', role: 'Controls Lead', voice: 'JennyNeural', start_ms: 8000, end_ms: 19000,
-      text_en: 'Right. Because your lateral cornering stiffness on that corner drops to near zero instantaneously. What did the sideslip angle look like before differential braking kicked in?',
-      text_zh: '没错。因为该侧车轮的侧偏刚度瞬间跌落至接近零。在差动制动介入之前，质心侧偏角的变化如何？' },
-    { id: 3, speaker: 'Engineer A', role: 'Vehicle Dynamics', voice: 'GuyNeural', start_ms: 19000, end_ms: 32000,
-      text_en: 'Sideslip climbed beyond 3.8 degrees within 180 milliseconds. If we don\'t apply an opposing compensatory yaw moment across the rear axle via torque vectoring right away, the driver has virtually zero control margin.',
-      text_zh: '质心侧偏角在180毫秒内攀升超过3.8度。如果不立即通过后桥扭矩矢量分配施加反向补偿横摆力矩，驾驶员几乎没有操纵裕度。' },
-    { id: 4, speaker: 'Engineer B', role: 'Controls Lead', voice: 'JennyNeural', start_ms: 32000, end_ms: 46000,
-      text_en: 'Agreed. Let\'s calibrate the feedforward compensator based on wheel speed variance and the direct estimated burst drag force, right into the target yaw rate calculation.',
-      text_zh: '同意。我们基于轮速方差和直接预估的爆胎阻力标定前馈补偿器，直接纳入目标横摆角速度计算。' },
-    { id: 5, speaker: 'Engineer A', role: 'Vehicle Dynamics', voice: 'GuyNeural', start_ms: 46000, end_ms: 57000,
-      text_en: 'And we need to adapt the effective rolling radius estimate in real time, otherwise the wheel speed sensors will trigger false ABS interventions.',
-      text_zh: '我们还需要实时修正有效滚动半径的估计，否则轮速传感器会触发误报的ABS干预。' },
-    { id: 6, speaker: 'Engineer B', role: 'Controls Lead', voice: 'JennyNeural', start_ms: 57000, end_ms: 65000,
-      text_en: 'Exactly. Let\'s schedule a closed-loop validation on the HIL rig tomorrow morning and review the yaw error budget.',
-      text_zh: '正是。明天上午我们在HIL台架上做一轮闭环验证，并复核横摆误差预算。' }
-  ],
-  vocabulary: [
-    { en: 'cornering stiffness', zh: '侧偏刚度', symbol: 'C_α', def: 'Ratio of tire lateral force per radian of slip angle within the linear elastic envelope.' },
-    { en: 'asymmetric yaw moment', zh: '不对称横摆力矩', symbol: 'M_z', def: 'Unbalanced rotational moment about the vertical axis that pulls the chassis sideways.' },
-    { en: 'differential braking', zh: '差动制动', symbol: 'Δp', def: 'Applying brake force independently to single wheels to generate a corrective yaw moment.' },
-    { en: 'effective rolling radius', zh: '有效滚动半径', symbol: 'R_eff', def: 'Distance travelled per radian of wheel rotation under load; used to compute slip ratio.' }
-  ],
-  listening_questions: [
-    { q: 'Why was the baseline ESC too slow to react during the burst event?',
-      options: ['Brake fluid temperature exceeded the thermal limit.', 'Its intervention was far too delayed for the instant rolling resistance spike.', 'The steering angle sensor lost its calibration frame.'],
-      answer: 1, explain: 'Segment 00:00 — Engineer A stresses the baseline ESC was "far too sluggish to counteract the immediate rolling resistance spike."' },
-    { q: 'What does Engineer B propose for the feedforward compensator?',
-      options: ['Increase total friction braking force symmetrically.', 'Use wheel speed variance and estimated burst drag force in the target yaw rate calculation.', 'Disconnect the electric powertrain immediately.'],
-      answer: 1, explain: 'Segment 00:32 — "calibrate the feedforward compensator based on wheel speed variance and the direct estimated burst drag force..."' }
-  ],
-  core_sentence_patterns: [
-    { title: 'Root-Cause Deduction', pattern: '"That explains the sudden [phenomenon]..."', example: '"That explains the sudden drop in CAN bus voltage when the precharge relay closes."' },
-    { title: 'Controller Requirement', pattern: '"Our [subsystem] needs to [action] within [timeframe] to generate [effect]..."', example: '"Our torque vectoring controller needs to apply differential braking within 30 ms to generate an opposing restoring moment."' },
-    { title: 'Adverse Consequence Warning', pattern: '"...otherwise the [component] will trigger false [intervention]."', example: '"...otherwise the wheel speed sensors will trigger false ABS interventions."' }
-  ]
-},
-{
-  id: 'm2',
-  meta: {
-    title: 'CAN Bus Jitter & Packet Drop', topic: 'CAN Bus Jitter & Packet Drop',
-    domain: 'Embedded SW & Firmware', role: 'Embedded Kernel Debugger',
-    scenario: 'Root-Cause Failure RCA Meeting', dialogue_type: 'root_cause_analysis',
-    difficulty: 'Level 2', length: 'short',
-    llm_provider: 'DeepSeek-V3', tts_provider: 'edge-tts',
-    voice: 'en-US-GuyNeural + en-US-JennyNeural',
-    audio_url: '/mock/audio/m2.wav', total_duration_ms: 60000, audioReady: false,
-    tag: 'CAN / RTOS', filter: 'Software'
-  },
-  background: {
-    technical_background: 'Intermittent frame loss on a chassis domain CAN bus appears only at low temperatures. A transceiver that powers up before its reference oscillator stabilizes can produce corrupted or dropped frames during the cold-start window.',
-    technical_principle: 'The bus sample point must sit inside the bit-time tolerance window. If oscillator drift shifts the sample point, bit errors accumulate and the error counter triggers bus-off states, degrading real-time control traffic.',
-    engineering_scenario: 'Morning RCA meeting on cold-start frame loss — embedded lead and kernel debugger reviewing oscilloscope traces and error counters.'
-  },
-  dialogue: [
-    { id: 1, speaker: 'Engineer A', role: 'Embedded Lead', voice: 'GuyNeural', start_ms: 0, end_ms: 9000,
-      text_en: 'We keep seeing intermittent CAN frame loss on the chassis domain bus during cold starts. It only shows up below minus ten degrees.',
-      text_zh: '冷启动时我们在底盘域总线上反复看到间歇性的CAN帧丢失。只有零下十度以下才会出现。' },
-    { id: 2, speaker: 'Engineer B', role: 'Kernel Debugger', voice: 'JennyNeural', start_ms: 9000, end_ms: 20000,
-      text_en: 'Could be the transceiver waking up before the oscillator has stabilized. What\'s the bit-error rate on the trace?',
-      text_zh: '可能是收发器在晶振稳定之前就唤醒了。轨迹上的误码率是多少？' },
-    { id: 3, speaker: 'Engineer A', role: 'Embedded Lead', voice: 'GuyNeural', start_ms: 20000, end_ms: 32000,
-      text_en: 'Around one point four times ten to the minus four, which is well above our threshold. The jitter on the sync segment also looks suspicious.',
-      text_zh: '大约1.4×10⁻⁴，远高于我们的阈值。同步段的抖动看起来也很可疑。' },
-    { id: 4, speaker: 'Engineer B', role: 'Kernel Debugger', voice: 'JennyNeural', start_ms: 32000, end_ms: 60000,
-      text_en: 'Let\'s capture the waveforms with the new scope and compare the sample points against the tolerance window. That will tell us whether to fix it in the driver or in the transceiver.',
-      text_zh: '我们用新示波器抓取波形，把采样点与容差窗口对比。这能判断该修驱动还是收发器。' }
-  ],
-  vocabulary: [
-    { en: 'bit error rate', zh: '误码率', symbol: 'BER', def: 'Ratio of erroneous bits to total transmitted bits over a measurement window.' },
-    { en: 'transceiver', zh: '收发器', symbol: 'PHY', def: 'Physical-layer device that converts between the bus differential signal and digital bits.' },
-    { en: 'oscillator', zh: '晶振', symbol: 'f_clk', def: 'Clock source that must stabilize before reliable bit sampling can start.' },
-    { en: 'sample point', zh: '采样点', symbol: 't_smp', def: 'Position within the bit time where the receiver samples the bus level.' }
-  ],
-  listening_questions: [
-    { q: 'What is the primary suspect for the cold-start frame loss?',
-      options: ['A broken cable shield', 'The transceiver waking up before the oscillator stabilizes', 'A baud rate mismatch between nodes'],
-      answer: 1, explain: 'Segment 00:09 — Engineer B hypothesizes: "Could be the transceiver waking up before the oscillator has stabilized."' }
-  ],
-  core_sentence_patterns: [
-    { title: 'Hypothesis Framing', pattern: '"Could be [cause A] before [condition B]..."', example: '"Could be the watchdog firing before the scheduler is ready."' },
-    { title: 'Measurement Request', pattern: '"Let\'s capture [signal] and compare [measure] against [reference]."', example: '"Let\'s capture the voltage rail and compare the ripple against the spec."' }
-  ]
-},
-{
-  id: 'm3',
-  meta: {
-    title: 'Torque Vectoring in Turn-in', topic: 'Torque Vectoring in Turn-in',
-    domain: 'Automotive', role: 'Control Algorithm Architect',
-    scenario: 'Technical Discussion & Trade-off', dialogue_type: 'technical_discussion',
-    difficulty: 'Level 4', length: 'long',
-    llm_provider: 'DeepSeek-V3', tts_provider: 'edge-tts',
-    voice: 'en-US-GuyNeural + en-US-JennyNeural',
-    audio_url: '/mock/audio/m3.wav', total_duration_ms: 75000, audioReady: false,
-    tag: 'TV / AWD', filter: 'Drivetrain'
-  },
-  background: {
-    technical_background: 'During hard turn-in, the inside rear wheel unloads and loses lateral grip before the front axle reaches its slip limit, capping achievable yaw acceleration and delaying the driver\'s requested rotation.',
-    technical_principle: 'Torque vectoring biases drive torque toward the outside rear wheel to create an additional yaw moment. The intervention must be gated by estimated friction and steering rate — early biasing trades longitudinal traction for yaw response; late biasing misses the corner entry.',
-    engineering_scenario: 'Vehicle dynamics development meeting on corner-entry behavior — dynamics engineer and control architect aligning the intervention strategy.'
-  },
-  dialogue: [
-    { id: 1, speaker: 'Engineer A', role: 'Vehicle Dynamics', voice: 'GuyNeural', start_ms: 0, end_ms: 9000,
-      text_en: 'During hard turn-in the inside rear wheel keeps losing grip before the front axle reaches its slip limit. We lose yaw response exactly when the driver needs it.',
-      text_zh: '急转向入弯时，内后轮在前轴到达滑移极限之前就失去了抓地力。恰在驾驶员需要横摆响应时我们丢失了它。' },
-    { id: 2, speaker: 'Engineer B', role: 'Controls Architect', voice: 'JennyNeural', start_ms: 9000, end_ms: 20000,
-      text_en: 'That\'s the classic yaw-acceleration shortfall. The torque vectoring controller should pre-emptively bias torque to the outer rear wheel.',
-      text_zh: '这是典型的横摆角加速度不足。扭矩矢量控制器应该预先把扭矩偏向弯外后轮。' },
-    { id: 3, speaker: 'Engineer A', role: 'Vehicle Dynamics', voice: 'GuyNeural', start_ms: 20000, end_ms: 33000,
-      text_en: 'But if we shift too early, we trade longitudinal traction for yaw response, and the driver feels the nose tuck in under partial throttle.',
-      text_zh: '但如果转移过早，我们会拿纵向牵引力换横摆响应，部分油门下车头会明显内收。' },
-    { id: 4, speaker: 'Engineer B', role: 'Controls Architect', voice: 'JennyNeural', start_ms: 33000, end_ms: 47000,
-      text_en: 'Right, so we gate the intervention on the estimated friction coefficient and the steering rate, not just the yaw error alone.',
-      text_zh: '对，所以介入要由预估附着系数和转向速率门控，而不是只看横摆误差。' },
-    { id: 5, speaker: 'Engineer A', role: 'Vehicle Dynamics', voice: 'GuyNeural', start_ms: 47000, end_ms: 75000,
-      text_en: 'Agreed. Let\'s run a swept-steer maneuver matrix tomorrow and log the outer-wheel slip margin across different surface conditions.',
-      text_zh: '同意。明天我们跑一遍扫频转向工况矩阵，记录不同路面下弯外轮的滑移裕度。' }
-  ],
-  vocabulary: [
-    { en: 'yaw-acceleration shortfall', zh: '横摆角加速度不足', symbol: 'ṙ', def: 'Insufficient rotational acceleration to meet the driver\'s intended path change.' },
-    { en: 'friction coefficient', zh: '附着系数', symbol: 'μ', def: 'Tire-road grip ratio used to estimate available lateral force.' },
-    { en: 'slip margin', zh: '滑移裕度', symbol: 'Δα', def: 'Headroom between current slip and the peak lateral-force point of the tire curve.' },
-    { en: 'swept-steer maneuver', zh: '扫频转向工况', symbol: 'Δδ(t)', def: 'A test run with linearly increasing steering input to excite the chassis dynamics.' }
-  ],
-  listening_questions: [
-    { q: 'When should the torque biasing intervention be gated?',
-      options: ['Always at full throttle', 'On the estimated friction coefficient and the steering rate', 'Only after ABS activates'],
-      answer: 1, explain: 'Segment 00:33 — Engineer B: "we gate the intervention on the estimated friction coefficient and the steering rate, not just the yaw error alone."' }
-  ],
-  core_sentence_patterns: [
-    { title: 'Trade-off Framing', pattern: '"If we [action] too early, we trade [A] for [B]..."', example: '"If we pre-charge the pack too early, we trade cell lifetime for response time."' },
-    { title: 'Test Design', pattern: '"Let\'s run a [maneuver] matrix and log [metric] across [conditions]."', example: '"Let\'s run a thermal cycling matrix and log cell voltage across all SOC points."' }
-  ]
-}
+  {
+    "id": "m3",
+    "meta": {
+      "title": "Torque Vectoring in Turn-in",
+      "topic": "Torque Vectoring in Turn-in",
+      "domain": "Automotive",
+      "role": "Control Algorithm Architect",
+      "scenario": "Technical Discussion & Trade-off",
+      "dialogue_type": "technical_discussion",
+      "difficulty": "Level 4",
+      "length": "long",
+      "llm_provider": "DeepSeek-V3",
+      "tts_provider": "edge-tts",
+      "voice": "en-US-GuyNeural + en-US-JennyNeural",
+      "audio_url": "/mock/audio/m3.wav",
+      "total_duration_ms": 75000,
+      "audioReady": false,
+      "tag": "TV / AWD",
+      "filter": "Drivetrain"
+    },
+    "background": {
+      "technical_background": "During hard turn-in, the inside rear wheel unloads and loses lateral grip before the front axle reaches its slip limit, capping achievable yaw acceleration and delaying the driver's requested rotation.",
+      "technical_principle": "Torque vectoring biases drive torque toward the outside rear wheel to create an additional yaw moment. The intervention must be gated by estimated friction and steering rate — early biasing trades longitudinal traction for yaw response; late biasing misses the corner entry.",
+      "engineering_scenario": "Vehicle dynamics development meeting on corner-entry behavior — dynamics engineer and control architect aligning the intervention strategy.",
+      "technical_background_zh": "急转弯入弯时，内侧后轮卸载并在前轴达到侧滑极限之前失去横向抓地力，限制了可达到的横摆加速度，延迟了驾驶员请求的车身旋转响应。",
+      "technical_principle_zh": "扭矩矢量分配将驱动扭矩偏向外部后轮，以产生额外的横摆力矩。干预必须由估计的摩擦系数和转向速率门控——过早介入会以纵向牵引力换取横摆响应，过晚介入则会错过入弯时机。",
+      "engineering_scenario_zh": "关于入弯行为的车辆动力学开发会议——动力学工程师与控制架构师对齐干预策略。"
+    },
+    "dialogue": [
+      {
+        "id": 1,
+        "speaker": "Engineer A",
+        "role": "Vehicle Dynamics",
+        "voice": "GuyNeural",
+        "start_ms": 0,
+        "end_ms": 9000,
+        "text_en": "During hard turn-in the inside rear wheel keeps losing grip before the front axle reaches its slip limit. We lose yaw response exactly when the driver needs it.",
+        "text_zh": "急转向入弯时，内后轮在前轴到达滑移极限之前就失去了抓地力。恰在驾驶员需要横摆响应时我们丢失了它。"
+      },
+      {
+        "id": 2,
+        "speaker": "Engineer B",
+        "role": "Controls Architect",
+        "voice": "JennyNeural",
+        "start_ms": 9000,
+        "end_ms": 20000,
+        "text_en": "That's the classic yaw-acceleration shortfall. The torque vectoring controller should pre-emptively bias torque to the outer rear wheel.",
+        "text_zh": "这是典型的横摆角加速度不足。扭矩矢量控制器应该预先把扭矩偏向弯外后轮。"
+      },
+      {
+        "id": 3,
+        "speaker": "Engineer A",
+        "role": "Vehicle Dynamics",
+        "voice": "GuyNeural",
+        "start_ms": 20000,
+        "end_ms": 33000,
+        "text_en": "But if we shift too early, we trade longitudinal traction for yaw response, and the driver feels the nose tuck in under partial throttle.",
+        "text_zh": "但如果转移过早，我们会拿纵向牵引力换横摆响应，部分油门下车头会明显内收。"
+      },
+      {
+        "id": 4,
+        "speaker": "Engineer B",
+        "role": "Controls Architect",
+        "voice": "JennyNeural",
+        "start_ms": 33000,
+        "end_ms": 47000,
+        "text_en": "Right, so we gate the intervention on the estimated friction coefficient and the steering rate, not just the yaw error alone.",
+        "text_zh": "对，所以介入要由预估附着系数和转向速率门控，而不是只看横摆误差。"
+      },
+      {
+        "id": 5,
+        "speaker": "Engineer A",
+        "role": "Vehicle Dynamics",
+        "voice": "GuyNeural",
+        "start_ms": 47000,
+        "end_ms": 75000,
+        "text_en": "Agreed. Let's run a swept-steer maneuver matrix tomorrow and log the outer-wheel slip margin across different surface conditions.",
+        "text_zh": "同意。明天我们跑一遍扫频转向工况矩阵，记录不同路面下弯外轮的滑移裕度。"
+      }
+    ],
+    "vocabulary": [
+      {
+        "en": "yaw-acceleration shortfall",
+        "zh": "横摆角加速度不足",
+        "symbol": "ṙ",
+        "def": "Insufficient rotational acceleration to meet the driver's intended path change."
+      },
+      {
+        "en": "friction coefficient",
+        "zh": "附着系数",
+        "symbol": "μ",
+        "def": "Tire-road grip ratio used to estimate available lateral force."
+      },
+      {
+        "en": "slip margin",
+        "zh": "滑移裕度",
+        "symbol": "Δα",
+        "def": "Headroom between current slip and the peak lateral-force point of the tire curve."
+      },
+      {
+        "en": "swept-steer maneuver",
+        "zh": "扫频转向工况",
+        "symbol": "Δδ(t)",
+        "def": "A test run with linearly increasing steering input to excite the chassis dynamics."
+      }
+    ],
+    "listening_questions": [
+      {
+        "q": "When should the torque biasing intervention be gated?",
+        "options": [
+          "Always at full throttle",
+          "On the estimated friction coefficient and the steering rate",
+          "Only after ABS activates"
+        ],
+        "answer": 1,
+        "explain": "Segment 00:33 — Engineer B: \"we gate the intervention on the estimated friction coefficient and the steering rate, not just the yaw error alone.\"",
+        "q_zh": "扭矩偏置干预应在何时被门控？",
+        "options_zh": [
+          "始终在全油门时",
+          "根据估计的摩擦系数和转向速率",
+          "仅在ABS激活之后"
+        ],
+        "explain_zh": "片段00:33——工程师B：“我们根据估计的摩擦系数和转向速率门控干预，而不仅仅依据横摆误差。”"
+      }
+    ],
+    "core_sentence_patterns": [
+      {
+        "title": "Trade-off Framing",
+        "pattern": "\"If we [action] too early, we trade [A] for [B]...\"",
+        "example": "\"If we pre-charge the pack too early, we trade cell lifetime for response time.\"",
+        "title_zh": "权衡表述",
+        "pattern_zh": "如果我们过早[动作]，就会用[A]换取[B]……",
+        "example_zh": "如果我们过早预充电电池包，就会用电芯寿命换取响应时间。"
+      },
+      {
+        "title": "Test Design",
+        "pattern": "\"Let's run a [maneuver] matrix and log [metric] across [conditions].\"",
+        "example": "\"Let's run a thermal cycling matrix and log cell voltage across all SOC points.\"",
+        "title_zh": "试验设计",
+        "pattern_zh": "让我们运行一个[工况]矩阵，并在[条件]范围内记录[指标]。",
+        "example_zh": "让我们运行一个热循环矩阵，并在所有SOC点记录电芯电压。"
+      }
+    ]
+  }
 ];
 
 /* ---------------- API FACADE (mock-first, backend-ready) ---------------- */
@@ -2986,6 +3290,7 @@ function updateSeekStep() {
 }
 function applyTranscriptLang() {
   document.querySelectorAll('#transcript-list .trow-zh').forEach(el => el.style.display = state.zhVisible ? '' : 'none');
+  const ins = $('inspector'); if (ins) ins.classList.toggle('zh-off', !state.zhVisible);
   $('btn-zh-toggle').classList.toggle('on', state.zhVisible);
 }
 
@@ -4396,27 +4701,36 @@ function questionsHTML(art) {
     '<div class="q-card" data-q="' + qi + '">' +
       '<div style="display:flex;align-items:center;justify-content:space-between"><span class="pill mono">Q' + (qi + 1) + '</span><span class="t-10 faint">Single choice</span></div>' +
       '<div class="t-13 bold">' + qt.q + '</div>' +
+      (qt.q_zh ? '<div class="i-zh t-12 accent dim">' + escapeHtml(qt.q_zh) + '</div>' : '') +
       '<div class="q-options">' + qt.options.map((o, oi) =>
         '<label class="q-opt" data-opt="' + oi + '">' +
           '<input type="radio" name="q' + art.id + '_' + qi + '" value="' + oi + '"/>' +
-          '<span>' + o + '</span><span class="ok-tag" data-ok="1" style="display:none">✓ Correct</span>' +
+          '<span>' + o + '</span>' +
+          ((qt.options_zh && qt.options_zh[oi]) ? '<span class="i-zh accent dim t-11">' + escapeHtml(qt.options_zh[oi]) + '</span>' : '') +
+          '<span class="ok-tag" data-ok="1" style="display:none">✓ Correct</span>' +
         '</label>').join('') + '</div>' +
-      '<div class="t-11 dim" data-expl="1" style="display:none;border-top:1px solid var(--line);padding-top:8px">' + qt.explain + '</div>' +
+      '<div class="t-11 dim" data-expl="1" style="display:none;border-top:1px solid var(--line);padding-top:8px">' + qt.explain +
+        (qt.explain_zh ? '<div class="i-zh accent dim" style="margin-top:4px">' + escapeHtml(qt.explain_zh) + '</div>' : '') +
+      '</div>' +
     '</div>').join('');
 }
 function patternsHTML(art) {
   return art.core_sentence_patterns.map(p =>
     '<div class="pattern-card">' +
-      '<span class="mono t-10 accent uc" style="letter-spacing:.06em">' + p.title + '</span>' +
+      '<span class="mono t-10 accent uc" style="letter-spacing:.06em">' + p.title + (p.title_zh ? ' · ' + escapeHtml(p.title_zh) : '') + '</span>' +
       '<div class="mono t-12">' + p.pattern + '</div>' +
+      (p.pattern_zh ? '<div class="i-zh mono t-11 accent dim">' + escapeHtml(p.pattern_zh) + '</div>' : '') +
       '<div class="p-eg t-11"><span class="dim">Example: </span>' + p.example + '</div>' +
+      (p.example_zh ? '<div class="i-zh t-11 accent dim" style="margin-top:2px"><span class="dim">示例：</span>' + escapeHtml(p.example_zh) + '</div>' : '') +
     '</div>').join('');
 }
 function groundingHTML(art) {
+  const bg = art.background || {};
+  const zh = (k) => bg[k] ? '<p class="t-12 i-zh accent dim" style="margin-top:6px">' + escapeHtml(bg[k]) + '</p>' : '';
   return [
-    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 accent uc">01 · Engineering Background</span><p class="t-12">' + art.background.technical_background + '</p></div>',
-    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 accent uc">02 · Technical Principle</span><p class="t-12">' + art.background.technical_principle + '</p></div>',
-    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 faint uc">03 · Engineering Scenario</span><p class="t-12 dim">' + art.background.engineering_scenario + '</p></div>'
+    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 accent uc">01 · Engineering Background</span><p class="t-12">' + bg.technical_background + '</p>' + zh('technical_background_zh') + '</div>',
+    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 accent uc">02 · Technical Principle</span><p class="t-12">' + bg.technical_principle + '</p>' + zh('technical_principle_zh') + '</div>',
+    '<div class="vocab-card" style="gap:8px"><span class="mono t-10 faint uc">03 · Engineering Scenario</span><p class="t-12 dim">' + bg.engineering_scenario + '</p>' + zh('engineering_scenario_zh') + '</div>'
   ].join('');
 }
 
@@ -5343,7 +5657,8 @@ function renderPlayerBar() {
     const el = document.getElementById(id);
     if (el) { el.disabled = !playable; el.classList.toggle('disabled', !playable); }
   });
-  $('btn-pb-subs').disabled = !playable;
+  $('btn-pb-subs').disabled = !art;
+  $('btn-pb-subs').classList.toggle('disabled', !art);
   const q = $('btn-pb-queue');
   if (q) {
     q.disabled = !state.activePlaylist;

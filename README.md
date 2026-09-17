@@ -116,6 +116,7 @@ python tests/e2e/test_tts_roles_e2e.py  # 11 项 TTS 角色专项
 | 真实 LLM 接入 | ✅ 完成（OpenAI 兼容通用契约 + pydantic 校验 + 失败重试 + json_object 自动降级；DeepSeek/豆包/Kimi/OpenAI/Qwen/Ollama/任意兼容端点） |
 | 真实 TTS 合成 | ✅ 完成（edge-tts 在线 / Kokoro 本地离线双引擎；逐句合成 + ffmpeg 拼接 + 真实时间戳回填） |
 | 播放器（逐句同步 / 单句循环 / 倍速 / 收藏 / 前后跳转） | ✅ 完成 |
+| 中英翻译开关（transcript + 右侧面板 Grounding/Quiz/Patterns 同步显隐；词汇中文常显） | ✅ 完成 |
 | 开发者模式（LLM Mock 过程详情 / TTS Mock 语料接管 / 诊断） | ✅ 完成 |
 | 异步进度（job 轮询） | ⚠️ 待办：`generation_jobs` 表已预留，当前进度由前端阶段驱动 |
 

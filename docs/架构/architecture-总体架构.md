@@ -50,20 +50,25 @@ LLM、TTS、播放器、讲义之间的**共同数据源**，保证各模块内�
     "tts_provider": "edge-tts", "voice": "en-US-GuyNeural",
     "audio_url": "...", "total_duration_ms": 95000
   },
-  "background": { "technical_background": "...", "technical_principle": "...", "engineering_scenario": "..." },
+  "background": { "technical_background": "...", "technical_principle": "...", "engineering_scenario": "...",
+    "technical_background_zh": "...", "technical_principle_zh": "...", "engineering_scenario_zh": "..." },
   "dialogue": [
     { "id": 1, "speaker": "Engineer A", "text_en": "...", "text_zh": "...",
       "start_ms": 0, "end_ms": 2300, "words": [] }
   ],
   "vocabulary": [ { "en": "yaw moment", "zh": "横摆力矩", "context_meaning": "..." } ],
-  "listening_questions": [],
-  "core_sentence_patterns": []
+  "listening_questions": [ { "q": "...", "options": ["..."], "answer": 1, "explain": "...",
+    "q_zh": "...", "options_zh": ["..."], "explain_zh": "..." } ],
+  "core_sentence_patterns": [ { "title": "...", "pattern": "...", "example": "...",
+    "title_zh": "...", "pattern_zh": "...", "example_zh": "..." } ]
 }
 ```
 
 设计要点：
 - LLM 阶段**不产出时间戳**；`start_ms / end_ms` 完全来自 TTS 逐句合成的真实时长累加；
-- 中英双语一次调用同时产出（上下文一致、成本低于两次调用）。
+- 中英双语一次调用同时产出（上下文一致、成本低于两次调用）；`*_zh` 字段为各英文内容的对应中文翻译；
+- 翻译开关（CN）控制右侧面板（Grounding / Quiz / Patterns）中文块与 transcript 中文行的显隐；词汇面板中文释义常显不受开关影响；
+- 旧素材（无 `*_zh` 字段）自动降级为纯英文展示，不报错。
 
 ## 4. Provider 可插拔设计
 
@@ -98,7 +103,7 @@ Audio 拼接（句间可插停顿，如 300ms）
 
 - `materials`：id, title, topic, domain, role, scenario, difficulty(1-5), depth/breadth(1-5), tone, status(draft/audio_ready/published), llm_provider/model, tts_voice_a/b, tts_style, tts_rate, total_duration_ms, audio_path, version
 - `dialogue_segments`：id, material_id, seq, speaker, role, voice, text_en, text_zh, start_ms, end_ms
-- `vocabulary` / `listening_questions` / `core_sentence_patterns`
+- `vocabulary` / `listening_questions`（含 q_zh / options_zh / explain_zh）/ `core_sentence_patterns`（含 title_zh / pattern_zh / example_zh）
 - `playlists` / `playlist_materials`（多对多）
 - `generation_jobs`：id, material_id, phase(corpus/tts/publish), status, progress_pct, error_message
 

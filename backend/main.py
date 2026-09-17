@@ -89,6 +89,9 @@ CREATE TABLE IF NOT EXISTS materials (
   technical_background TEXT,
   technical_principle TEXT,
   engineering_scenario TEXT,
+  technical_background_zh TEXT,
+  technical_principle_zh TEXT,
+  engineering_scenario_zh TEXT,
   created_at INTEGER,
   updated_at INTEGER,
   version INTEGER DEFAULT 1
@@ -114,13 +117,17 @@ CREATE TABLE IF NOT EXISTS listening_questions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   material_id TEXT NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
   q TEXT,
-  options TEXT,                                -- JSON array
-  answer TEXT, explain TEXT
+  options TEXT,                                -- JSON array (en)
+  answer TEXT, explain TEXT,
+  q_zh TEXT,
+  options_zh TEXT,                             -- JSON array (zh)
+  explain_zh TEXT
 );
 CREATE TABLE IF NOT EXISTS core_sentence_patterns (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   material_id TEXT NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
-  title TEXT, pattern TEXT, example TEXT
+  title TEXT, pattern TEXT, example TEXT,
+  title_zh TEXT, pattern_zh TEXT, example_zh TEXT
 );
 CREATE TABLE IF NOT EXISTS playlists (
   id TEXT PRIMARY KEY,
@@ -160,10 +167,31 @@ CREATE INDEX IF NOT EXISTS idx_llm_usage_created ON llm_usage(created_at);
 def init_db():
     conn = db()
     conn.executescript(SCHEMA)
+    migrate_bilingual_columns(conn)
     conn.commit()
     seed(conn)
     migrate_audio_status(conn)
     conn.close()
+
+
+def migrate_bilingual_columns(conn: sqlite3.Connection) -> None:
+    """Idempotently add bilingual (zh) columns to databases created before the
+    bilingual inspector change. CREATE TABLE IF NOT EXISTS does not alter
+    existing tables, so columns are added explicitly when missing."""
+    migrations = {
+        "materials": [
+            "technical_background_zh",
+            "technical_principle_zh",
+            "engineering_scenario_zh",
+        ],
+        "listening_questions": ["q_zh", "options_zh", "explain_zh"],
+        "core_sentence_patterns": ["title_zh", "pattern_zh", "example_zh"],
+    }
+    for table, cols in migrations.items():
+        existing = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+        for col in cols:
+            if col not in existing:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} TEXT")
 
 
 def migrate_audio_status(conn: sqlite3.Connection) -> int:
@@ -229,8 +257,10 @@ def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
            (id,title,topic,domain,role,scenario,dialogue_type,difficulty,length,
             llm_provider,tts_provider,voice,depth,breadth,tone,status,audio_url,
             total_duration_ms,tag,"filter",meta_json,technical_background,
-            technical_principle,engineering_scenario,created_at,updated_at,version)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            technical_principle,engineering_scenario,
+            technical_background_zh,technical_principle_zh,engineering_scenario_zh,
+            created_at,updated_at,version)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             mid,
             meta.get("title", ""),
@@ -256,6 +286,9 @@ def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
             art.get("background", {}).get("technical_background"),
             art.get("background", {}).get("technical_principle"),
             art.get("background", {}).get("engineering_scenario"),
+            art.get("background", {}).get("technical_background_zh"),
+            art.get("background", {}).get("technical_principle_zh"),
+            art.get("background", {}).get("engineering_scenario_zh"),
             now,
             now,
             1,
@@ -285,13 +318,15 @@ def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
         )
     for q in art.get("listening_questions", []):
         conn.execute(
-            "INSERT INTO listening_questions (material_id,q,options,answer,explain) VALUES (?,?,?,?,?)",
-            (mid, q.get("q"), json.dumps(q.get("options", [])), q.get("answer"), q.get("explain")),
+            "INSERT INTO listening_questions (material_id,q,options,answer,explain,q_zh,options_zh,explain_zh) VALUES (?,?,?,?,?,?,?,?)",
+            (mid, q.get("q"), json.dumps(q.get("options", [])), q.get("answer"), q.get("explain"),
+             q.get("q_zh"), json.dumps(q.get("options_zh", [])), q.get("explain_zh")),
         )
     for p in art.get("core_sentence_patterns", []):
         conn.execute(
-            "INSERT INTO core_sentence_patterns (material_id,title,pattern,example) VALUES (?,?,?,?)",
-            (mid, p.get("title"), p.get("pattern"), p.get("example")),
+            "INSERT INTO core_sentence_patterns (material_id,title,pattern,example,title_zh,pattern_zh,example_zh) VALUES (?,?,?,?,?,?,?)",
+            (mid, p.get("title"), p.get("pattern"), p.get("example"),
+             p.get("title_zh"), p.get("pattern_zh"), p.get("example_zh")),
         )
     conn.commit()
 
@@ -336,6 +371,9 @@ def artifact_of(conn: sqlite3.Connection, mid: str) -> dict | None:
             "technical_background": row["technical_background"],
             "technical_principle": row["technical_principle"],
             "engineering_scenario": row["engineering_scenario"],
+            "technical_background_zh": row["technical_background_zh"],
+            "technical_principle_zh": row["technical_principle_zh"],
+            "engineering_scenario_zh": row["engineering_scenario_zh"],
         },
         "dialogue": [
             {
@@ -347,11 +385,14 @@ def artifact_of(conn: sqlite3.Connection, mid: str) -> dict | None:
         ],
         "vocabulary": [{"en": v["en"], "zh": v["zh"], "symbol": v["symbol"], "def": v["def"]} for v in vocab],
         "listening_questions": [
-            {"q": q["q"], "options": json.loads(q["options"] or "[]"), "answer": q["answer"], "explain": q["explain"]}
+            {"q": q["q"], "options": json.loads(q["options"] or "[]"), "answer": q["answer"], "explain": q["explain"],
+             "q_zh": q["q_zh"], "options_zh": json.loads(q["options_zh"] or "[]"), "explain_zh": q["explain_zh"]}
             for q in qs
         ],
         "core_sentence_patterns": [
-            {"title": p["title"], "pattern": p["pattern"], "example": p["example"]} for p in pats
+            {"title": p["title"], "pattern": p["pattern"], "example": p["example"],
+             "title_zh": p["title_zh"], "pattern_zh": p["pattern_zh"], "example_zh": p["example_zh"]}
+            for p in pats
         ],
     }
 
@@ -476,14 +517,20 @@ TEMPLATE_VOCAB = [
     {"en": "design review", "zh": "设计评审", "symbol": "", "def": "A structured review meeting where designs are challenged and approved."},
 ]
 TEMPLATE_QUESTIONS = [
-    {"q": "What is the key constraint mentioned at the start of the discussion?", "options": ["Cost of the hardware", "Response time window", "Fuel efficiency", "Software license"], "answer": "Response time window", "explain": "Engineer B: 'The key constraint is response time — we only have a narrow window before the condition escalates.'"},
-    {"q": "How should the compensation logic be triggered?", "options": ["By waiting for the effect to appear", "By a manual operator switch", "From the sensor estimate", "On a fixed timer"], "answer": "From the sensor estimate", "explain": "Alex: 'So the compensation logic should trigger from the sensor estimate, not wait for the effect to show up.'"},
-    {"q": "Where will the final validation be performed this week?", "options": ["On the HIL bench", "On the public road", "In a thermal chamber", "In simulation only"], "answer": "On the HIL bench", "explain": "Alex: 'validate it on the HIL bench this week.'"},
+    {"q": "What is the key constraint mentioned at the start of the discussion?", "options": ["Cost of the hardware", "Response time window", "Fuel efficiency", "Software license"], "answer": "Response time window", "explain": "Engineer B: 'The key constraint is response time — we only have a narrow window before the condition escalates.'",
+     "q_zh": "讨论开始时提到的关键约束是什么？", "options_zh": ["硬件成本", "响应时间窗口", "燃油效率", "软件许可"], "explain_zh": "工程师B：“关键约束是响应时间——在状况恶化之前，我们只有很窄的时间窗口。”"},
+    {"q": "How should the compensation logic be triggered?", "options": ["By waiting for the effect to appear", "By a manual operator switch", "From the sensor estimate", "On a fixed timer"], "answer": "From the sensor estimate", "explain": "Alex: 'So the compensation logic should trigger from the sensor estimate, not wait for the effect to show up.'",
+     "q_zh": "补偿逻辑应如何触发？", "options_zh": ["等效应显现出来再触发", "由操作员手动开关触发", "基于传感器估计触发", "按固定定时器触发"], "explain_zh": "Alex：“所以补偿逻辑应基于传感器估计触发，而不是等效应显现出来。”"},
+    {"q": "Where will the final validation be performed this week?", "options": ["On the HIL bench", "On the public road", "In a thermal chamber", "In simulation only"], "answer": "On the HIL bench", "explain": "Alex: 'validate it on the HIL bench this week.'",
+     "q_zh": "本周最终验证将在哪里进行？", "options_zh": ["在HIL台架上", "在公开道路上", "在热环境舱中", "仅在仿真中"], "explain_zh": "Alex：“本周在HIL台架上进行验证。”"},
 ]
 TEMPLATE_PATTERNS = [
-    {"title": "Constraint Statement", "pattern": "The key constraint is [X] — we only have [limit] before [condition].", "example": "The key constraint is power draw — we only have 2 seconds before the cell overheats."},
-    {"title": "Trigger Decision", "pattern": "So the [logic] should trigger from the [signal], not wait for the [effect].", "example": "So the limiter should trigger from the torque estimate, not wait for the overspeed."},
-    {"title": "Verification Plan", "pattern": "Then we close the loop with [approach] and validate it on [rig] this week.", "example": "Then we close the loop with a soft ramp and validate it on the dyno this week."},
+    {"title": "Constraint Statement", "pattern": "The key constraint is [X] — we only have [limit] before [condition].", "example": "The key constraint is power draw — we only have 2 seconds before the cell overheats.",
+     "title_zh": "约束陈述", "pattern_zh": "关键约束是[X]——在[条件]发生之前，我们只有[限度]。", "example_zh": "关键约束是功耗——在电芯过热之前，我们只有2秒。"},
+    {"title": "Trigger Decision", "pattern": "So the [logic] should trigger from the [signal], not wait for the [effect].", "example": "So the limiter should trigger from the torque estimate, not wait for the overspeed.",
+     "title_zh": "触发决策", "pattern_zh": "所以[逻辑]应基于[信号]触发，而不是等[效应]显现。", "example_zh": "所以限制器应基于扭矩估计触发，而不是等超速发生。"},
+    {"title": "Verification Plan", "pattern": "Then we close the loop with [approach] and validate it on [rig] this week.", "example": "Then we close the loop with a soft ramp and validate it on the dyno this week.",
+     "title_zh": "验证计划", "pattern_zh": "然后我们用[方案]闭环，本周在[台架]上验证。", "example_zh": "然后我们用软斜坡闭环，本周在测功机上验证。"},
 ]
 
 
@@ -509,6 +556,9 @@ def mock_generate(p: GenerateIn) -> dict:
                 "technical_background": "This is a template response used for dev testing. The scenario is a working discussion about %s." % topic,
                 "technical_principle": "The system relies on sensor estimates, conservative calibration and closed-loop validation to keep the operating margin safe.",
                 "engineering_scenario": "Two engineers discuss the baseline, constraint, trigger logic and validation plan during a routine design review.",
+                "technical_background_zh": "这是用于开发测试的模板响应。场景是围绕 %s 的工作讨论。" % topic,
+                "technical_principle_zh": "该系统依靠传感器估计、保守标定与闭环验证来保持运行裕度安全。",
+                "engineering_scenario_zh": "两位工程师在例行设计评审中讨论基线、约束、触发逻辑与验证计划。",
             },
             "dialogue": [
                 {**d, "text_en": d["text_en"].replace("{topic}", topic), "text_zh": d["text_zh"].replace("{topic}", topic)}
@@ -594,12 +644,15 @@ LLM_SYSTEM_PROMPT = """你是 TELG 技术英语听力素材生成引擎，为研
 
 ## 输出契约（硬约束，违反即失败）
 - 必须输出合法 JSON 对象。禁止 Markdown 代码块、注释、或任何 JSON 之外的文字。JSON 示例仅供参考，输出时不得包含注释。
-- JSON 结构（字段名必须完全一致）：
+- JSON 结构（字段名必须完全一致；所有 *_zh 字段是对应英文内容的标准中文翻译）：
 {
   "background": {
     "technical_background": "英文：该主题工程背景，2-3 句",
     "technical_principle": "英文：核心技术原理，2-3 句，可含公式符号如 C_alpha",
-    "engineering_scenario": "英文：这段对话发生在什么工作场景，1-2 句"
+    "engineering_scenario": "英文：这段对话发生在什么工作场景，1-2 句",
+    "technical_background_zh": "上述工程背景的中文翻译",
+    "technical_principle_zh": "上述技术原理的中文翻译",
+    "engineering_scenario_zh": "上述工作场景的中文翻译"
   },
   "dialogue": [
     {"speaker": "说话人标识（真实人名或岗位名，如 \"Alex Chen\" / \"Supplier QA Manager\"，严禁 Engineer A 式占位）", "role": "职场角色/职位（如 Vehicle Dynamics Engineer）", "text_en": "英文台词", "text_zh": "对应中文翻译"}
@@ -608,10 +661,12 @@ LLM_SYSTEM_PROMPT = """你是 TELG 技术英语听力素材生成引擎，为研
     {"en": "英文术语", "zh": "标准译法", "symbol": "符号，无则空串", "def": "英文释义"}
   ],
   "listening_questions": [
-    {"q": "问题", "options": ["选项1", "选项2", "选项3"], "answer": "正确选项的完整原文", "explain": "答案出自哪句台词"}
+    {"q": "问题", "options": ["选项1", "选项2", "选项3"], "answer": "正确选项的完整原文", "explain": "答案出自哪句台词",
+     "q_zh": "问题的中文翻译", "options_zh": ["各选项的中文翻译，与 options 一一对应"], "explain_zh": "答案出处的中文翻译"}
   ],
   "core_sentence_patterns": [
-    {"title": "句型名", "pattern": "句式模板", "example": "例句"}
+    {"title": "句型名", "pattern": "句式模板", "example": "例句",
+     "title_zh": "句型名的中文翻译", "pattern_zh": "句式模板的中文翻译", "example_zh": "例句的中文翻译"}
   ]
 }
 - dialogue 元素中不得出现 start_ms/end_ms/voice 等字段。
