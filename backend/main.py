@@ -589,12 +589,10 @@ def validate_request(p: GenerateIn) -> list[str]:
         rs = p.roleSelection or {}
         cands = rs.get("candidates") or []
         n = rs.get("speakerCount")
-        if not isinstance(cands, list) or len(cands) < 1:
-            errs.append("discussion 形态需要候选角色列表 roleSelection.candidates")
-        if not isinstance(n, int) or not (3 <= n <= 5):
-            errs.append("discussion 出场人数 speakerCount 必须在 3–5")
-        elif isinstance(cands, list) and len(cands) < n:
-            errs.append("候选角色数量（%d）少于要求出场人数（%d）" % (len(cands), n))
+        if not isinstance(cands, list):
+            errs.append("discussion 候选角色 roleSelection.candidates 必须是列表")
+        if n is not None and (not isinstance(n, int) or not (3 <= n <= 5)):
+            errs.append("discussion 出场人数 speakerCount 若指定必须在 3–5（缺省时由模型自行决定）")
     return errs
 
 
@@ -779,8 +777,16 @@ def mock_generate(p: GenerateIn) -> dict:
     else:
         rs = p.roleSelection or {}
         cands = [c for c in (rs.get("candidates") or []) if isinstance(c, str) and c.strip()]
-        n = int(rs.get("speakerCount") or min(3, len(cands) or 3))
-        n = max(1, min(n, len(cands) or 1))
+        n = rs.get("speakerCount")
+        if not isinstance(n, int) or not (3 <= n <= 5):
+            # headcount left to the model: default to a sensible count from the pool
+            n = min(5, max(3, len(cands) or 3))
+        # top up from generic roles when the candidate pool is short —
+        # the model is expected to fill in the scene appropriately
+        fallback = ["领域工程师", "测试工程师", "产品经理", "项目经理", "供应商代表", "评审专家"]
+        while len(cands) < n:
+            cands.append(fallback[len(cands) % len(fallback)])
+        cands = cands[:n]
         art["speakers"] = [
             {"id": "speaker_%d" % (i + 1), "role": cands[i], "voiceTag": "neutral"}
             for i in range(n)
@@ -948,12 +954,13 @@ def build_user_prompt(p: GenerateIn, action: str = "generate") -> str:
     else:  # discussion
         rs = p.roleSelection or {}
         cands = [c for c in (rs.get("candidates") or []) if isinstance(c, str) and c.strip()]
-        n = int(rs.get("speakerCount") or 3)
-        n = max(1, min(n, len(cands) or 1))
+        n = rs.get("speakerCount")
+        head = ("，出场 " + str(n) + " 人" if isinstance(n, int) and (3 <= n <= 5) else "，出场 3–5 人（由你根据语境确定）")
+        pool = ("、".join(cands) if cands else "（未指定，请按领域自行构思）")
         struct = [
-            "- 形态：多人讨论（discussion），出场 " + str(n) + " 人",
-            "- 候选角色：" + ("、".join(cands) if cands else "领域工程师"),
-            "- 请从候选角色中挑选最贴合语境的 " + str(n) + " 位出场，不得使用候选池之外的角色",
+            "- 形态：多人讨论（discussion）" + head,
+            "- 候选角色：" + pool,
+            "- 从候选角色中挑选最贴合语境的出场人选；候选不足或不适配时，可补充贴合该领域/语境的真实角色",
         ]
 
     lines = [
