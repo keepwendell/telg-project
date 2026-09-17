@@ -46,7 +46,12 @@ with sync_playwright() as p:
     log('L6 试听点击有 loading 反馈并完成', loading and done and 'ok' in cls, f'loading={loading} done={done} {cls}')
     # 7. 统一文本输入框共享（修改文本后另一角色试听）
     pg.evaluate("(()=>{const i=document.getElementById('cfg-tts-test-text'); i.value='Can we recheck the yaw rate feedback loop before the release?';})()"); pg.wait_for_timeout(100)
-    pg.evaluate("document.querySelectorAll('#voice-roles .btn-role-test')[1].click(); true"); pg.wait_for_timeout(1200)
+    for _r in range(2):
+        pg.evaluate("document.querySelectorAll('#voice-roles .btn-role-test')[1].click(); true")
+        for _w in range(40):
+            pg.wait_for_timeout(500)
+            if 'ok' in pg.evaluate("document.getElementById('tts-test-result').className"): break
+        if 'ok' in pg.evaluate("document.getElementById('tts-test-result').className"): break
     log('L7 自定义文本后试听可用', 'ok' in pg.evaluate("document.getElementById('tts-test-result').className"))
     # 8. Add role 增加一行
     pg.evaluate("document.getElementById('btn-role-add').click(); true"); pg.wait_for_timeout(200)

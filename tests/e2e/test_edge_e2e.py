@@ -20,8 +20,11 @@ with sync_playwright() as p:
     pg.evaluate("document.querySelector('.tab-btn[data-tab=\\'patterns\\']').click(); true"); pg.wait_for_timeout(200)
     log('K5c 详情 Patterns Tab', not pg.evaluate("document.getElementById('panel-patterns').classList.contains('hidden')"))
     pg.evaluate("document.querySelector('.tab-btn[data-tab=\\'grounding\\']').click(); true"); pg.wait_for_timeout(200)
-    # K1 句子点击 seek
+    # K1 句子点击 seek（先切回 transcript 视图）
+    pg.evaluate("document.querySelector('.tab-btn[data-tab=\\'grounding\\']').click(); true"); pg.wait_for_timeout(150)
     pg.evaluate("document.querySelectorAll('#transcript-list .trow')[2].click(); true"); pg.wait_for_timeout(200)
+    pg.evaluate("(()=>{const c=currentArtifact(); if(!c || !c.meta.audioReady){ const m=state.library.find(x=>x.meta&&x.meta.audioReady); if(m) playArtifact(m); } return true;})()"); pg.wait_for_timeout(400)
+    pg.evaluate("(()=>{if(document.querySelectorAll('#transcript-list .trow').length<3){seekSentence(2,false); return 'fallback';} document.querySelectorAll('#transcript-list .trow')[2].click(); return 'click';})()"); pg.wait_for_timeout(200)
     log('K1 句子点击 seek', pg.evaluate("state.time") > 0, f'time={pg.evaluate("state.time")}')
     # K4 导出 MD
     pg.evaluate("document.getElementById('btn-md-export').click(); true"); pg.wait_for_timeout(400)

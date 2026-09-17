@@ -356,7 +356,7 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .chip-row{display:flex;flex-wrap:wrap;gap:6px}
 .chip{padding:5px 9px;font-size:11px;color:var(--on-variant);background:var(--surface-low);border:1px solid var(--line);border-radius:6px;cursor:pointer;transition:color .15s var(--ease),background .15s var(--ease),border-color .15s var(--ease)}
 .chip:hover{color:var(--on-surface)}
-.chip.active{color:var(--on-surface);background:var(--surface-high);border-color:var(--outline);font-weight:500}
+.chip.active{color:var(--on-surface);background:var(--surface-high);border-color:var(--outline)}
 .engine-tags{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 .engine-tag{display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer}
 .engine-tag .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--outline)}
@@ -1059,9 +1059,9 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;flex-wrap:wrap">
             <label class="flabel" style="margin-bottom:0" data-i18n="gen.fmt">对话形态</label>
-            <span class="t-10 dim" id="fmt-hint"></span>
+            <span class="t-10" id="fmt-hint" style="color:var(--primary)"></span>
           </div>
-          <div class="seg" id="fmt-seg" style="grid-template-columns:repeat(3,1fr);max-width:480px">
+          <div class="seg" id="fmt-seg" style="grid-template-columns:repeat(3,1fr);max-width:560px">
             <button class="seg-item" data-fmt="solo" data-i18n="gen.fmtSolo">单人讲解</button>
             <button class="seg-item" data-fmt="dialogue" data-i18n="gen.fmtDialogue">双人对话</button>
             <button class="seg-item active" data-fmt="discussion" data-i18n="gen.fmtDiscussion">多人讨论</button>
@@ -2843,7 +2843,8 @@ const I18N = {
     'gen.sceneSec': 'Scene Simulation', 'gen.sceneSub': 'Simulate an immersive listening scene — pick the conversation format, your practice domain and speakers; describe the context freely.',
     'gen.fmt': 'Conversation Format', 'gen.fmtSolo': 'Solo Talk', 'gen.fmtDialogue': 'Dialogue', 'gen.fmtDiscussion': 'Discussion',
     'gen.fmtHintSolo': 'Single technical presentation / lecture', 'gen.fmtHintDialogue': 'Two-person conversation', 'gen.fmtHintDiscussion': 'Multi-party discussion (3–5 speakers)',
-    'gen.custom': 'Custom', 'gen.roles': 'Speakers', 'gen.roleSoloHint': 'pick 1 speaker', 'gen.roleDlgHint': 'pick exactly 2', 'gen.roleAsymHint': 'lead / respond', 'gen.roleDiscHint': 'multi-select candidate pool — the closest ones appear',
+    'gen.custom': 'Custom', 'gen.roles': 'Speakers', 'gen.roleSoloHint': 'pick 1 speaker', 'gen.roleDlgHint': 'pick exactly 2', 'gen.roleAsymHint': 'lead / respond', 'gen.roleDiscHint': 'multi-select — every speaker you pick joins the discussion (3–5)',
+    'gen.discCount': '{n} selected — the speakers you pick appear', 'gen.discMin': 'Please select at least 3 speakers for a discussion', 'gen.discMax': 'A discussion supports up to 5 speakers',
     'gen.asymOff': 'Symmetric (peer-to-peer)', 'gen.asymOn': 'Asymmetric (lead / respond)',
     'gen.lead': 'Lead · drives & asks', 'gen.leadPh': 'e.g. 4S store sales consultant', 'gen.respond': 'Respond · answers, may ask back', 'gen.respondPh': 'e.g. test-drive customer',
     'gen.speakerCount': 'Speakers:', 'gen.context': 'Scene Context', 'gen.contextPh': 'Describe the occasion and topic — e.g. test drive: the sales consultant presents vehicle performance and answers customer concerns',
@@ -3059,7 +3060,8 @@ const I18N = {
     'gen.sceneSec': '场景模拟设置', 'gen.sceneSub': '模拟专业的沉浸式听力场景——选择对话形态、感兴趣方向与出场角色，场景语境自由描述。',
     'gen.fmt': '对话形态', 'gen.fmtSolo': '单人讲解', 'gen.fmtDialogue': '双人对话', 'gen.fmtDiscussion': '多人讨论',
     'gen.fmtHintSolo': '单人技术讲解 / 汇报 / 课程', 'gen.fmtHintDialogue': '双人对话（面试 / 销售 / 协作）', 'gen.fmtHintDiscussion': '多人讨论（3–5 人，如评审会）',
-    'gen.custom': '自定义', 'gen.roles': '对话角色', 'gen.roleSoloHint': '单选 1 位讲者', 'gen.roleDlgHint': '恰好选 2 位', 'gen.roleAsymHint': '主导方 / 应答方', 'gen.roleDiscHint': '多选候选池——从中挑选最贴合语境的角色出场',
+    'gen.custom': '自定义', 'gen.roles': '对话角色', 'gen.roleSoloHint': '单选 1 位讲者', 'gen.roleDlgHint': '恰好选 2 位', 'gen.roleAsymHint': '主导方 / 应答方', 'gen.roleDiscHint': '多选角色——所选即出场（3–5 位）',
+    'gen.discCount': '已选 {n} 位——所选即出场（3–5 位）', 'gen.discMin': '多人讨论请至少选择 3 位角色', 'gen.discMax': '多人讨论最多 5 位角色',
     'gen.asymOff': '对等双方', 'gen.asymOn': '一方主导（lead / respond）',
     'gen.lead': '主导方 lead · 掌控话题', 'gen.leadPh': '如：4S 店销售顾问', 'gen.respond': '应答方 respond · 回应可反问', 'gen.respondPh': '如：试驾客户',
     'gen.speakerCount': '出场人数：', 'gen.context': '场景语境', 'gen.contextPh': '描述场合与主题，如：试驾环节，销售介绍车辆性能并回应客户顾虑',
@@ -4025,16 +4027,14 @@ function renderGenRoles() {
     h += '<div class="chip-row">' + pool.map(r =>
       '<button type="button" class="chip' + (sc.roles.includes(r) ? ' active' : '') + '" data-role="' + escapeHtml(r) + '">' + escapeHtml(r) + '</button>'
     ).join('') + customChip + '</div>';
-    h += '<div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">' +
-      '<label class="t-10 dim" style="white-space:nowrap">' + L['gen.speakerCount'] + '</label>' +
-      '<input type="range" id="gen-count" min="3" max="5" value="' + sc.speakerCount + '" style="flex:1;min-width:120px;max-width:220px">' +
-      '<span class="t-11 mono" id="gen-count-val">' + sc.speakerCount + '</span></div>';
+    h += '<div class="t-10 dim" style="margin-top:8px" id="gen-disc-count">' + escapeHtml(String(L['gen.discCount'] || '').replace('{n}', sc.roles.length)) + '</div>';
   }
   wrap.innerHTML = h;
   bindGenRoleEvents();
 }
 function toggleGenRole(name) {
   const sc = state.genScene;
+  const L = I18N[state.lang];
   if (sc.format === 'solo') {
     sc.roles = [name];
   } else if (sc.format === 'dialogue' && !sc.asymmetric) {
@@ -4043,6 +4043,7 @@ function toggleGenRole(name) {
     else sc.roles = [sc.roles[1], name];
   } else {
     if (sc.roles.includes(name)) sc.roles = sc.roles.filter(r => r !== name);
+    else if (sc.roles.length >= 5) { showToast(L['gen.discMax'] || 'At most 5 speakers', 'warn'); return; }
     else sc.roles.push(name);
   }
   renderGenScene();
@@ -4054,11 +4055,6 @@ function bindGenRoleEvents() {
   if (lead) lead.addEventListener('input', () => { state.genScene.lead = lead.value; });
   const respond = $('gen-respond');
   if (respond) respond.addEventListener('input', () => { state.genScene.respond = respond.value; });
-  const cnt = $('gen-count');
-  if (cnt) cnt.addEventListener('input', () => {
-    state.genScene.speakerCount = +cnt.value;
-    const v = $('gen-count-val'); if (v) v.textContent = state.genScene.speakerCount;
-  });
 }
 
 /* ---------- quick add: custom domain / role / scenario ---------- */
@@ -4178,13 +4174,15 @@ function renderProfileBox() {
         '<button class="btn btn-primary btn-sm" id="btn-pf-edit">' + L['settings.profile.edit'] + '</button>' +
         '</div>';
     } else {
+      const domCands = genDomainCandidates();
+      const domName = did => { const c = domCands.find(x => x.id === did || x.name === did); return c ? c.name : did; };
       box.innerHTML = '<div class="m-panel" style="padding:12px">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap">' +
           '<span class="t-11 bold">' + L['settings.profile.summary'] + '</span>' +
           '<button class="btn btn-ghost btn-sm" id="btn-pf-edit">' + L['settings.profile.edit'] + '</button>' +
         '</div>' +
         (p.domains.length ? '<div style="margin-bottom:8px"><div class="t-10 dim" style="margin-bottom:4px">' + L['settings.profile.domains'] + '</div><div class="chip-row">' +
-          p.domains.map(d => '<span class="chip">' + escapeHtml(d) + '</span>').join('') + '</div></div>' : '') +
+          p.domains.map(d => '<span class="chip">' + escapeHtml(domName(d)) + '</span>').join('') + '</div></div>' : '') +
         (p.roles.length ? '<div style="margin-bottom:8px"><div class="t-10 dim" style="margin-bottom:4px">' + L['settings.profile.roles'] + '</div><div class="chip-row">' +
           p.roles.map(r => '<span class="chip">' + escapeHtml(r) + '</span>').join('') + '</div></div>' : '') +
         '<div class="t-10 dim" style="margin-top:6px">' + L['settings.profile.lang'] + ': ' + langLabelShort(p.language) + ' · ' + L['settings.profile.minutes'] + ': ' + p.minutes + ' ' + L['settings.goal.unit'] + '</div>' +
@@ -4194,19 +4192,23 @@ function renderProfileBox() {
     if (editBtn) editBtn.addEventListener('click', () => { state.profileEditing = true; renderProfileBox(); });
     return;
   }
-  /* edit form — three managed items only */
+  /* edit form — three managed items only; chips behave like the generator
+     (click to toggle): selected chips are the managed items, unselecting
+     removes them, custom entries added below join the candidate pool */
+  const domCands = genDomainCandidates();
+  const roleCands = genRoleCandidates();
   box.innerHTML = '<div class="m-panel" style="padding:12px">' +
     '<div class="flabel" style="margin-bottom:6px">' + L['settings.profile.domains'] + ' <span class="t-10 dim">(' + L['settings.profile.domainsHint'] + ')</span></div>' +
-    '<div class="chip-row" id="pf-domains">' + p.domains.map((d, i) =>
-      '<span class="chip" data-pf="domain" data-i="' + i + '">' + escapeHtml(d) + '<span class="chip-x" data-pf="domain" data-i="' + i + '">×</span></span>'
+    '<div class="chip-row" id="pf-domains">' + domCands.map(d =>
+      '<button type="button" class="chip' + (p.domains.includes(d.id) ? ' active' : '') + '" data-pf="domain" data-val="' + escapeHtml(d.id) + '">' + escapeHtml(d.name) + '</button>'
     ).join('') + '</div>' +
     '<div style="display:flex;gap:6px;margin-top:6px;align-items:center">' +
       '<input class="inp" id="pf-domain-add" style="flex:1;height:32px" maxlength="40" placeholder="' + escapeHtml(L['settings.profile.domainAddPh']) + '" data-addpf="domain">' +
       '<button class="chip" data-addpfbtn="domain">' + escapeHtml(L['gen.add']) + '</button>' +
     '</div>' +
     '<div class="flabel" style="margin:12px 0 6px">' + L['settings.profile.roles'] + ' <span class="t-10 dim">(' + L['settings.profile.rolesHint'] + ')</span></div>' +
-    '<div class="chip-row" id="pf-roles">' + p.roles.map((r, i) =>
-      '<span class="chip" data-pf="role" data-i="' + i + '">' + escapeHtml(r) + '<span class="chip-x" data-pf="role" data-i="' + i + '">×</span></span>'
+    '<div class="chip-row" id="pf-roles">' + roleCands.map(r =>
+      '<button type="button" class="chip' + (p.roles.includes(r) ? ' active' : '') + '" data-pf="role" data-val="' + escapeHtml(r) + '">' + escapeHtml(r) + '</button>'
     ).join('') + '</div>' +
     '<div style="display:flex;gap:6px;margin-top:6px;align-items:center">' +
       '<input class="inp" id="pf-role-add" style="flex:1;height:32px" maxlength="40" placeholder="' + escapeHtml(L['settings.profile.roleAddPh']) + '" data-addpf="role">' +
@@ -4257,25 +4259,17 @@ function renderProfileBox() {
     });
   });
   document.querySelectorAll('[data-pf]').forEach(chip => {
-    chip.addEventListener('click', e => {
-      if (e.target.closest('.chip-x')) return;   /* the × handles its own removal */
-      removePfItem(chip.dataset.pf, +chip.dataset.i);
+    chip.addEventListener('click', () => {
+      const key = chip.dataset.pf;
+      const val = chip.dataset.val;
+      const pf = readProfile();
+      const arr = key === 'domain' ? pf.domains : pf.roles;
+      const i = arr.indexOf(val);
+      if (i >= 0) arr.splice(i, 1); else arr.push(val);
+      writeProfile(pf);
+      renderProfileBox();
     });
   });
-  document.querySelectorAll('.chip-x[data-pf]').forEach(x => {
-    x.addEventListener('click', e => {
-      e.stopPropagation();
-      removePfItem(x.dataset.pf, +x.dataset.i);
-    });
-  });
-}
-function removePfItem(key, i) {
-  const pf = readProfile();
-  const arr = key === 'domain' ? pf.domains : pf.roles;
-  if (!Array.isArray(arr) || i < 0 || i >= arr.length) return;
-  arr.splice(i, 1);
-  writeProfile(pf);
-  renderProfileBox();
 }
 function collectProfileForm() {
   const prev = readProfile() || {};
@@ -5114,10 +5108,10 @@ function collectParams() {
       payload.roles = { a: a, b: b };
     }
   } else {
-    let cands = (sc.roles || []).filter(Boolean);
-    const pool = genRoleCandidates();
-    pool.forEach(r => { if (cands.length < (sc.speakerCount || 3) && !cands.includes(r)) cands.push(r); });
-    payload.roleSelection = { candidates: cands.slice(0, Math.max(3, sc.speakerCount || 3)), speakerCount: sc.speakerCount || 3 };
+    const cands = (sc.roles || []).filter(Boolean);
+    if (cands.length < 3) { showToast(I18N[state.lang]['gen.discMin'] || 'Please select at least 3 speakers', 'warn'); return null; }
+    if (cands.length > 5) { showToast(I18N[state.lang]['gen.discMax'] || 'At most 5 speakers', 'warn'); return null; }
+    payload.roleSelection = { candidates: cands, speakerCount: cands.length };
   }
   return payload;
 }
@@ -5182,6 +5176,7 @@ function setGenSteps(mode) {
 function runGenerate(params, replaceId) {
   if (state.generating || state.synthesizing) return;
   params = params || collectParams();
+  if (!params) return;   /* collectParams already toasted the reason */
   if (!params.topic || !String(params.topic).trim()) { showToast('Please enter a topic first', 'warn'); return; }
   closeGenPanel();
   closeRefineModal();
