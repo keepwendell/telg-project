@@ -864,10 +864,10 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
         <p class="material-meta" id="m-meta">Automotive · Vehicle Dynamics Engineer · Technical Discussion</p>
       </div>
       <div class="material-actions">
-        <div class="seg" style="grid-template-columns:repeat(2,1fr);flex-shrink:0">
-          <button class="seg-item active" data-mode="normal"><span data-i18n="mode.normal">Normal</span></button>
-          <button class="seg-item" data-mode="blind"><span data-i18n="mode.blind">Blind</span></button>
-        </div>
+        <button class="zh-toggle on" id="btn-zh-toggle" title="Toggle Chinese translation">
+          <svg class="icon icon-sm"><use href="#i-translate"/></svg>
+          <span data-i18n="tr.zh">CN</span>
+        </button>
         <button class="btn btn-sm" id="btn-font" title="Adjust transcript font size">
           <svg class="icon icon-sm"><use href="#i-type"/></svg>
           <span class="mono t-10" id="font-label">13px</span>
@@ -932,11 +932,11 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
             </div>
           </div>
           <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;flex-wrap:wrap;gap:6px" class="t-10 uc faint">
+            <div class="seg" style="grid-template-columns:repeat(2,1fr);flex-shrink:0">
+              <button class="seg-item active" data-mode="normal"><span data-i18n="mode.normal">Normal</span></button>
+              <button class="seg-item" data-mode="blind"><span data-i18n="mode.blind">Blind</span></button>
+            </div>
             <span style="display:flex;gap:10px;align-items:center" class="mono">
-              <button class="zh-toggle on" id="btn-zh-toggle" title="Toggle Chinese translation">
-                <svg class="icon icon-sm"><use href="#i-translate"/></svg>
-                <span data-i18n="tr.zh">CN</span>
-              </button>
               <span><span class="kbd">Space</span> Play</span>
               <span><span class="kbd">J/K</span> Prev/Next</span>
               <span><span class="kbd">R</span> Replay</span>
@@ -4428,7 +4428,7 @@ function setActionsDisabled(off) {
     const el = document.getElementById(id);
     if (el) { el.disabled = off; el.classList.toggle('disabled', off); }
   });
-  document.querySelectorAll('.material-actions .seg-item[data-mode]').forEach(b => {
+  document.querySelectorAll('.seg-item[data-mode]').forEach(b => {
     b.disabled = off; b.classList.toggle('disabled', off);
   });
 }
@@ -4477,7 +4477,7 @@ function renderMaterial() {
 }
 function applyListenMode() {
   $('transcript-pane').classList.toggle('blind-mode', state.listenMode === 'blind');
-  document.querySelectorAll('.material-actions .seg-item[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === state.listenMode));
+  document.querySelectorAll('.seg-item[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === state.listenMode));
 }
 function setListenMode(mode) {
   state.listenMode = mode;
@@ -6193,7 +6193,7 @@ function onClick(e) {
   if (rDepthItem) { setSeg($('refine-depth'), rDepthItem); updateRefineLabels(); return; }
   const rBreadthItem = e.target.closest('#refine-breadth .seg-item');
   if (rBreadthItem) { setSeg($('refine-breadth'), rBreadthItem); updateRefineLabels(); return; }
-  const modeBtn = e.target.closest('.material-actions .seg-item[data-mode]');
+  const modeBtn = e.target.closest('.seg-item[data-mode]');
   if (modeBtn) { setListenMode(modeBtn.dataset.mode); return; }
   if (e.target.closest('#btn-font')) { cycleFont(); return; }
   if (e.target.closest('#btn-md-export')) { exportMD(currentArtifact()); return; }
