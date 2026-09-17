@@ -644,7 +644,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 .gen-topic-row{display:flex;align-items:center;gap:10px;padding:0 14px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface-highest);color:var(--outline);transition:border-color .15s var(--ease),color .15s var(--ease)}
 .gen-topic-row:focus-within{border-color:var(--primary-dim);color:var(--primary)}
 .gen-topic-row textarea{flex:1;min-height:54px;padding:13px 0;background:transparent;border:none;outline:none;color:var(--on-surface);font-size:14px;font-family:var(--font-body);resize:none;line-height:1.5;min-width:0}
-.gen-card-foot{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--line);gap:10px;flex-shrink:0}
+.gen-card-foot{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 18px;border-top:1px solid var(--line);gap:18px;flex-shrink:0}
 
 /* ===== New-Material dialog (Claude-aligned layout) ===== */
 #gen-panel .sec-head{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
@@ -677,7 +677,10 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
 #gen-panel .field-hint.show{opacity:.9}
 #gen-panel #gen-context{width:100%;min-height:98px;resize:vertical;padding:13px 14px;border-radius:12px;background:var(--surface-low);border:1px solid var(--line-strong);color:var(--on-surface);font-size:13px;line-height:1.68;outline:none;transition:border-color .2s,box-shadow .2s,background .2s}
 #gen-panel #gen-context:focus{border-color:var(--g-accent-border);background:var(--surface);box-shadow:0 0 0 3px var(--g-accent-faint)}
-#gen-panel .btn-generate-full{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;border-radius:11px;border:none;background:linear-gradient(180deg,#5a94ff,#3f7cf0);color:#fff;font-size:13.5px;font-weight:600;letter-spacing:.4px;cursor:pointer;box-shadow:0 5px 16px -5px rgba(63,124,240,.7);transition:.18s}
+#gen-panel .btn-generate-full{flex:1.4;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;border-radius:11px;border:1px solid var(--g-accent-border);background:linear-gradient(180deg,#5a94ff,#3f7cf0);color:#fff;font-size:13.5px;font-weight:600;letter-spacing:.4px;cursor:pointer;box-shadow:0 5px 16px -5px rgba(63,124,240,.7);transition:.18s}
+#gen-panel .gen-card-foot .btn-ghost{flex:0 0 auto;height:34px;padding:0 14px;border-radius:9px;border:1px solid var(--line-strong);background:transparent;color:var(--on-mute,var(--g-on-mute));font-size:12px;font-family:inherit;letter-spacing:.2px;cursor:pointer;transition:.18s}
+#gen-panel .gen-card-foot .btn-ghost:hover{color:var(--on-variant);border-color:var(--g-line-strong);background:var(--surface-high)}
+#gen-panel .gen-card-foot .btn-ghost:active{transform:translateY(1px)}
 #gen-panel .btn-generate-full:hover{filter:brightness(1.08)}
 #gen-panel .btn-generate-full:active{transform:translateY(1px)}
 #gen-panel .btn-generate-full:disabled{opacity:.45;cursor:not-allowed;filter:none}
@@ -6805,7 +6808,7 @@ function onClick(e) {
   if (addDomChip) { openQuickAdd('domains', addDomChip); return; }
   const addRoleChip = e.target.closest('#gen-roles-wrap .chip-add[data-key="roles"]');
   if (addRoleChip) { openQuickAdd('roles', addRoleChip); return; }
-  if (e.type === 'input' && e.target.id === 'gen-context') { state.genScene.context = e.target.value; return; }
+  if (e.type === 'input' && e.target.id === 'gen-context') { state.genScene.context = e.target.value; updateGenerateBtn(); return; }
   if (e.target.closest('#ob-skip-llm')) { obIdx = 1; obSub = 0; renderObStep(); return; }
   if (e.target.closest('#ob-gen-profile')) { obGenProfile(); return; }
   if (e.type === 'change' && e.target.id === 'ob-llm-provider') {
