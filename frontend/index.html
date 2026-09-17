@@ -178,6 +178,14 @@ a{color:inherit;text-decoration:none}
 .select:hover{background:var(--surface)}
 .select:focus{background:var(--surface);border-color:var(--primary-dim)}
 .select-arrow{position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--outline)}
+.quick-add{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;color:var(--outline);cursor:pointer;transition:color .15s var(--ease),background .15s var(--ease)}
+.quick-add:hover{color:var(--on-surface);background:var(--surface-high)}
+.quick-add .icon{width:13px;height:13px}
+.quick-add-pop{position:fixed;z-index:1250;width:min(270px,calc(100vw - 40px));padding:12px;background:var(--surface-high);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.32);display:flex;flex-direction:column;gap:9px}
+.quick-add-pop .qap-title{font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--on-variant);text-transform:uppercase}
+.quick-add-pop input{width:100%;height:32px;padding:0 10px;background:var(--bg-lowest);border:1px solid var(--line);border-radius:7px;font-size:12.5px;color:var(--on-surface);outline:none;transition:border-color .15s var(--ease)}
+.quick-add-pop input:focus{border-color:var(--primary-dim)}
+.quick-add-pop .qap-row{display:flex;justify-content:flex-end;gap:8px}
 label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;color:var(--on-variant);margin-bottom:7px}
 
 /* ---------- segmented control ---------- */
@@ -1025,7 +1033,10 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
       </div>
       <div class="param-grid">
         <div>
-          <label class="flabel" data-i18n="gen.domain">Domain</label>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px">
+            <label class="flabel" style="margin-bottom:0" data-i18n="gen.domain">Domain</label>
+            <button type="button" class="quick-add" data-key="domains" title="Add custom domain"><svg class="icon"><use href="#i-plus"/></svg></button>
+          </div>
           <div class="select-wrap">
             <select class="select" id="domain-select">
               <option value="automotive" selected>Automotive Engineering</option>
@@ -1038,7 +1049,10 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           </div>
         </div>
         <div>
-          <label class="flabel" data-i18n="gen.role">Role</label>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px">
+            <label class="flabel" style="margin-bottom:0" data-i18n="gen.role">Role</label>
+            <button type="button" class="quick-add" data-key="roles" title="Add custom role"><svg class="icon"><use href="#i-plus"/></svg></button>
+          </div>
           <div class="select-wrap">
             <select class="select" id="role-select">
               <option selected>Vehicle Dynamics Engineer</option>
@@ -1051,7 +1065,10 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           </div>
         </div>
         <div>
-          <label class="flabel" data-i18n="gen.scenario">Scenario</label>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px">
+            <label class="flabel" style="margin-bottom:0" data-i18n="gen.scenario">Scenario</label>
+            <button type="button" class="quick-add" data-key="scenarios" title="Add custom scenario"><svg class="icon"><use href="#i-plus"/></svg></button>
+          </div>
           <div class="select-wrap">
             <select class="select" id="scenario-select">
               <option selected>Technical Discussion &amp; Trade-off</option>
@@ -2515,7 +2532,7 @@ const I18N = {
     'gen.title': 'New Material', 'gen.sub': 'Synthesize a technical listening material from a real engineering scenario.',
     'gen.topicHint': 'Type any engineering topic in English or Chinese — the more specific, the better. Enter for a new line · click Generate (or ⌘⏎) to run.',
     'gen.topicPh': 'e.g. Asymmetric Yaw Damping, CAN Bus Phase Jitter, FOC Inverter Faults...',
-    'gen.presets': 'Presets:', 'gen.domain': 'Domain', 'gen.role': 'Role', 'gen.scenario': 'Scenario',
+    'gen.presets': 'Presets:', 'gen.domain': 'Domain', 'gen.role': 'Role', 'gen.scenario': 'Scenario', 'gen.add': 'Add', 'gen.addCustom': 'Add custom…', 'gen.addedRec': 'Added, synced to Settings → Recommended Defaults', 'gen.dupRec': 'This item already exists',
     'gen.complex': 'Complexity / Terminology Density', 'gen.duration': 'Target Audio Duration',
     'gen.depth': 'Technical Depth', 'gen.breadth': 'Breadth',
     'depthLabels': { 1: 'Overview level', 2: 'Core concepts', 3: 'Mechanism + trade-offs', 4: 'Deep-dive · math & formulas', 5: 'Principal · research-level' },
@@ -2722,7 +2739,7 @@ const I18N = {
     'gen.title': '新建素材', 'gen.sub': '从真实工程场景合成一段技术英语听力素材。',
     'gen.topicHint': '用中文或英文输入任意工程主题——越具体越好。回车换行 · 点击生成（或按 ⌘⏎）开始。',
     'gen.topicPh': '例如：不对称横摆阻尼、CAN 总线相位抖动、FOC 逆变器故障…',
-    'gen.presets': '预设：', 'gen.domain': '领域', 'gen.role': '角色', 'gen.scenario': '场景',
+    'gen.presets': '预设：', 'gen.domain': '领域', 'gen.role': '角色', 'gen.scenario': '场景', 'gen.add': '添加', 'gen.addCustom': '添加自定义…', 'gen.addedRec': '已添加，并同步到 设置 → 推荐设置', 'gen.dupRec': '该项已存在',
     'gen.complex': '复杂度 / 术语密度', 'gen.duration': '目标音频时长',
     'gen.depth': '技术深度', 'gen.breadth': '谈论广度',
     'depthLabels': { 1: '概览级', 2: '核心概念', 3: '机制与权衡', 4: '深入 — 公式与推导', 5: '专家级 — 研究深度' },
@@ -3590,6 +3607,61 @@ function renderScenarioOptions() {
   }
   $('scenario-select').innerHTML = opts.map(o => '<option>' + escapeHtml(o) + '</option>').join('');
 }
+
+/* ---------- quick add: custom domain / role / scenario ---------- */
+let _qapCloseHandler = null;
+function openQuickAdd(key, anchor) {
+  closeQuickAdd();
+  const L = I18N[state.lang];
+  const wrap = document.createElement('div');
+  wrap.className = 'quick-add-pop';
+  wrap.innerHTML = '<div class="qap-title">' + escapeHtml(L['gen.addCustom']) + '</div>' +
+    '<input type="text" maxlength="60" placeholder="' + escapeHtml(key === 'domains' ? 'e.g. Robotics Systems' : key === 'roles' ? 'e.g. Firmware Lead' : 'e.g. Factory Acceptance Test') + '"/>' +
+    '<div class="qap-row"><button class="btn btn-sm qap-cancel">' + escapeHtml(L['settings.cancel'] || 'Cancel') + '</button><button class="btn btn-sm btn-primary qap-ok">' + escapeHtml(L['gen.add'] || 'Add') + '</button></div>';
+  const r = anchor.getBoundingClientRect();
+  wrap.style.top = Math.max(8, Math.min(r.bottom + 6, window.innerHeight - 140)) + 'px';
+  wrap.style.left = Math.min(Math.max(8, r.left), window.innerWidth - 290) + 'px';
+  document.body.appendChild(wrap);
+  const inp = wrap.querySelector('input');
+  const ok = wrap.querySelector('.qap-ok');
+  const cancel = wrap.querySelector('.qap-cancel');
+  const submit = () => { const v = inp.value.trim(); if (!v) { inp.focus(); return; } quickAddItem(key, v); closeQuickAdd(); };
+  ok.textContent = L['gen.add'] || 'Add';
+  ok.addEventListener('click', submit);
+  cancel.addEventListener('click', closeQuickAdd);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') closeQuickAdd(); });
+  setTimeout(() => { inp.focus(); _qapCloseHandler = (ev) => { if (!ev.target.closest('.quick-add-pop') && !ev.target.closest('.quick-add')) closeQuickAdd(); }; document.addEventListener('click', _qapCloseHandler); }, 0);
+}
+function closeQuickAdd() {
+  if (_qapCloseHandler) { document.removeEventListener('click', _qapCloseHandler); _qapCloseHandler = null; }
+  const p = document.querySelector('.quick-add-pop');
+  if (p) p.remove();
+}
+function quickAddItem(key, name) {
+  name = String(name || '').trim();
+  if (!name) return;
+  const L = I18N[state.lang];
+  const recs = readRecs() || { domains: [], roles: [], scenarios: [] };
+  if (!Array.isArray(recs.domains)) recs.domains = [];
+  if (!Array.isArray(recs.roles)) recs.roles = [];
+  if (!Array.isArray(recs.scenarios)) recs.scenarios = [];
+  let dup = false;
+  if (key === 'domains') { dup = recs.domains.some(d => d && d.name === name); if (!dup) recs.domains.push({ id: 'custom-' + Date.now(), name: name, desc: '' }); }
+  else if (key === 'roles') { dup = recs.roles.includes(name); if (!dup) recs.roles.push(name); }
+  else { dup = recs.scenarios.includes(name); if (!dup) recs.scenarios.push(name); }
+  if (dup) { showToast(L['gen.dupRec'], 'warn'); return; }
+  writeRecs(recs);
+  applyProfileToGenPanel();
+  if (key === 'domains') {
+    const d = recs.domains.find(x => x.name === name);
+    if (d && $('domain-select')) { $('domain-select').value = d.id; renderScenarioOptions(); }
+  } else {
+    const sel = key === 'roles' ? $('role-select') : $('scenario-select');
+    if (sel) sel.value = name;
+  }
+  showToast(L['gen.addedRec'] + ' · ' + name, 'ok');
+}
+
 /* Legacy migration: user-customized domains from the old "Domain Profiles"
    panel are folded into recommendations.domains once, then removed. */
 function migrateLegacyDomains() {
@@ -6170,6 +6242,8 @@ function onClick(e) {
   if (e.target.closest('#btn-new-playlist')) { startPlCreate(); return; }
   const tabBtn = e.target.closest('.tab-btn');
   if (tabBtn) { switchTab(tabBtn.dataset.tab); return; }
+  const qaBtn = e.target.closest('.quick-add');
+  if (qaBtn) { openQuickAdd(qaBtn.dataset.key, qaBtn); return; }
   const filter = e.target.closest('[data-filter]');
   if (filter) { toggleFilter(filter.dataset.filter, filter); return; }
   if (e.target.closest('#btn-pb-play')) { togglePlay(); return; }
