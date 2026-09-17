@@ -193,6 +193,9 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .seg-item{padding:6px 8px;text-align:center;font-size:11px;color:var(--on-variant);border-radius:4px;cursor:pointer;user-select:none;transition:color .15s var(--ease),background .15s var(--ease)}
 .seg-item:hover{color:var(--on-surface)}
 .seg-item.active{background:var(--surface-high);color:var(--on-surface);font-weight:500}
+/* listen-mode seg inside the material actions bar: match sibling button height */
+.material-actions .seg{padding:1px;gap:1px;border-radius:6px;height:21px}
+.material-actions .seg .seg-item{display:flex;align-items:center;justify-content:center;padding:0 10px;height:19px;font-size:10.5px}
 
 /* ---------- tags / pills ---------- */
 .preset-tag{font-size:11px;padding:4px 10px;background:var(--surface-low);border-radius:6px;color:var(--on-variant);border:1px solid transparent;transition:all .15s var(--ease)}
@@ -257,7 +260,8 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .playing-flag.paused{color:var(--warning)}
 .playing-flag.paused .dot{background:var(--warning)}
 .blind-mode .trow-zh{opacity:0}
-.blind-mode.zh-on .trow-zh{opacity:1}
+.blind-mode.zh-on .trow-zh{opacity:1;filter:blur(5px);transition:filter .2s var(--ease)}
+.blind-mode.zh-on .trow-zh:hover{filter:none}
 .blind-mode .trow-en{filter:blur(5px);transition:filter .2s var(--ease)}
 .blind-mode .trow-en:hover{filter:none}
 
@@ -452,7 +456,9 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .vocab-card{padding:14px;background:var(--bg-lowest);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;gap:6px}
 .q-card{padding:16px;background:var(--bg-lowest);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;gap:10px}
 .q-options{display:flex;flex-direction:column;gap:6px}
-.q-opt{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:6px;background:var(--surface-low);cursor:pointer;font-size:12px;transition:background .15s var(--ease)}
+.q-opt{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:6px;background:var(--surface-low);cursor:pointer;font-size:12px;transition:background .15s var(--ease)}
+.q-opt .i-zh{flex:0 0 100%;padding-left:21px}
+.q-opt .q-opt-en{flex:1 1 0;min-width:0}
 .q-opt:hover{background:var(--surface)}
 .q-opt input{accent-color:var(--primary);margin-top:2px}
 .q-opt.correct{border:1px solid var(--primary-dim)}
@@ -531,6 +537,12 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .speed-menu button:hover{background:var(--surface-highest);color:var(--on-surface)}
 .speed-menu button.active{color:var(--primary);font-weight:500}
 .speed-menu button.active::after{content:"✓";margin-left:10px}
+.font-wrap{position:relative}
+.font-menu{position:absolute;top:calc(100% + 6px);right:0;z-index:80;min-width:88px;padding:4px;background:var(--surface-high);border:1px solid var(--line-strong);border-radius:8px;display:flex;flex-direction:column;gap:1px}
+.font-menu button{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-radius:5px;font-family:var(--font-mono);font-size:11px;color:var(--on-variant);text-align:left;white-space:nowrap;transition:background .15s var(--ease),color .15s var(--ease)}
+.font-menu button:hover{background:var(--surface-highest);color:var(--on-surface)}
+.font-menu button.active{color:var(--primary);font-weight:500}
+.font-menu button.active::after{content:"✓";margin-left:10px}
 
 /* ---------- modal ---------- */
 .modal-overlay{position:fixed;inset:0;z-index:115;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:24px}
@@ -1117,14 +1129,25 @@ html[data-theme="light"] #gen-panel{
         <p class="material-meta" id="m-meta">Automotive · Vehicle Dynamics Engineer · Technical Discussion</p>
       </div>
       <div class="material-actions">
+        <div class="seg" style="grid-template-columns:repeat(2,1fr);flex-shrink:0" title="">
+          <button class="seg-item active" data-mode="normal"><span data-i18n="mode.normal">Normal</span></button>
+          <button class="seg-item" data-mode="blind"><span data-i18n="mode.blind">Blind</span></button>
+        </div>
         <button class="zh-toggle on" id="btn-zh-toggle" title="Toggle Chinese translation">
           <svg class="icon icon-sm"><use href="#i-translate"/></svg>
           <span data-i18n="tr.zh">CN</span>
         </button>
-        <button class="btn btn-sm" id="btn-font" title="Adjust transcript font size">
-          <svg class="icon icon-sm"><use href="#i-type"/></svg>
-          <span class="mono t-10" id="font-label">13px</span>
-        </button>
+        <div class="font-wrap">
+          <button class="btn btn-sm" id="btn-font" title="Adjust transcript font size">
+            <svg class="icon icon-sm"><use href="#i-type"/></svg>
+            <span class="mono t-10" id="font-label">13px</span>
+          </button>
+          <div class="font-menu hidden" id="font-menu">
+            <button data-fs="13px">13px</button>
+            <button data-fs="15px">15px</button>
+            <button data-fs="17px">17px</button>
+          </div>
+        </div>
         <button class="btn btn-sm pb-loop-btn" id="btn-pb-loop" title="Single-sentence loop">
           <svg class="icon icon-sm"><use href="#i-repeat"/></svg>
           <span class="t-10 nowrap">单句循环</span>
@@ -1183,17 +1206,6 @@ html[data-theme="light"] #gen-panel{
               <button class="btn btn-sm hidden" id="btn-edit-audio" title="Re-configure TTS settings and re-synthesize"><svg class="icon icon-sm"><use href="#i-tune"/></svg><span class="nowrap" data-i18n="tr.editAudio">Edit Audio Settings</span></button>
               <button class="btn btn-sm btn-primary hidden" id="btn-publish-banner"><svg class="icon icon-sm"><use href="#i-save"/></svg><span data-i18n="gen.publish">Publish</span></button>
             </div>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;flex-wrap:wrap;gap:6px" class="t-10 uc faint">
-            <div class="seg" style="grid-template-columns:repeat(2,1fr);flex-shrink:0">
-              <button class="seg-item active" data-mode="normal"><span data-i18n="mode.normal">Normal</span></button>
-              <button class="seg-item" data-mode="blind"><span data-i18n="mode.blind">Blind</span></button>
-            </div>
-            <span style="display:flex;gap:10px;align-items:center" class="mono">
-              <span><span class="kbd">Space</span> Play</span>
-              <span><span class="kbd">J/K</span> Prev/Next</span>
-              <span><span class="kbd">R</span> Replay</span>
-            </span>
           </div>
           <div id="transcript-list"></div>
         </div>
@@ -4871,16 +4883,16 @@ function questionsHTML(art) {
     '<div class="q-card" data-q="' + qi + '">' +
       '<div style="display:flex;align-items:center;justify-content:space-between"><span class="pill mono">Q' + (qi + 1) + '</span><span class="t-10 faint">Single choice</span></div>' +
       '<div class="t-13 bold">' + qt.q + '</div>' +
-      (qt.q_zh ? '<div class="i-zh t-12 accent dim">' + escapeHtml(qt.q_zh) + '</div>' : '') +
+      (qt.q_zh ? '<div class="i-zh t-12">' + escapeHtml(qt.q_zh) + '</div>' : '') +
       '<div class="q-options">' + qt.options.map((o, oi) =>
         '<label class="q-opt" data-opt="' + oi + '">' +
           '<input type="radio" name="q' + art.id + '_' + qi + '" value="' + oi + '"/>' +
-          '<span>' + o + '</span>' +
-          ((qt.options_zh && qt.options_zh[oi]) ? '<span class="i-zh accent dim t-11">' + escapeHtml(qt.options_zh[oi]) + '</span>' : '') +
+          '<span class="q-opt-en">' + o + '</span>' +
+          ((qt.options_zh && qt.options_zh[oi]) ? '<div class="i-zh t-11" style="margin-top:2px">' + escapeHtml(qt.options_zh[oi]) + '</div>' : '') +
           '<span class="ok-tag" data-ok="1" style="display:none">✓ Correct</span>' +
         '</label>').join('') + '</div>' +
       '<div class="t-11 dim" data-expl="1" style="display:none;border-top:1px solid var(--line);padding-top:8px">' + qt.explain +
-        (qt.explain_zh ? '<div class="i-zh accent dim" style="margin-top:4px">' + escapeHtml(qt.explain_zh) + '</div>' : '') +
+        (qt.explain_zh ? '<div class="i-zh" style="margin-top:4px">' + escapeHtml(qt.explain_zh) + '</div>' : '') +
       '</div>' +
     '</div>').join('');
 }
@@ -4889,14 +4901,14 @@ function patternsHTML(art) {
     '<div class="pattern-card">' +
       '<span class="mono t-10 accent uc" style="letter-spacing:.06em">' + p.title + (p.title_zh ? ' · ' + escapeHtml(p.title_zh) : '') + '</span>' +
       '<div class="mono t-12">' + p.pattern + '</div>' +
-      (p.pattern_zh ? '<div class="i-zh mono t-11 accent dim">' + escapeHtml(p.pattern_zh) + '</div>' : '') +
+      (p.pattern_zh ? '<div class="i-zh mono t-11">' + escapeHtml(p.pattern_zh) + '</div>' : '') +
       '<div class="p-eg t-11"><span class="dim">Example: </span>' + p.example + '</div>' +
-      (p.example_zh ? '<div class="i-zh t-11 accent dim" style="margin-top:2px"><span class="dim">示例：</span>' + escapeHtml(p.example_zh) + '</div>' : '') +
+      (p.example_zh ? '<div class="i-zh t-11" style="margin-top:2px"><span class="dim">示例：</span>' + escapeHtml(p.example_zh) + '</div>' : '') +
     '</div>').join('');
 }
 function groundingHTML(art) {
   const bg = art.background || {};
-  const zh = (k) => bg[k] ? '<p class="t-12 i-zh accent dim" style="margin-top:6px">' + escapeHtml(bg[k]) + '</p>' : '';
+  const zh = (k) => bg[k] ? '<p class="t-12 i-zh" style="margin-top:6px">' + escapeHtml(bg[k]) + '</p>' : '';
   return [
     '<div class="vocab-card" style="gap:8px"><span class="mono t-10 accent uc">01 · Engineering Background</span><p class="t-12">' + bg.technical_background + '</p>' + zh('technical_background_zh') + '</div>',
     '<div class="vocab-card" style="gap:8px"><span class="mono t-10 accent uc">02 · Technical Principle</span><p class="t-12">' + bg.technical_principle + '</p>' + zh('technical_principle_zh') + '</div>',
@@ -4914,6 +4926,38 @@ function setActionsDisabled(off) {
   });
   document.querySelectorAll('.seg-item[data-mode]').forEach(b => {
     b.disabled = off; b.classList.toggle('disabled', off);
+  });
+}
+/* Adjust (btn-voice) is a full-material action: only usable on PUBLISHED
+   materials. Drafts / incomplete materials edit via the synth banner. */
+function openPublishReadyView() {
+  const art = currentArtifact();
+  if (!art || !art.meta.generated) return;
+  /* Step 2 of 3: audio ready — show the banner with Edit Audio Settings +
+     Publish, and the 2/3 phase progress. One click away from publishing. */
+  $('synth-banner').classList.remove('hidden');
+  $('synth-banner-label').textContent = I18N[state.lang]['tr.audioReady'];
+  $('btn-refine').classList.add('hidden');
+  $('btn-synth').classList.add('hidden');
+  $('btn-edit-audio').classList.remove('hidden');
+  $('btn-publish-banner').classList.remove('hidden');
+  if (art.meta.audioReady === true) setPhases(2);
+}
+function applyVoiceGate() {
+  const vBtn = $('btn-voice');
+  if (!vBtn) return;
+  const art = currentArtifact();
+  const off = !art || !(art.meta && art.meta.saved === true);
+  vBtn.disabled = off;
+  vBtn.classList.toggle('disabled', off);
+}
+/* Normal/Blind switching only makes sense once the corpus text is ready. */
+function applyModeGate() {
+  const art = currentArtifact();
+  const off = !art || !(art.meta && art.meta.generated === true);
+  document.querySelectorAll('.seg-item[data-mode]').forEach(b => {
+    b.disabled = off;
+    b.classList.toggle('disabled', off);
   });
 }
 function renderMaterial() {
@@ -4937,6 +4981,8 @@ function renderMaterial() {
   }
   if (tabbar) tabbar.style.display = '';
   setActionsDisabled(false);
+  applyVoiceGate();
+  applyModeGate();
   const ins = $('inspector');
   if (ins) ins.dataset.fs = state.fontIdx;
   const meta = art.meta;
@@ -4968,9 +5014,8 @@ function setListenMode(mode) {
   state.listenMode = mode;
   applyListenMode();
 }
-function cycleFont() {
-  state.fontIdx = (state.fontIdx + 1) % CONFIG.fontSizes.length;
-  const fs = CONFIG.fontSizes[state.fontIdx];
+function applyFontSize(fs) {
+  state.fontIdx = Math.max(0, CONFIG.fontSizes.indexOf(fs));
   $('font-label').textContent = fs;
   const ins = $('inspector');
   if (ins) ins.dataset.fs = state.fontIdx;
@@ -4978,6 +5023,16 @@ function cycleFont() {
     el.style.fontSize = fs; el.style.lineHeight = (parseInt(fs) + 9) + 'px';
   });
 }
+function setFontMenu() {
+  const m = $('font-menu');
+  m.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.fs === CONFIG.fontSizes[state.fontIdx]));
+}
+function toggleFontMenu() {
+  const m = $('font-menu');
+  const hidden = m.classList.toggle('hidden');
+  if (!hidden) setFontMenu();
+}
+function closeFontMenu() { $('font-menu').classList.add('hidden'); }
 function syncLoopUI() {
   const b = document.getElementById('btn-pb-loop');
   if (b) b.classList.toggle('on', state.loop);
@@ -6700,6 +6755,7 @@ function onClick(e) {
   if (e.target.closest('.btn-role-del')) { delVoiceRole(e.target.closest('.btn-role-del')); return; }
   if (e.target.closest('.btn-role-test')) { auditionRole(e.target.closest('.btn-role-test')); return; }
   if (!e.target.closest('#speed-menu') && !e.target.closest('#btn-pb-speed')) closeSpeedMenu();
+  if (!e.target.closest('#font-menu') && !e.target.closest('#btn-font')) closeFontMenu();
   if (e.target.closest('#gen-llm-tag')) { openModal(); switchMTab('llm', false); return; }
   if (e.target.closest('#btn-cancel-gen')) { closeGenPanel(); return; }
   if (e.target.id === 'gen-backdrop') { closeGenPanel(); return; }
@@ -6729,7 +6785,8 @@ function onClick(e) {
   }
   if (e.target.id === 'adjust-modal') { closeAdjustModal(); return; }
   if (e.target.closest('#btn-refine')) { openRefineModal(); return; }
-  if (e.target.closest('#btn-voice') || e.target.closest('#btn-edit-audio')) { openTTSModal(); return; }
+  if (e.target.closest('#btn-voice')) { openPublishReadyView(); return; }
+  if (e.target.closest('#btn-edit-audio')) { openTTSModal(); return; }
   if (e.target.closest('#btn-synth')) { openTTSModal(); return; }
   if (e.target.closest('#btn-retry-synth')) { hideSynthError(); synthesizeAudio(); return; }
   if (e.target.closest('#btn-generate')) { runGenerate(); return; }
@@ -6754,7 +6811,9 @@ function onClick(e) {
   if (rDirItem) { setSeg($('refine-dir'), rDirItem); updateRefineLabels(); return; }
   const modeBtn = e.target.closest('.seg-item[data-mode]');
   if (modeBtn) { setListenMode(modeBtn.dataset.mode); return; }
-  if (e.target.closest('#btn-font')) { cycleFont(); return; }
+  if (e.target.closest('#btn-font')) { toggleFontMenu(); return; }
+  const fsItem = e.target.closest('#font-menu [data-fs]');
+  if (fsItem) { applyFontSize(fsItem.dataset.fs); closeFontMenu(); return; }
   if (e.target.closest('#btn-md-export')) { exportMD(currentArtifact()); return; }
   const phDone = e.target.closest('.gen-phase.done');
   if (phDone) {
