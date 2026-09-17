@@ -748,14 +748,26 @@ class LLMGenerationError(RuntimeError):
     pass
 
 
+# Neutral defaults: any OpenAI-compatible endpoint can be used. TELG_LLM_* env
+# vars take precedence; DEEPSEEK_API_KEY is kept as a backward-compatible alias.
+DEFAULT_LLM_BASE = "https://api.deepseek.com/v1"
+DEFAULT_LLM_MODEL = "deepseek-chat"
+
+
+def _llm_endpoint(cfg: dict) -> tuple[str, str, str]:
+    base = (cfg.get("base_url") or os.environ.get("TELG_LLM_BASE") or DEFAULT_LLM_BASE).strip().rstrip("/")
+    key = (cfg.get("api_key") or os.environ.get("TELG_LLM_API_KEY")
+           or os.environ.get("DEEPSEEK_API_KEY") or "").strip()
+    model = (cfg.get("model") or os.environ.get("TELG_LLM_MODEL") or DEFAULT_LLM_MODEL).strip()
+    return base, key, model
+
+
 def call_llm_with_retry(p: GenerateIn, action: str = "generate") -> dict:
     cfg = p.llm_config or {}
-    base = (cfg.get("base_url") or os.environ.get("TELG_LLM_BASE") or "https://api.deepseek.com/v1").strip().rstrip("/")
-    key = (cfg.get("api_key") or os.environ.get("DEEPSEEK_API_KEY") or "").strip()
-    model = (cfg.get("model") or os.environ.get("TELG_LLM_MODEL") or "deepseek-chat").strip()
+    base, key, model = _llm_endpoint(cfg)
     temp = float(cfg.get("temperature") or 0.7)
     if not key:
-        raise LLMGenerationError("LLM API key not configured — set it in Settings (Apply) or export DEEPSEEK_API_KEY")
+        raise LLMGenerationError("LLM API key not configured — set it in Settings (Apply) or export TELG_LLM_API_KEY")
     try:
         key.encode("ascii")
     except UnicodeEncodeError:
@@ -770,22 +782,20 @@ def call_llm_with_retry(p: GenerateIn, action: str = "generate") -> dict:
     client = OpenAI(base_url=base, api_key=key, timeout=60)
     errors = []
     last_usage = None
+    json_fmt = True   # some OpenAI-compatible endpoints reject response_format
     for attempt in range(3):
         user = build_user_prompt(p, action)
         if errors:
             user += ("\n\n## 校验失败反馈\n你上次输出未通过校验：\n" + "\n".join(errors)
                      + "\n请只修正上述问题、保留其余内容，重新输出完整 JSON（不得输出任何 JSON 之外的内容）。")
         try:
-            resp = client.chat.completions.create(
-                model=model,
-                temperature=temp,
-                max_tokens=max_tokens,
-                response_format={"type": "json_object"},
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-            )
+            kwargs = dict(model=model, temperature=temp, max_tokens=max_tokens, messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ])
+            if json_fmt:
+                kwargs["response_format"] = {"type": "json_object"}
+            resp = client.chat.completions.create(**kwargs)
             last_usage = getattr(resp, "usage", None)
             raw = (resp.choices[0].message.content or "").strip()
             data = json.loads(raw)
@@ -795,6 +805,8 @@ def call_llm_with_retry(p: GenerateIn, action: str = "generate") -> dict:
             return art.model_dump(by_alias=True)
         except Exception as e:  # noqa: BLE001
             errors.append("%s" % e)
+            if json_fmt and re.search(r"response_format|json_object|json mode|not supported|unsupported", "%s" % e, re.I):
+                json_fmt = False   # retry without the structured-output flag
     raise LLMGenerationError("LLM generation failed after 3 attempts: " + " | ".join(errors[-2:]))
 
 
@@ -1377,9 +1389,7 @@ def profile_generate(c: ProfileGenIn):
     if not (c.role.strip() or c.domain.strip()):
         raise HTTPException(400, "role or domain is required")
     cfg = c.llm_config or {}
-    base = (cfg.get("base_url") or os.environ.get("TELG_LLM_BASE") or "https://api.deepseek.com/v1").strip().rstrip("/")
-    key = (cfg.get("api_key") or os.environ.get("DEEPSEEK_API_KEY") or "").strip()
-    model = (cfg.get("model") or os.environ.get("TELG_LLM_MODEL") or "deepseek-chat").strip()
+    base, key, model = _llm_endpoint(cfg)
     lang_label = {"en-zh": "English + Chinese", "ja-zh": "Japanese + Chinese", "other": "other"}.get(c.language, c.language)
     sc_label = {"interview": "technical interview", "meeting": "meeting presentation", "collab": "team collaboration",
                 "supplier": "supplier communication", "class": "classroom teaching"}.get((c.scenarios or [""])[0], ", ".join(c.scenarios or []))
@@ -1453,7 +1463,7 @@ def test_llm(c: TestLLMIn):
         return {"ok": False, "error": "api_key contains non-ASCII characters (placeholder?) — enter a real key"}
     url = base + "/chat/completions"
     payload = {
-        "model": c.model or "deepseek-chat",
+        "model": c.model or DEFAULT_LLM_MODEL,
         "messages": [{"role": "user", "content": "Reply with exactly: ok"}],
         "max_tokens": 8,
         "temperature": c.temperature or 0.2,
@@ -1477,7 +1487,7 @@ def test_llm(c: TestLLMIn):
                 con.execute(
                     "INSERT INTO llm_usage(provider, model, action, prompt_tokens, completion_tokens, total_tokens)"
                     " VALUES(?,?,?,?,?,?)",
-                    ((c.provider or "openai-compatible"), (c.model or "deepseek-chat"), "test-llm",
+                    ((c.provider or "openai-compatible"), (c.model or DEFAULT_LLM_MODEL), "test-llm",
                      int(u.get("prompt_tokens") or 0), int(u.get("completion_tokens") or 0), total),
                 )
                 con.commit()
@@ -1771,9 +1781,7 @@ def onboarding_generate(c: OnboardGenIn):
     if not (c.role.strip() or c.domain.strip()):
         raise HTTPException(400, "role or domain is required")
     cfg = c.llm_config or {}
-    base = (cfg.get("base_url") or os.environ.get("TELG_LLM_BASE") or "https://api.deepseek.com/v1").strip().rstrip("/")
-    key = (cfg.get("api_key") or os.environ.get("DEEPSEEK_API_KEY") or "").strip()
-    model = (cfg.get("model") or os.environ.get("TELG_LLM_MODEL") or "deepseek-chat").strip()
+    base, key, model = _llm_endpoint(cfg)
     lang_label = {"en-zh": "English + Chinese", "ja-zh": "Japanese + Chinese", "other": "other"}.get(c.language, c.language)
     user = (
         "## 用户问卷\n"
@@ -1876,9 +1884,7 @@ def recs_generate(c: RecsGenIn):
     if not (c.role.strip() or c.domain.strip()):
         raise HTTPException(400, "role or domain is required")
     cfg = c.llm_config or {}
-    base = (cfg.get("base_url") or os.environ.get("TELG_LLM_BASE") or "https://api.deepseek.com/v1").strip().rstrip("/")
-    key = (cfg.get("api_key") or os.environ.get("DEEPSEEK_API_KEY") or "").strip()
-    model = (cfg.get("model") or os.environ.get("TELG_LLM_MODEL") or "deepseek-chat").strip()
+    base, key, model = _llm_endpoint(cfg)
     lang_label = {"en-zh": "English + Chinese", "ja-zh": "Japanese + Chinese", "other": "other"}.get(c.language, c.language)
     user = (
         "## 学习档案\n"

@@ -72,7 +72,9 @@ LLMProvider: generate() / health_check() / model_info()
 TTSProvider: synthesize(text, voice, speed, lang) → audio + duration
 ```
 
-- LLM：首期 OpenAI-compatible（base_url + api_key + model 可配置），兼容 DeepSeek / Qwen / Ollama / 企业内部 Gateway；
+- LLM：OpenAI-compatible 通用契约（base_url + api_key + model 可配置，另支持环境变量 `TELG_LLM_BASE` / `TELG_LLM_API_KEY` / `TELG_LLM_MODEL`），兼容 DeepSeek / Qwen / Ollama / 豆包 Ark / Kimi / OpenAI / 企业内部 Gateway；前端提供预设厂商下拉与 **Custom** 手动接入，任意兼容端点开箱即用。
+  - 生成请求默认携带 `response_format: json_object`；部分兼容端点不支持时后端自动降级为普通 JSON 输出并重试（系统提示词仍要求纯 JSON，模型校验层兜底）。
+  - 鉴权：API Key 由前端随请求临时携带、不持久化存储；服务端环境变量作为部署级兜底。
 - TTS：首期 edge-tts（接入简单、英语效果好、无 Key）；Piper / sherpa-onnx / CosyVoice 后续按同一接口接入。
 
 ## 5. 逐句 TTS 与时间轴（工程要点）
@@ -106,7 +108,7 @@ Audio 拼接（句间可插停顿，如 300ms）
 |---|---|
 | 前端交互全链路 | ✅ 完成（mock 数据可完整跑通：生成→TTS→发布→播放→管理） |
 | 后端 CRUD / Provider 测试 / mock 生成 | ✅ 完成（FastAPI + SQLite） |
-| 真实 LLM 接入 | ⚠️ 接口就绪（test-generate / generate 走 OpenAI-compatible），未端到端验证 |
+| 真实 LLM 接入 | ✅ 完成（OpenAI 兼容通用契约 + pydantic 校验 + 失败重试 + json_object 自动降级；端到端验证通过） |
 | 真实 TTS 合成 | ❌ 占位（synthesize 仅置 audioReady，不产真实音频与时间戳） |
 | 异步任务/进度 | ❌ 前端 sleep 模拟，待 job 轮询 |
 | 安全 | ⚠️ Key 由后端管理（前端不持久化），部署需收紧 CORS/鉴权 |

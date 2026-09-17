@@ -328,7 +328,7 @@ const LLM_PRESETS = {
   qwen: { base: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-max' },
   ollama: { base: 'http://localhost:11434/v1', model: 'llama3.1' }
 };
-const PROVIDER_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi (Moonshot)', ark: '豆包 · Volcengine Ark', openai: 'OpenAI', qwen: 'Qwen (DashScope)', ollama: 'Ollama (Local)' };
+const PROVIDER_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi (Moonshot)', ark: '豆包 · Volcengine Ark', openai: 'OpenAI', qwen: 'Qwen (DashScope)', ollama: 'Ollama (Local)', custom: 'Custom (OpenAI-compatible)' };
 const LANG_DEFS = [['en-zh','中英 / EN↔ZH',false],['ja-zh','中日 / JA↔ZH',true],['de-zh','中德 / DE↔ZH',true],['fr-zh','中法 / FR↔ZH',true]];
 function L(){ return T[state.lang]; }
 const state = {
@@ -472,7 +472,7 @@ function renderLlm(){
   const t=L();
   document.getElementById('ob-title').textContent = t['llm.title'];
   document.getElementById('ob-sub').textContent = t['llm.sub'];
-  const opts = Object.keys(LLM_PRESETS).map(k=>'<option value="'+k+'"'+(k===state.llm.provider?' selected':'')+'>'+escapeHtml(PROVIDER_LABELS[k]||k)+'</option>').join('');
+  const opts = Object.keys(PROVIDER_LABELS).map(k=>'<option value="'+k+'"'+(k===state.llm.provider?' selected':'')+'>'+escapeHtml(PROVIDER_LABELS[k]||k)+'</option>').join('');
   const pr = LLM_PRESETS[state.llm.provider]||{};
   const baseVal = state.llm.base_url || pr.base || '';
   const modelVal = state.llm.model || pr.model || '';

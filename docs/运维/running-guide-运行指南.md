@@ -177,15 +177,27 @@ Uvicorn running on http://127.0.0.1:8000
 
 ### 第 3 步：配置并验证 LLM（生成语料用）
 
+系统走 **OpenAI 兼容契约**，任意兼容服务都可接入（DeepSeek / 豆包 Ark / Kimi / OpenAI / Qwen / Ollama / 企业网关）：
+
 1. 点右上角 **设置 → LLM**；
-2. 填写三个字段（以 DeepSeek 为例）：
-   - Base URL：`https://api.deepseek.com/v1`
-   - Model：`deepseek-chat`
+2. 选择预设厂商（自动填 Base URL / Model），或选 **Custom (OpenAI-compatible)** 手动填写三个字段（以 DeepSeek 为例）：
+   - Base URL：`https://api.deepseek.com/v1`（API 根地址，不带 `/chat/completions` 后缀）
+   - Model：`deepseek-chat`（服务商期望的模型标识）
    - API Key：你的密钥
 3. 点 **Test Connection** → 应显示模型名 + 延迟（毫秒），而不是红色报错；
 4. 点 **Apply** 保存。
 
 > Key 只随每次请求发送、不持久化存储——重启浏览器后需要重新填（这是刻意设计，见「设置」页说明）。
+
+**环境变量（优先级低于页面配置，便于部署/换模型）**：
+
+| 变量 | 说明 |
+|---|---|
+| `TELG_LLM_BASE` | LLM API 根地址，如 `https://api.deepseek.com/v1` |
+| `TELG_LLM_API_KEY` | API 密钥（兼容别名：`DEEPSEEK_API_KEY`） |
+| `TELG_LLM_MODEL` | 模型标识，如 `deepseek-chat` |
+
+> 生成请求默认携带 `response_format: json_object`；部分兼容端点不支持时后端会自动降级为普通 JSON 输出并重试。
 
 ### 第 4 步：生成你的第一份素材
 
@@ -241,7 +253,7 @@ Uvicorn running on http://127.0.0.1:8000
 | ⑦ | 合成报 `TTS synthesis failed` | edge-tts 需联网访问微软语音服务：检查网络/代理；临时可用「测试数据」验证其余功能 |
 | ⑦b | 合成/试听报 `TTS model not downloaded`（Kokoro） | Kokoro 引擎的模型文件缺失：按 3.1 下载 `kokoro-v1.0.onnx` + `voices-v1.0.bin` 到 `backend\models\kokoro\`（工程内，推荐）或 `%USERPROFILE%\.cache\telg\kokoro\` |
 | ⑧ | `pip install` 慢/失败 | 换国内镜像：`pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple` |
-| ⑨ | Generate 报 `LLM API key not configured` | 设置里填 Key 并 **Apply**；或设置环境变量 `DEEPSEEK_API_KEY`（PowerShell：`$env:DEEPSEEK_API_KEY="sk-..."`） |
+| ⑨ | Generate 报 `LLM API key not configured` | 设置里填 Key 并 **Apply**；或设置环境变量 `TELG_LLM_API_KEY`（兼容别名 `DEEPSEEK_API_KEY`；PowerShell：`$env:TELG_LLM_API_KEY="sk-..."`） |
 | ⑩ | 每次拉到新目录都要新建 venv 吗？ | **不需要**。venv 建一次即可复用：`D:\dev\telg-project\backend\.venv\Scripts\python.exe main.py`。仅换机器 / 换 Python 大版本才重建 |
 
 ---

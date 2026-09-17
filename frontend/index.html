@@ -1604,12 +1604,7 @@ html[data-theme="light"] .gen-card{box-shadow:0 24px 64px rgba(20,24,32,.25)}
           <div class="s-ctrl">
             <div class="select-wrap">
               <select class="select" id="cfg-llm-provider">
-                <option value="deepseek">DeepSeek</option>
-                <option value="moonshot">Kimi (Moonshot)</option>
-                <option value="ark">豆包 · Volcengine Ark</option>
-                <option value="openai">OpenAI</option>
-                <option value="qwen">Qwen (DashScope)</option>
-                <option value="ollama">Ollama (Local)</option>
+                <!-- options injected from PROVIDER_LABELS at init -->
               </select>
               <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
             </div>
@@ -2018,7 +2013,9 @@ function appendLlmTrace(msg, cls) {
 function readSavedSettings() {
   try { return JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; } catch (e) { return {}; }
 }
-const LLM_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi', ark: 'Doubao', openai: 'OpenAI', qwen: 'Qwen', ollama: 'Ollama' };
+/* Single source of truth for provider display names; "custom" covers any
+   OpenAI-compatible endpoint not in LLM_PRESETS (type your own base/model). */
+const PROVIDER_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi (Moonshot)', ark: '豆包 · Volcengine Ark', openai: 'OpenAI', qwen: 'Qwen (DashScope)', ollama: 'Ollama (Local)', custom: 'Custom' };
 /* Latest engine self-check: { ts, llm: {name,ok,detail,ms}, tts: {name,ok,detail,ms} }.
    Kept in memory + localStorage so a page reload shows the last result
    immediately instead of blinking "checking" every time. */
@@ -2071,8 +2068,8 @@ function updateEngineBadge() {
   if (!dot || !label) return;
   const s = readSavedSettings();
   const llm = s.llm || {};
-  const llmProv = LLM_PRESETS[llm.provider] ? llm.provider : 'deepseek';
-  const llmName = LLM_LABELS[llmProv] || llmProv;
+  const llmProv = LLM_PRESETS[llm.provider] ? llm.provider : 'custom';
+  const llmName = PROVIDER_LABELS[llmProv] || llmProv;
   const ttsProv = normalizeTTSProvider((s.tts || {}).provider || 'edge-tts');
   const ttsName = ttsProv === 'kokoro' ? 'Kokoro' : (ttsProv === 'cosyvoice' ? 'CosyVoice' : 'edge-tts');
   label.textContent = llmName + ' · ' + ttsName;
@@ -2103,8 +2100,8 @@ async function selfCheck(force) {
   updateEngineBadge();
   const s = readSavedSettings();
   const llm = s.llm || {};
-  const llmProv = LLM_PRESETS[llm.provider] ? llm.provider : 'deepseek';
-  const llmName = LLM_LABELS[llmProv] || llmProv;
+  const llmProv = LLM_PRESETS[llm.provider] ? llm.provider : 'custom';
+  const llmName = PROVIDER_LABELS[llmProv] || llmProv;
   let lr; const t0 = performance.now();
   try {
     lr = await API.testLLM({ provider: llmProv, base_url: llm.baseUrl || '', api_key: llm.apiKey || '', model: llm.model || '', temperature: parseFloat(llm.temperature) || 0.7 });
@@ -3366,7 +3363,7 @@ function obLlmStored() {
   const s = readStoredCfg().llm || {};
   return { provider: s.provider || 'deepseek', base_url: s.baseUrl || '', api_key: s.apiKey || '', model: s.model || '' };
 }
-const OB_PROVIDER_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi (Moonshot)', ark: '豆包 · Volcengine Ark', openai: 'OpenAI', qwen: 'Qwen (DashScope)', ollama: 'Ollama (Local)' };
+
 function renderObLLM() {
   const L = I18N[state.lang];
   state.obLlmOk = false;
@@ -3375,7 +3372,7 @@ function renderObLLM() {
   const llm = obLlmStored();
   const pr = LLM_PRESETS[llm.provider] || {};
   const baseVal = llm.base_url || pr.base || '', modelVal = llm.model || pr.model || '';
-  const opts = Object.keys(LLM_PRESETS).map(k => '<option value="' + k + '"' + (k === llm.provider ? ' selected' : '') + '>' + escapeHtml(OB_PROVIDER_LABELS[k] || k) + '</option>').join('');
+  const opts = Object.keys(PROVIDER_LABELS).map(k => '<option value="' + k + '"' + (k === llm.provider ? ' selected' : '') + '>' + escapeHtml(PROVIDER_LABELS[k] || k) + '</option>').join('');
   $('ob-body').innerHTML =
     '<div class="ob-llm-form">' +
       '<div class="s-row"><div class="s-info"><div class="s-name">' + L['ob.llmProvider'] + '</div></div>' +
@@ -5457,8 +5454,8 @@ function pickAnswer(opt) {
 function llmDisplayLabel() {
   const s = readStoredCfg();
   const llm = s.llm || {};
-  const prov = LLM_PRESETS[llm.provider] ? llm.provider : 'deepseek';
-  const label = LLM_LABELS[prov] || prov;
+  const prov = LLM_PRESETS[llm.provider] ? llm.provider : 'custom';
+  const label = PROVIDER_LABELS[prov] || prov;
   const model = (llm.model || '').trim();
   return model ? label + ' · ' + model : label;
 }
@@ -6427,10 +6424,12 @@ function init() {
   document.head.appendChild(extra);
   try {
     const cfg = JSON.parse(localStorage.getItem('telg-settings') || 'null');
+    $('cfg-llm-provider').innerHTML = Object.keys(PROVIDER_LABELS).map(k =>
+      '<option value="' + k + '">' + escapeHtml(PROVIDER_LABELS[k]) + '</option>').join('');
     if (cfg && cfg.llm) {
       let llmProvider = cfg.llm.provider;
       if (LLM_PRESET_LEGACY[llmProvider]) llmProvider = LLM_PRESET_LEGACY[llmProvider];
-      if (!(llmProvider in LLM_PRESETS)) llmProvider = 'deepseek';
+      if (!(llmProvider in LLM_PRESETS)) llmProvider = 'custom';
       $('cfg-llm-provider').value = llmProvider;
       $('cfg-llm-model').value = cfg.llm.model; $('cfg-llm-base').value = cfg.llm.baseUrl; $('cfg-llm-key').value = cfg.llm.apiKey;
       const ttsProv = normalizeTTSProvider(cfg.tts.provider);
@@ -6461,8 +6460,10 @@ function init() {
   const adjTTS = $('adj-tts-provider');
   if (adjTTS) adjTTS.addEventListener('change', () => onProviderChange('adj'));
   $('cfg-llm-provider').addEventListener('change', () => {
-    const pr = LLM_PRESETS[$('cfg-llm-provider').value];
+    const sel = $('cfg-llm-provider').value;
+    const pr = LLM_PRESETS[sel];
     if (pr) { $('cfg-llm-base').value = pr.base; $('cfg-llm-model').value = pr.model; }
+    else if (sel === 'custom') { $('cfg-llm-base').value = ''; $('cfg-llm-model').value = ''; }
   });
 
   $('topic-input').addEventListener('input', updateGenerateBtn);

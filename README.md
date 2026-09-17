@@ -44,6 +44,19 @@ python main.py                          # 保持终端开启
 > ⚠️ **必须通过后端访问前端**：`python main.py` 后打开 `http://127.0.0.1:8000`（后端同源托管前端 + `/api/v1`）。
 > 不要用 `file://` 双击 index.html / onboarding.html，也不要用 `python -m http.server` 等静态服务器单独托管前端——否则 `/api/v1/*` 会打到静态服务器并返回 HTML 404，连接测试会报 "Backend returned HTML instead of JSON"。
 
+### 接入新的 LLM（OpenAI 兼容即可）
+
+系统通过 **OpenAI 兼容契约** 调用 LLM，不绑定任何单一厂商；DeepSeek / 豆包 Ark / Kimi / OpenAI / Qwen / Ollama 及任意企业内网关均可接入：
+
+1. 主页面「设置 → LLM」：选择预设厂商（自动填 Base URL / Model），或在下拉中选择 **Custom (OpenAI-compatible)** 手动填写；
+2. 填写 **Base URL**（API 根地址，**不要带** `/chat/completions` 后缀）、**Model**（服务商期望的模型标识）、**API Key**；
+3. 点 **Test Connection** 验证连通（成功显示模型名 + 延迟），再 **Apply Settings** 生效；
+4. 首启引导页（onboarding）同样支持 Custom 手动填写。
+
+- 服务端同时支持环境变量（优先级低于页面配置）：`TELG_LLM_BASE`、`TELG_LLM_API_KEY`（兼容别名 `DEEPSEEK_API_KEY`）、`TELG_LLM_MODEL`。
+- 生成请求默认携带 `response_format: json_object`；部分兼容端点不支持时**自动降级**为普通 JSON 输出并重试（结构化提示词仍要求纯 JSON）。
+- 更换/迁移 LLM 后，学习档案与推荐设置中的 `model` 字段会同步更新；旧模型生成的内容不受影响。
+
 ## 目录结构
 
 ```
@@ -100,7 +113,7 @@ python tests/e2e/test_tts_roles_e2e.py  # 11 项 TTS 角色专项
 | 首启引导（欢迎/本地账号/LLM 强制配置/档案问卷/初始推荐） | ✅ 完成 |
 | 前端交互全链路（生成 → 语料 → 合成 → 发布 → 播放 → 管理） | ✅ 完成 |
 | 后端 CRUD / Provider 测试 / 档案生成 / 学习统计 | ✅ 完成 |
-| 真实 LLM 接入 | ✅ 完成（OpenAI 兼容 + pydantic 校验 + 失败重试；DeepSeek/豆包/Kimi 等同一契约） |
+| 真实 LLM 接入 | ✅ 完成（OpenAI 兼容通用契约 + pydantic 校验 + 失败重试 + json_object 自动降级；DeepSeek/豆包/Kimi/OpenAI/Qwen/Ollama/任意兼容端点） |
 | 真实 TTS 合成 | ✅ 完成（edge-tts 在线 / Kokoro 本地离线双引擎；逐句合成 + ffmpeg 拼接 + 真实时间戳回填） |
 | 播放器（逐句同步 / 单句循环 / 倍速 / 收藏 / 前后跳转） | ✅ 完成 |
 | 开发者模式（LLM Mock 过程详情 / TTS Mock 语料接管 / 诊断） | ✅ 完成 |
