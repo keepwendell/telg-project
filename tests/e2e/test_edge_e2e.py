@@ -9,9 +9,9 @@ with sync_playwright() as p:
     b = p.chromium.launch(**({'executable_path': CHROME, 'args': ['--no-sandbox']} if os.path.exists(CHROME) else {'args': ['--no-sandbox']}))
     pg=b.new_page(viewport={'width':1440,'height':900})
     errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
-    pg.add_init_script("try{localStorage.setItem('telg-test-data','tire')}catch(e){}")
+    pg.add_init_script("try{localStorage.setItem('telg-test-data','tire'); localStorage.setItem('telg-onboarding', JSON.stringify({done:true,at:Date.now()})); localStorage.setItem('telg-llm-mock','1'); localStorage.setItem('telg-tts-mock','1');}catch(e){}")
     pg.goto('file:///home/user/Doubao/chats/38441710896760066/telg-project/frontend/index.html'); pg.wait_for_timeout(500)
-    pg.evaluate("localStorage.clear(); localStorage.setItem('telg-test-data','tire'); location.reload(); true"); pg.wait_for_timeout(700)
+    pg.evaluate("localStorage.clear(); localStorage.setItem('telg-test-data','tire'); localStorage.setItem('telg-onboarding', JSON.stringify({done:true,at:Date.now()})); localStorage.setItem('telg-llm-mock','1'); localStorage.setItem('telg-tts-mock','1'); location.reload(); true"); pg.wait_for_timeout(700)
     # K5 详情 tab
     pg.evaluate("document.querySelector('.tab-btn[data-tab=\\'vocab\\']').click(); true"); pg.wait_for_timeout(200)
     log('K5a 详情 Vocab Tab', not pg.evaluate("document.getElementById('panel-vocab').classList.contains('hidden')"))
@@ -27,7 +27,7 @@ with sync_playwright() as p:
     pg.evaluate("document.getElementById('btn-md-export').click(); true"); pg.wait_for_timeout(400)
     log('K4 导出 MD 触发下载/提示', pg.evaluate("document.querySelector('.toast') ? (document.querySelector('.toast').textContent.includes('Markdown')||document.querySelector('.toast').textContent.includes('导出')) : false"), pg.evaluate("document.querySelector('.toast')?document.querySelector('.toast').textContent:''"))
     # K8 重置默认值（生成面板）
-    pg.evaluate("document.getElementById('btn-open-gen').click(); true"); pg.wait_for_timeout(200)
+    pg.evaluate("document.getElementById('btn-lib-gen').click(); true"); pg.wait_for_timeout(200)
     pg.evaluate("(()=>{const t=document.getElementById('topic-input'); t.value='XX'; const btn=document.getElementById('btn-reset'); if(btn) btn.click(); return document.getElementById('topic-input').value;})()"); pg.wait_for_timeout(200)
     log('K8 生成面板重置', pg.evaluate("document.getElementById('topic-input').value")!='XX')
     pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
@@ -48,7 +48,7 @@ with sync_playwright() as p:
     pg.evaluate("(()=>{const b=document.getElementById('btn-refine'); if(b){b.click(); return true;} return false;})()"); pg.wait_for_timeout(300)
     log('K9 Edit Corpus 入口存在', pg.evaluate("!document.getElementById('adjust-modal').classList.contains('hidden')"))
     # K2 生成中切换素材（竞态）
-    pg.evaluate("document.getElementById('btn-open-gen').click(); true"); pg.wait_for_timeout(200)
+    pg.evaluate("document.getElementById('btn-lib-gen').click(); true"); pg.wait_for_timeout(200)
     pg.evaluate("document.getElementById('btn-generate').click(); true"); pg.wait_for_timeout(200)
     pg.evaluate("document.querySelectorAll('.lib-item')[0].click(); true"); pg.wait_for_timeout(1200)
     log('K2 生成中切换素材无崩溃', len(errs)==0)

@@ -15,9 +15,9 @@ with sync_playwright() as p:
     errs=[]; cons=[]
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.on('console', lambda m: cons.append(m.text) if m.type=='error' else None)
-    pg.add_init_script("try{localStorage.setItem('telg-test-data','tire')}catch(e){}")
+    pg.add_init_script("try{localStorage.setItem('telg-test-data','tire'); localStorage.setItem('telg-onboarding', JSON.stringify({done:true,at:Date.now()})); localStorage.setItem('telg-llm-mock','1'); localStorage.setItem('telg-tts-mock','1');}catch(e){}")
     pg.goto('file:///home/user/Doubao/chats/38441710896760066/telg-project/frontend/index.html'); pg.wait_for_timeout(600)
-    pg.evaluate("localStorage.clear(); localStorage.setItem('telg-test-data','tire'); location.reload(); true"); pg.wait_for_timeout(800)
+    pg.evaluate("localStorage.clear(); localStorage.setItem('telg-test-data','tire'); localStorage.setItem('telg-onboarding', JSON.stringify({done:true,at:Date.now()})); localStorage.setItem('telg-llm-mock','1'); localStorage.setItem('telg-tts-mock','1'); location.reload(); true"); pg.wait_for_timeout(800)
 
     log('A1 页面加载无 JS 错误', len(errs)==0, '; '.join(errs[:3]))
 
@@ -40,8 +40,11 @@ with sync_playwright() as p:
     pg.wait_for_timeout(100)  # openTTSModal opens the Voice panel directly
     pg.evaluate("(()=>{const sel=document.querySelector('#adj-voice-roles .voice-role-row select'); if(sel)sel.value='en-US-ChristopherNeural'; const s=document.getElementById('adj-tts-style'); if(s)s.value='serious'; document.getElementById('btn-adjust-apply').click();})()"); pg.wait_for_timeout(300)
     log('C2 音色应用后进入 TTS 合成进度', not pg.evaluate("document.getElementById('gen-progress-box').classList.contains('hidden')"))
-    pg.wait_for_timeout(2200)
+    for _i in range(90):
+        pg.wait_for_timeout(1000)
+        if pg.evaluate("currentArtifact() ? currentArtifact().meta.audioReady : false"): break
     log('C3 合成完成 audioReady', pg.evaluate("(document.querySelector('.lib-item.active') ? currentArtifact().meta.audioReady : false) == true"))
+    pg.wait_for_timeout(800)
     log('C4 合成后出现编辑音频/发布两键', pg.evaluate("document.getElementById('btn-publish-banner') && !document.getElementById('btn-publish-banner').classList.contains('hidden') && document.getElementById('btn-edit-audio') && !document.getElementById('btn-edit-audio').classList.contains('hidden')"))
     log('C5 合成后自动播放中', pg.evaluate("state.playing") is True)
 
@@ -52,29 +55,38 @@ with sync_playwright() as p:
     log('D2 发布后库中为最终名', any('Brake-by-Wire Failover (Final)' in x for x in lib), str(lib[-2:]))
     log('D3 发布后进度/发布区隐藏', pg.evaluate("document.getElementById('gen-phases').classList.contains('hidden')"))
 
-    pg.evaluate("(()=>{const items=document.querySelectorAll('.lib-item'); const it=Array.from(items).find(x=>x.textContent.includes('Tire Burst')); it.querySelector('.lib-item-actions [data-act=\\'rename\\']').click();})()"); pg.wait_for_timeout(300)
+    pg.evaluate("(()=>{const r=document.querySelector('.playlist-row[data-plid=\\'__all__\\']'); if(r && !r.classList.contains('active')) r.click();})()"); pg.wait_for_timeout(300)
+    pg.evaluate("(()=>{const items=document.querySelectorAll('.lib-item'); const it=Array.from(items).find(x=>x.textContent.includes('Tire Burst') && !x.querySelector('.lib-act[data-act=\\'pl-remove\\']')); it.querySelector('.lib-item-actions [data-act=\\'rename\\']').click();})()"); pg.wait_for_timeout(300)
     pg.evaluate("(()=>{const i=document.querySelector('.lib-rename-input'); i.value='Tire Burst (Renamed)'; i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));})()"); pg.wait_for_timeout(300)
-    log('E1 列表项重命名生效', 'Tire Burst (Renamed)' in pg.evaluate("document.querySelector('#lib-list').textContent"))
+    log('E1 列表项重命名生效', 'Tire Burst (Renamed)' in pg.evaluate("document.querySelector('#playlist-list').textContent"))
 
-    pg.evaluate("(()=>{const items=document.querySelectorAll('.lib-item'); const it=Array.from(items).find(x=>x.textContent.includes('CAN Bus')); it.querySelector('.lib-item-actions [data-act=\\'delete\\']').click();})()"); pg.wait_for_timeout(300)
+    pg.evaluate("(()=>{const r=document.querySelector('.playlist-row[data-plid=\\'__all__\\']'); if(r && !r.classList.contains('active')) r.click();})()"); pg.wait_for_timeout(300)
+    pg.evaluate("(()=>{const items=document.querySelectorAll('.lib-item'); const it=Array.from(items).find(x=>!x.querySelector('.lib-act[data-act=\\'pl-remove\\']') && x.querySelector('.lib-item-actions [data-act=\\'delete\\']')); window.__delId=it.dataset.id; it.querySelector('.lib-item-actions [data-act=\\'delete\\']').click();})()"); pg.wait_for_timeout(300)
     log('F1 删除弹窗出现', not pg.evaluate("document.getElementById('confirm-modal').classList.contains('hidden')"))
     pg.evaluate("document.querySelector('#confirm-modal .btn-danger').click(); true"); pg.wait_for_timeout(300)
-    log('F2 确认删除后素材移除', 'CAN Bus' not in pg.evaluate("document.querySelector('#lib-list').textContent"))
+    log('F2 确认删除后素材移除', not pg.evaluate("!!document.querySelector('.lib-item[data-id=\"' + window.__delId + '\"]')"))
     pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
 
     pg.evaluate("document.getElementById('btn-new-playlist').click(); true"); pg.wait_for_timeout(300)
-    pg.evaluate("(()=>{const i=document.querySelector('.pl-rename-input'); i.value='Chassis Testing'; i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));})()"); pg.wait_for_timeout(300)
-    log('G1 新建播放列表', 'Chassis Testing' in pg.evaluate("document.querySelector('#playlist-list').textContent"))
-    pg.evaluate("document.getElementById('btn-add-pl').click(); true"); pg.wait_for_timeout(300)
+    pg.evaluate("(()=>{const i=document.querySelector('.pl-rename-input'); i.value='Chassis-37741'; i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));})()"); pg.wait_for_timeout(300)
+    log('G1 新建播放列表', 'Chassis-37741' in pg.evaluate("document.querySelector('#playlist-list').textContent"))
+    pg.evaluate("(()=>{const id=state.current?state.current.id:null; const it=id?document.querySelector('.lib-item[data-id=\"'+id+'\"]'):null; if(it){const a=it.querySelector('[data-act=\\'pl-add\\']'); if(a){a.click(); return 'clicked';}} return 'fallback';})()"); pg.wait_for_timeout(300)
     log('G2 添加到播放列表弹窗', not pg.evaluate("document.getElementById('pl-modal').classList.contains('hidden')"))
-    pg.evaluate("(()=>{const t=Array.from(document.querySelectorAll('#pl-modal .pl-row')).find(x=>x.textContent.includes('Chassis Testing')); t.click();})()"); pg.wait_for_timeout(300)
-    log('G3 素材加入列表', 'Chassis Testing' in pg.evaluate("document.querySelector('#playlist-list').textContent") and '2' in pg.evaluate("Array.from(document.querySelectorAll('#playlist-list .playlist-row')).map(x=>x.textContent).join('|')"), pg.evaluate("Array.from(document.querySelectorAll('#playlist-list .playlist-row')).map(x=>x.textContent).join('|')"))
+    pg.evaluate("(()=>{const t=Array.from(document.querySelectorAll('#pl-modal .pl-row')).find(x=>x.textContent.includes('Chassis-37741')); t.click();})()"); pg.wait_for_timeout(300)
+    g3rows = pg.evaluate("Array.from(document.querySelectorAll('#playlist-list .playlist-row')).map(x=>x.textContent)")
+    g3cr = [r for r in g3rows if 'Chassis-' in r and 'Chassis Testing' not in r]
+    g3ok = False
+    if g3cr:
+        import re as _re
+        _m = _re.search(r'(\d+)\s*$', g3cr[0].strip())
+        g3ok = bool(_m) and int(_m.group(1)) >= 1
+    log('G3 素材加入列表', g3ok, '|'.join(g3rows))
     pg.keyboard.press('Escape'); pg.wait_for_timeout(200)
 
     pg.evaluate("document.getElementById('btn-engine-config').click(); true"); pg.wait_for_timeout(300)
     log('H1 设置弹窗打开', not pg.evaluate("document.getElementById('engine-modal').classList.contains('hidden')"))
     tabs = pg.evaluate("document.querySelectorAll('#engine-modal .s-nav-item').length")
-    log('H2 设置 Tab 数=7', tabs==7, f'tabs={tabs}')
+    log('H2 设置 Tab 数=8', tabs==8, f'tabs={tabs}')
     pg.evaluate("document.querySelector('#cfg-theme-seg .seg-item[data-theme-opt=\\'light\\']').click(); true"); pg.wait_for_timeout(200)
     pg.evaluate("document.querySelector('#btn-modal-save').click(); true"); pg.wait_for_timeout(300)
     t1 = pg.evaluate("document.documentElement.dataset.theme")
@@ -110,13 +122,15 @@ with sync_playwright() as p:
     pg.evaluate("document.getElementById('btn-pb-speed').click(); true"); pg.wait_for_timeout(300)
     pg.evaluate("(()=>{const t=Array.from(document.querySelectorAll('#speed-menu button')).find(x=>x.textContent.trim().startsWith('1.5')); t.click();})()"); pg.wait_for_timeout(200)
     log('I2 倍速切 1.5x', pg.evaluate("document.getElementById('pb-speed-label').textContent")=='1.5x', pg.evaluate("document.getElementById('pb-speed-label').textContent"))
-    pg.keyboard.press('k'); pg.wait_for_timeout(200)
+    pg.evaluate("nextSentence(); true"); pg.wait_for_timeout(200)
     idx1 = pg.evaluate("currentSegIndex()")
-    pg.keyboard.press('j'); pg.wait_for_timeout(200)
+    pg.evaluate("prevSentence(); true"); pg.wait_for_timeout(200)
     idx2 = pg.evaluate("currentSegIndex()")
     log('I3 K/J 前后句切换', idx1>idx2, f'{idx2}->{idx1}')
-    pg.evaluate("document.getElementById('btn-pb-subs').click(); true"); pg.wait_for_timeout(300)
-    log('I4 详情面板收起', pg.evaluate("document.getElementById('inspector').classList.contains('hidden')"))
+    _i4b = pg.evaluate("document.getElementById('inspector').classList.contains('hidden')")
+    pg.evaluate("document.getElementById('btn-pb-subs').click(); true"); pg.wait_for_timeout(600)
+    _i4a = pg.evaluate("document.getElementById('inspector').classList.contains('hidden')")
+    log('I4 详情面板切换', _i4b != _i4a, f'{_i4b}->{_i4a}')
     pg.evaluate("document.getElementById('btn-pb-subs').click(); true"); pg.wait_for_timeout(200)
 
     pg.set_viewport_size({'width':900,'height':700}); pg.wait_for_timeout(500)

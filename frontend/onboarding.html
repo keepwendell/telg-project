@@ -245,6 +245,12 @@ const CONFIG = { apiBase: API_ORIGIN + '/api/v1' };
 const DEV_TOOLS = true; // dev/test only — remove every DEV_TOOLS branch before production release
 const ROLE_SUGGESTIONS = ['嵌入式软件工程师','AI 算法工程师','半导体工艺工程师','电力电子工程师'];
 const DOMAIN_SUGGESTIONS = ['半导体制造','人工智能应用','新能源与储能','自动化与机器人'];
+const BUILTIN_DOMAINS = [
+  { id: 'automotive', name: 'Automotive' }, { id: 'semiconductor', name: 'Semiconductor' },
+  { id: 'energy', name: 'New Energy' }, { id: 'ai-software', name: 'AI / Software' },
+  { id: 'medical', name: 'Medical Devices' }, { id: 'fintech', name: 'FinTech' },
+  { id: 'aerospace', name: 'Aerospace' }, { id: 'general', name: 'General Engineering' }
+];
 const MINUTE_PRESETS = [15, 30, 45, 60];
 function escapeHtml(x){ return String(x==null?'':x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 const STEPS = ['account','llm','survey','confirm'];
@@ -265,19 +271,19 @@ const T = {
     'llm.hint': '密钥仅保存在本机浏览器，不会上传到除所选服务商外的任何第三方。',
     'llm.next': '下一步', 'llm.testing': '正在验证连接…', 'llm.ok': '连接成功，可以继续', 'llm.needFields': '请完整填写接口地址、模型与密钥',
     'llm.devSkip': '跳过 — 仅测试用',
-    'sv.title': '个性化设置', 'sv.sub': '以下信息用于生成领域、角色与场景的默认推荐，完成后可在设置中随时调整。',
-    'sv.role': '角色 / 职位', 'sv.roleDesc': '选填。例如：嵌入式软件工程师、AI 算法工程师',
-    'sv.domain': '主要练习领域', 'sv.domainDesc': '必填。例如：半导体制造、人工智能应用',
+    'sv.title': '个性化设置', 'sv.sub': '我们可以模拟专业的沉浸式听力场景，需要了解您的感兴趣方向，之后的提示将围绕它展开。',
+    'sv.role': '想听谁的对话', 'sv.roleDesc': '选填。例如：嵌入式软件工程师、AI 算法工程师',
+    'sv.domain': '目标练习领域', 'sv.domainDesc': '必填。例如：半导体制造、人工智能应用',
     'sv.lang': '语言方向', 'sv.langDesc': '当前开放中英方向，其余语言开发中',
     'sv.minutes': '每日听力时长目标', 'sv.minutesDesc': '用于设定每日训练目标',
-    'sv.needDomain': '请先填写练习领域', 'sv.needMin': '请选择每日时长目标',
+    'sv.needDomain': '请先填写目标练习领域', 'sv.needMin': '请选择每日时长目标',
     'sv.next': '生成并继续', 'sv.generating': '正在生成学习档案与推荐…', 'sv.genFail': '生成失败',
     'sv.skipNote': '未配置 LLM — 将直接使用基础档案，跳过 AI 生成。',
     'sv.devPreview': '使用示例数据预览第四步',
-    'cf.title': '确认学习档案', 'cf.sub': '请核对以下信息。推荐内容支持增删调整，后续也可在设置中修改。',
-    'cf.role': '角色', 'cf.domain': '领域', 'cf.lang': '语言', 'cf.minutes': '每日分钟',
-    'cf.rolePortrait': '角色画像', 'cf.domainProfile': '领域档案', 'cf.focusTone': '专注与语气',
-    'cf.recTitle': '初始推荐', 'cf.recDomains': '领域', 'cf.recRoles': '角色', 'cf.recScenarios': '场景',
+    'cf.title': '确认学习偏好', 'cf.sub': '请核对以下信息。推荐内容支持增删调整，后续也可在设置中修改。',
+    'cf.role': '对话角色', 'cf.domain': '练习领域', 'cf.lang': '语言', 'cf.minutes': '每日分钟',
+    'cf.rolePortrait': '对话角色设定', 'cf.domainProfile': '领域档案', 'cf.focusTone': '专注与语气',
+    'cf.recTitle': '初始推荐', 'cf.recDomains': '练习领域', 'cf.recRoles': '对话角色', 'cf.recScenarios': '场景',
     'cf.addPh': '添加…', 'cf.regenAll': '全部重新生成', 'cf.regenerating': '重新生成中…',
     'cf.needLlmChanged': 'LLM 配置在生成后发生变更，以上内容可能已过期，建议重新生成。',
     'cf.noGen': '尚未生成 AI 学习档案与推荐内容，可直接完成设置，或返回上一步重新生成。',
@@ -300,19 +306,19 @@ const T = {
     'llm.hint': 'Stored only in this browser and sent only to the provider you selected.',
     'llm.next': 'Next', 'llm.testing': 'Testing connection…', 'llm.ok': 'Connected — you can continue', 'llm.needFields': 'Fill in base URL, model and API key',
     'llm.devSkip': 'Skip — dev/testing only',
-    'sv.title': 'Personalize', 'sv.sub': 'This information seeds your default domain, role and scenario recommendations, and can be adjusted later in Settings.',
-    'sv.role': 'Role / position', 'sv.roleDesc': 'Optional. For example: Embedded software engineer, AI algorithm engineer',
-    'sv.domain': 'Primary practice domain', 'sv.domainDesc': 'Required. For example: Semiconductor manufacturing, AI applications',
+    'sv.title': 'Personalize', 'sv.sub': 'We can simulate immersive listening scenes for you — so first, tell us your areas of interest. Your prompts will revolve around them from now on.',
+    'sv.role': 'Whose conversation do you want to hear?', 'sv.roleDesc': 'Optional. For example: Embedded software engineer, AI algorithm engineer',
+    'sv.domain': 'Target practice domain', 'sv.domainDesc': 'Required. For example: Semiconductor manufacturing, AI applications',
     'sv.lang': 'Language direction', 'sv.langDesc': 'EN ↔ ZH is available now; other directions are in development',
     'sv.minutes': 'Daily listening target', 'sv.minutesDesc': 'Sets your daily training goal',
     'sv.needDomain': 'Enter your practice domain first', 'sv.needMin': 'Select a daily minute target',
     'sv.next': 'Generate & continue', 'sv.generating': 'Generating profile & recommendations…', 'sv.genFail': 'Generation failed',
     'sv.skipNote': 'No LLM configured — continuing with a basic profile, no AI generation.',
     'sv.devPreview': 'Preview step 4 with sample data',
-    'cf.title': 'Confirm your profile', 'cf.sub': 'Review the summary below. Recommendations can be edited here and revisited later in Settings.',
-    'cf.role': 'Role', 'cf.domain': 'Domain', 'cf.lang': 'Language', 'cf.minutes': 'Daily minutes',
-    'cf.rolePortrait': 'Role portrait', 'cf.domainProfile': 'Domain profile', 'cf.focusTone': 'Focus & tone',
-    'cf.recTitle': 'Initial recommendations', 'cf.recDomains': 'Domains', 'cf.recRoles': 'Roles', 'cf.recScenarios': 'Scenarios',
+    'cf.title': 'Confirm your preferences', 'cf.sub': 'Review the summary below. Recommendations can be edited here and revisited later in Settings.',
+    'cf.role': 'Speakers', 'cf.domain': 'Practice domains', 'cf.lang': 'Language', 'cf.minutes': 'Daily minutes',
+    'cf.rolePortrait': 'Speaker setting', 'cf.domainProfile': 'Domain profile', 'cf.focusTone': 'Focus & tone',
+    'cf.recTitle': 'Initial recommendations', 'cf.recDomains': 'Practice domains', 'cf.recRoles': 'Speakers', 'cf.recScenarios': 'Scenarios',
     'cf.addPh': 'Add…', 'cf.regenAll': 'Regenerate all', 'cf.regenerating': 'Regenerating…',
     'cf.needLlmChanged': 'The LLM configuration changed after this was generated — consider regenerating.',
     'cf.noGen': 'No AI profile has been generated yet. You can finish as-is, or go back to generate one.',
@@ -709,8 +715,16 @@ function confirmFinish(){
   const cfg = readStoredCfg();
   cfg.goalMin = String(state.survey.minutes);
   const g = state.gen;
+  /* v2 profile: structured arrays — practice domains (name→id resolved for
+     built-ins) and conversation speakers. Legacy single-value fields are kept
+     so older frontend code paths still find something. */
+  const domainName = state.survey.domain;
+  const builtinDomain = BUILTIN_DOMAINS.find(d => d.name === domainName || d.id === domainName);
   cfg.profile = {
-    role: state.survey.role, primaryDomain: state.survey.domain, language: state.survey.language,
+    domains: [builtinDomain ? builtinDomain.id : domainName],
+    roles: state.survey.role ? [state.survey.role] : [],
+    primaryDomain: domainName, role: state.survey.role,
+    language: state.survey.language, minutes: state.survey.minutes,
     scenarios: [], focus: '', generated: !!g,
     rolePortrait: g ? (g.role_portrait||'') : '', domainProfile: g ? (g.domain_profile||'') : '', focusTone: g ? (g.focus_tone||'') : ''
   };

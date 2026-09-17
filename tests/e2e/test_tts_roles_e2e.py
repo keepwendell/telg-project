@@ -10,9 +10,9 @@ with sync_playwright() as p:
     b = p.chromium.launch(**({'executable_path': CHROME, 'args': ['--no-sandbox']} if os.path.exists(CHROME) else {'args': ['--no-sandbox']}))
     pg=b.new_page(viewport={'width':1440,'height':900})
     errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
-    pg.add_init_script("try{localStorage.setItem('telg-test-data','tire')}catch(e){}")
+    pg.add_init_script("try{localStorage.setItem('telg-test-data','tire'); localStorage.setItem('telg-onboarding', JSON.stringify({done:true,at:Date.now()})); localStorage.setItem('telg-llm-mock','1'); localStorage.setItem('telg-tts-mock','1');}catch(e){}")
     pg.goto('file:///home/user/Doubao/chats/38441710896760066/telg-project/frontend/index.html'); pg.wait_for_timeout(500)
-    pg.evaluate("localStorage.clear(); localStorage.setItem('telg-test-data','tire'); location.reload(); true"); pg.wait_for_timeout(700)
+    pg.evaluate("localStorage.clear(); localStorage.setItem('telg-test-data','tire'); localStorage.setItem('telg-onboarding', JSON.stringify({done:true,at:Date.now()})); localStorage.setItem('telg-llm-mock','1'); localStorage.setItem('telg-tts-mock','1'); location.reload(); true"); pg.wait_for_timeout(700)
     pg.evaluate("document.getElementById('btn-engine-config').click(); true"); pg.wait_for_timeout(300)
     pg.evaluate("document.querySelector('#engine-modal .s-nav-item[data-mtab=\\'tts\\']').click(); true"); pg.wait_for_timeout(300)
     # 1. Voice Roles 标题与其他设置项标题对齐（x 坐标一致）
@@ -36,9 +36,11 @@ with sync_playwright() as p:
     log('L5 角色每行独立含试听/删除', len(rows)>=2 and all(r['hasTest'] and r['hasDel'] and r['hasSel'] for r in rows), str(rows))
     # 6. 点击试听 → loading 视觉反馈出现
     pg.evaluate("document.querySelectorAll('#voice-roles .btn-role-test')[0].click(); true")
-    pg.wait_for_timeout(120)
     loading = pg.evaluate("document.querySelectorAll('#voice-roles .btn-role-test')[0].classList.contains('loading')")
     pg.wait_for_timeout(1200)
+    for _i in range(30):
+        pg.wait_for_timeout(500)
+        if not pg.evaluate("document.querySelectorAll('#voice-roles .btn-role-test')[0].classList.contains('loading')"): break
     done = not pg.evaluate("document.querySelectorAll('#voice-roles .btn-role-test')[0].classList.contains('loading')")
     cls = pg.evaluate("document.getElementById('tts-test-result').className")
     log('L6 试听点击有 loading 反馈并完成', loading and done and 'ok' in cls, f'loading={loading} done={done} {cls}')

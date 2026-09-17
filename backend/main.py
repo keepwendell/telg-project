@@ -308,6 +308,12 @@ def seed(conn: sqlite3.Connection):
 
 def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
     meta = dict(art["meta"])
+    # v2: structured speakers may ride on the artifact top level; persist them
+    # inside meta so artifact_of can always restore the speaker list.
+    if meta.get("speakers") is None and art.get("speakers"):
+        meta["speakers"] = art["speakers"]
+        if meta.get("speakerCount") is None:
+            meta["speakerCount"] = len(art["speakers"])
     mid = art["id"]
     now = int(time.time())
     conn.execute(
@@ -363,7 +369,9 @@ def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
                (material_id,seq,speaker,role,voice,text_en,text_zh,start_ms,end_ms)
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
-                mid, i, s.get("speaker"), s.get("role"), s.get("voice"),
+                mid, i,
+                s.get("speakerId") or s.get("speaker"),  # v2: stable speakerId; legacy: name
+                s.get("role"), s.get("voice"),
                 s.get("text_en"), s.get("text_zh"),
                 int(st) if st is not None else None,
                 int(en) if en is not None else None,
@@ -415,6 +423,21 @@ def artifact_of(conn: sqlite3.Connection, mid: str) -> dict | None:
         "SELECT * FROM dialogue_segments WHERE material_id = ? ORDER BY seq",
         (mid,),
     ).fetchall()
+    # v2 speakers: prefer the persisted structured list; legacy materials (and
+    # imported artifacts) fall back to deriving speakers from dialogue names.
+    if not meta.get("speakers"):
+        seen: list[dict] = []
+        idx: dict = {}
+        for s in segs:
+            name = s["speaker"] or ""
+            if name and name not in idx:
+                idx[name] = "speaker_%d" % (len(seen) + 1)
+                seen.append({"id": idx[name], "role": s["role"] or name, "voiceTag": "neutral"})
+        if seen:
+            meta["speakers"] = seen
+            meta["speakerCount"] = len(seen)
+            if not meta.get("format"):
+                meta["format"] = "dialogue" if len(seen) > 1 else "solo"
     vocab = conn.execute("SELECT * FROM vocabulary WHERE material_id = ?", (mid,)).fetchall()
     qs = conn.execute(
         "SELECT * FROM listening_questions WHERE material_id = ?", (mid,)
@@ -485,6 +508,16 @@ class GenerateIn(BaseModel):
     topic: str
     domain: str = ""
     domainLabel: str = ""
+    # --- structured conversation format (v2) ---
+    # format: solo (1 speaker, exact-fill) | dialogue (2 speakers, exact-fill;
+    #   asymmetric=True uses lead/respond slots) | discussion (3-5 speakers,
+    #   candidate-pool with speakerCount)
+    format: str = "discussion"
+    asymmetric: bool = False
+    roles: dict = {}               # solo: {"speaker": "..."}; dialogue: {"a","b"} or {"lead","respond"}
+    roleSelection: dict = {}       # discussion: {"candidates": [...], "speakerCount": n}
+    context: str = ""              # free-text scene context (what/where the conversation happens)
+    # --- legacy fields (kept for dev endpoints; new frontend uses v2 fields) ---
     role: str = ""
     scenario: str = ""
     difficulty: int = 3
@@ -495,6 +528,74 @@ class GenerateIn(BaseModel):
     advanced: dict = {}
     llm_config: dict = {}          # {provider, base_url, api_key, model, temperature}
     test_mode: bool = False        # dev-only: use template response instead of a real LLM call
+
+
+# ----------------------------------------------------------------------------
+# Conversation structure primitives (v2)
+#   Structure is a closed enum; context is free text. Role selection mode:
+#     exact-fill    — the user names every speaker (solo / dialogue)
+#     candidate-pool— the user gives a pool + headcount; LLM picks who speaks
+# ----------------------------------------------------------------------------
+FORMATS = {
+    "solo":       {"speakerMode": ("fixed", 1), "roleSelectionMode": "exact-fill"},
+    "dialogue":   {"speakerMode": ("fixed", 2), "roleSelectionMode": "exact-fill", "supportsAsymmetric": True},
+    "discussion": {"speakerMode": ("range", 3, 5), "roleSelectionMode": "candidate-pool"},
+}
+
+
+def request_roles(p: GenerateIn) -> list[str]:
+    """Ordered role names for exact-fill formats; [] for discussion."""
+    fmt = (p.format or "").strip().lower()
+    if fmt == "solo":
+        v = ((p.roles or {}).get("speaker") or p.role or "").strip()
+        return [v] if v else []
+    if fmt == "dialogue":
+        r = p.roles or {}
+        if p.asymmetric:
+            out = []
+            for k in ("lead", "respond"):
+                v = r.get(k, "").strip()
+                if v:
+                    out.append(v)
+            return out
+        out = []
+        for k in ("a", "b"):
+            v = r.get(k, "").strip()
+            if v:
+                out.append(v)
+        if not out:
+            out = [v for v in r.values() if isinstance(v, str) and v.strip()][:2]
+        return out
+    return []
+
+
+def validate_request(p: GenerateIn) -> list[str]:
+    """Pre-flight structure validation — pure code, runs BEFORE any LLM call.
+    Prevents contradictions like "technical presentation + 10 roles"."""
+    errs = []
+    fmt = (p.format or "").strip().lower()
+    spec = FORMATS.get(fmt)
+    if not spec:
+        return ["format 必须为 solo / dialogue / discussion（收到：%r）" % (p.format or "")]
+    if fmt == "solo":
+        if len(request_roles(p)) != 1:
+            errs.append("solo 形态需要恰好 1 个讲者角色（roles.speaker）")
+    elif fmt == "dialogue":
+        roles = request_roles(p)
+        if len(roles) != 2 or not all(x.strip() for x in roles):
+            errs.append("dialogue 形态需要恰好 2 个角色" +
+                        ("（roles.lead / roles.respond）" if p.asymmetric else "（roles.a / roles.b）"))
+    else:  # discussion
+        rs = p.roleSelection or {}
+        cands = rs.get("candidates") or []
+        n = rs.get("speakerCount")
+        if not isinstance(cands, list) or len(cands) < 1:
+            errs.append("discussion 形态需要候选角色列表 roleSelection.candidates")
+        if not isinstance(n, int) or not (3 <= n <= 5):
+            errs.append("discussion 出场人数 speakerCount 必须在 3–5")
+        elif isinstance(cands, list) and len(cands) < n:
+            errs.append("候选角色数量（%d）少于要求出场人数（%d）" % (len(cands), n))
+    return errs
 
 
 class PatchMaterialIn(BaseModel):
@@ -558,13 +659,17 @@ def parse_sec(l: str) -> int | None:
     return int(l) if m else None
 
 
+TEMPLATE_SPEAKERS = [
+    {"id": "speaker_1", "role": "System Lead", "voiceTag": "lead"},
+    {"id": "speaker_2", "role": "Controls Engineer", "voiceTag": "respond"},
+]
 TEMPLATE_DIALOGUE = [
-    {"speaker": "Alex", "role": "System Lead", "text_en": "Let's walk through the current {topic} baseline and see where the margin is.", "text_zh": "我们先过一遍当前 {topic} 的基线，看看裕度在哪里。"},
-    {"speaker": "Priya", "role": "Controls", "text_en": "The key constraint is response time — we only have a narrow window before the condition escalates.", "text_zh": "关键约束是响应时间——在状况恶化之前，我们只有很窄的时间窗口。"},
-    {"speaker": "Alex", "role": "System Lead", "text_en": "Right. So the compensation logic should trigger from the sensor estimate, not wait for the effect to show up.", "text_zh": "对。所以补偿逻辑应基于传感器估计触发，而不是等效应显现出来。"},
-    {"speaker": "Priya", "role": "Controls", "text_en": "Agreed, but we still need to verify it under the worst-case load, including degraded sensor quality.", "text_zh": "同意，但我们仍要在最恶劣工况下验证，包括传感器质量退化的情况。"},
-    {"speaker": "Alex", "role": "System Lead", "text_en": "Then we close the loop with a conservative calibration and validate it on the HIL bench this week.", "text_zh": "那我们就用保守标定闭环，本周在 HIL 台架上做验证。"},
-    {"speaker": "Priya", "role": "Controls", "text_en": "Sounds good. Let's track the margin over time and review it again at the next design review.", "text_zh": "可以。我们持续跟踪裕度变化，下次设计评审再回顾一次。"},
+    {"speakerId": "speaker_1", "text_en": "Let's walk through the current {topic} baseline and see where the margin is.", "text_zh": "我们先过一遍当前 {topic} 的基线，看看裕度在哪里。"},
+    {"speakerId": "speaker_2", "text_en": "The key constraint is response time — we only have a narrow window before the condition escalates.", "text_zh": "关键约束是响应时间——在状况恶化之前，我们只有很窄的时间窗口。"},
+    {"speakerId": "speaker_1", "text_en": "Right. So the compensation logic should trigger from the sensor estimate, not wait for the effect to show up.", "text_zh": "对。所以补偿逻辑应基于传感器估计触发，而不是等效应显现出来。"},
+    {"speakerId": "speaker_2", "text_en": "Agreed, but we still need to verify it under the worst-case load, including degraded sensor quality.", "text_zh": "同意，但我们仍要在最恶劣工况下验证，包括传感器质量退化的情况。"},
+    {"speakerId": "speaker_1", "text_en": "Then we close the loop with a conservative calibration and validate it on the HIL bench this week.", "text_zh": "那我们就用保守标定闭环，本周在 HIL 台架上做验证。"},
+    {"speakerId": "speaker_2", "text_en": "Sounds good. Let's track the margin over time and review it again at the next design review.", "text_zh": "可以。我们持续跟踪裕度变化，下次设计评审再回顾一次。"},
 ]
 TEMPLATE_VOCAB = [
     {"en": "response time", "zh": "响应时间", "symbol": "t_resp", "def": "Time from event onset to actuator response, a key control margin factor."},
@@ -631,9 +736,61 @@ def mock_generate(p: GenerateIn) -> dict:
     art["meta"]["title"] = p.topic or base["meta"]["title"]
     art["meta"]["topic"] = p.topic or base["meta"]["topic"]
     art["meta"]["domain"] = p.domainLabel or base["meta"]["domain"]
-    art["meta"]["role"] = p.role or base["meta"]["role"]
-    art["meta"]["scenario"] = p.scenario or base["meta"]["scenario"]
-    art["meta"]["dialogue_type"] = re.sub(r"[^a-z]+", "_", (p.scenario or "").lower())
+    art["meta"]["scenario"] = p.context or base["meta"]["scenario"]
+    art["meta"]["context"] = p.context or ""
+    # v2 structured speakers: derive from the request format
+    fmt = (p.format or "discussion").strip().lower()
+    art["meta"]["format"] = fmt
+    art["meta"]["asymmetric"] = bool(p.asymmetric)
+    # Normalize dialogue lines to speakerId (seed rows carry legacy "speaker" names).
+    mapping: dict = {}
+    for d in art["dialogue"]:
+        key = d.get("speakerId") or d.get("speaker") or "speaker_1"
+        if key not in mapping:
+            mapping[key] = "speaker_%d" % (len(mapping) + 1)
+    for d in art["dialogue"]:
+        key = d.get("speakerId") or d.get("speaker") or "speaker_1"
+        d["speakerId"] = mapping[key]
+        d.pop("speaker", None)
+    if fmt == "solo":
+        role = request_roles(p)
+        art["speakers"] = [{"id": "speaker_1", "role": role[0] if role else "Technical Presenter", "voiceTag": "neutral"}]
+        art["dialogue"] = [{**d, "speakerId": "speaker_1"} for d in art["dialogue"]]
+        art["meta"]["speakerCount"] = 1
+    elif fmt == "dialogue":
+        roles = request_roles(p)
+        if p.asymmetric and len(roles) == 2:
+            art["speakers"] = [
+                {"id": "speaker_1", "role": roles[0], "voiceTag": "lead"},
+                {"id": "speaker_2", "role": roles[1], "voiceTag": "respond"},
+            ]
+        else:
+            while len(roles) < 2:
+                roles.append("Engineer %d" % (len(roles) + 1))
+            art["speakers"] = [
+                {"id": "speaker_1", "role": roles[0], "voiceTag": "lead"},
+                {"id": "speaker_2", "role": roles[1], "voiceTag": "respond"},
+            ]
+        art["dialogue"] = [
+            {**d, "speakerId": "speaker_1" if i % 2 == 0 else "speaker_2"}
+            for i, d in enumerate(art["dialogue"])
+        ]
+        art["meta"]["speakerCount"] = 2
+    else:
+        rs = p.roleSelection or {}
+        cands = [c for c in (rs.get("candidates") or []) if isinstance(c, str) and c.strip()]
+        n = int(rs.get("speakerCount") or min(3, len(cands) or 3))
+        n = max(1, min(n, len(cands) or 1))
+        art["speakers"] = [
+            {"id": "speaker_%d" % (i + 1), "role": cands[i], "voiceTag": "neutral"}
+            for i in range(n)
+        ]
+        art["dialogue"] = [
+            {**d, "speakerId": "speaker_%d" % (i % n + 1)} for i, d in enumerate(art["dialogue"])
+        ]
+        art["meta"]["speakerCount"] = n
+    art["meta"]["speakers"] = art["speakers"]
+    art["meta"]["dialogue_type"] = fmt
     art["meta"]["difficulty"] = "Level " + str(p.difficulty)
     art["meta"]["length"] = p.length
     sec = parse_sec(p.length)
@@ -707,13 +864,16 @@ LLM_SYSTEM_PROMPT = """你是 TELG 技术英语听力素材生成引擎，为研
   "background": {
     "technical_background": "英文：该主题工程背景，2-3 句",
     "technical_principle": "英文：核心技术原理，2-3 句，可含公式符号如 C_alpha",
-    "engineering_scenario": "英文：这段对话发生在什么工作场景，1-2 句",
+    "engineering_scenario": "英文：这段内容发生在什么工作场景，1-2 句",
     "technical_background_zh": "上述工程背景的中文翻译",
     "technical_principle_zh": "上述技术原理的中文翻译",
     "engineering_scenario_zh": "上述工作场景的中文翻译"
   },
+  "speakers": [
+    {"id": "speaker_1", "role": "说话人的具体角色名（如 Sales Consultant / Calibration Engineer / Interviewer）", "voiceTag": "lead | respond | neutral"}
+  ],
   "dialogue": [
-    {"speaker": "说话人标识（真实人名或岗位名，如 \"Alex Chen\" / \"Supplier QA Manager\"，严禁 Engineer A 式占位）", "role": "职场角色/职位（如 Vehicle Dynamics Engineer）", "text_en": "英文台词", "text_zh": "对应中文翻译"}
+    {"speakerId": "speaker_1（必须属于 speakers[].id）", "text_en": "英文台词", "text_zh": "对应中文翻译"}
   ],
   "vocabulary": [
     {"en": "英文术语", "zh": "标准译法", "symbol": "符号，无则空串", "def": "英文释义"}
@@ -727,6 +887,8 @@ LLM_SYSTEM_PROMPT = """你是 TELG 技术英语听力素材生成引擎，为研
      "title_zh": "句型名的中文翻译", "pattern_zh": "句式模板的中文翻译", "example_zh": "例句的中文翻译"}
   ]
 }
+- speakers[].id 必须是稳定的 speaker_1 / speaker_2 / … 标识；dialogue 每句的 speakerId 必须指向 speakers 中已声明的 id。严禁 dialogue 中出现 speakers 之外的说话人。
+- 说话人数量、角色、出场方式由用户消息中的「形态」（solo / dialogue / discussion）约束决定，必须严格遵守。
 - dialogue 元素中不得出现 start_ms/end_ms/voice 等字段。
 
 ## 质量红线（按优先级排序，违反前者比违反后者更严重）
@@ -735,15 +897,15 @@ LLM_SYSTEM_PROMPT = """你是 TELG 技术英语听力素材生成引擎，为研
 3. 信息密度：每句都要携带具体信息（数值、时序、参数、权衡、因果），删除所有空泛寒暄。
 - text_en 必须是地道工程英语口语；text_zh 是 text_en 的准确中文翻译，工程术语用标准译法。
 
-## 对话结构（严格遵守）
-- 单人技术讲解/汇报场景（Scenario 为 Single Technical Deep-Dive、Technical Presentation 等）：dialogue 只包含 1 个 speaker，role 为该场景角色，全程一人连贯讲解，可带少量自问自答，但不得出现第二个人名或 Interviewer/Candidate 角色。
-- 技术面试场景（Scenario 含 Interview）：dialogue 恰好 2 个 speaker，role 分别为 Interviewer 与 Candidate，一问一答。
-- 其余场景：dialogue 的 speaker 数量与角色由用户消息中的"广度"约束决定。
+## 对话结构（由用户消息中的「形态」决定，严格遵守）
+- solo（单人讲解/演讲/课程）：speakers 恰好 1 人，全程一人连贯讲解，可带少量自问自答，但不得出现第二个说话人。
+- dialogue 对称：speakers 恰好 2 人，双方对等交流，围绕焦点来回推进。
+- dialogue 不对称（用户消息指定 lead/respond）：speakers 恰好 2 人，lead 角色主动开场、掌控话题节奏与提问，respond 角色回应并可反问；lead 话轮占比应明显高于 respond。
+- discussion：speakers 的数量与角色按用户消息从候选池中挑选，不得使用候选池之外的角色，围绕同一焦点多轮交锋。
 
 ## 角色命名（硬约束）
-- 每个 speaker 使用真实感的人名（如 Alex、Priya、Dana、Marcus）或具体岗位名（如 Powertrain Lead、Supplier QA Manager、Calibration Engineer）；严禁 "Engineer A"、"Speaker 1" 等占位式命名。
-- role 字段给出该说话人的职场角色/职位，与 speaker 互补（人名 + 职位），同一说话人全部台词中的 speaker 拼写必须一致。
-- 单人讲解场景：speaker 用一个贯穿全程的人名或岗位名（如 Dana 或 Field Service Engineer），role 为该场景角色。
+- speakers[].role 使用具体、真实的角色名（如 "4S店销售顾问"、"Calibration Engineer"、"Supplier QA Manager"、"Interviewer"）；严禁 "Engineer A"、"Speaker 1" 式占位。
+- 同一角色全部台词使用完全一致的 speakerId，拼写不得漂移。
 
 请直接输出 JSON。"""
 
@@ -759,15 +921,51 @@ def build_user_prompt(p: GenerateIn, action: str = "generate") -> str:
     target_words = LENGTH_WORDS.get(sec, 290)
     turns = max(4, round(target_words / 38))  # ~38 词/轮 → 轮数，避免篇幅与时长脱节
     domain = p.domainLabel or p.domain or "Engineering"
+    fmt = (p.format or "discussion").strip().lower()
+
+    # --- format-specific role/structure lines ---
+    if fmt == "solo":
+        roles = request_roles(p)
+        struct = [
+            "- 形态：单人讲解独白（solo），全程 1 位讲者",
+            "- 讲者角色：" + (roles[0] if roles else "领域工程师"),
+        ]
+    elif fmt == "dialogue":
+        roles = request_roles(p)
+        if p.asymmetric and len(roles) == 2:
+            struct = [
+                "- 形态：双人不对称对话（dialogue，一方主导）",
+                "- 主导方 lead：" + roles[0] + "（主动开场、掌控话题节奏与提问）",
+                "- 应答方 respond：" + roles[1] + "（回应并可反问）",
+            ]
+        else:
+            while len(roles) < 2:
+                roles.append("Engineer %d" % (len(roles) + 1))
+            struct = [
+                "- 形态：双人平等对话（dialogue，对称）",
+                "- 角色：" + roles[0] + " 与 " + roles[1] + "（双方对等交流）",
+            ]
+    else:  # discussion
+        rs = p.roleSelection or {}
+        cands = [c for c in (rs.get("candidates") or []) if isinstance(c, str) and c.strip()]
+        n = int(rs.get("speakerCount") or 3)
+        n = max(1, min(n, len(cands) or 1))
+        struct = [
+            "- 形态：多人讨论（discussion），出场 " + str(n) + " 人",
+            "- 候选角色：" + ("、".join(cands) if cands else "领域工程师"),
+            "- 请从候选角色中挑选最贴合语境的 " + str(n) + " 位出场，不得使用候选池之外的角色",
+        ]
 
     lines = [
-        "请生成一套可直接用于听力训练的技术英语素材（英文对话 + 中文翻译）。",
+        "请生成一套可直接用于听力训练的技术英语素材（英文内容 + 中文翻译）。",
         "",
         "## 本次任务",
         "- 主题：" + (p.topic or ""),
         "- 领域：" + domain + "（必须符合该领域研发工程师的真实语境与术语惯例）",
-        "- 角色：" + (p.role or "领域工程师"),
-        "- 场景：" + (p.scenario or "Technical Discussion"),
+    ]
+    lines += struct
+    lines += [
+        "- 场景语境：" + (p.context or "通用专业场景"),
         "- 语气：" + TONE_DEFS.get(tone, TONE_DEFS["neutral"]),
         "",
         "## 生成约束",
@@ -777,9 +975,9 @@ def build_user_prompt(p: GenerateIn, action: str = "generate") -> str:
         "- 时长 " + str(p.length) + " 秒，目标总词数约 " + str(target_words) + " 词（约 " + str(turns) + " 轮对话，宁精勿灌水）",
         "- 特殊要求：" + (advanced.get("injections") or "无"),
         "",
-        "## 对话看点",
+        "## 内容看点",
         "请根据主题自行确定一个最有价值的讨论焦点（如某参数/方案的权衡、一次故障排查、一场评审分歧），"
-        "让对话围绕该焦点自然展开、有张力；不要平铺直叙地罗列知识点。",
+        "让内容围绕该焦点自然展开、有张力；不要平铺直叙地罗列知识点。",
     ]
     if action == "regenerate":
         lines.insert(1, "（本次为重新生成：请更换切入角度或结构，内容与上一版不雷同，质量更优。）")
@@ -790,8 +988,17 @@ def build_user_prompt(p: GenerateIn, action: str = "generate") -> str:
 from pydantic import BaseModel as _BM, Field as _F  # noqa: E402
 
 
+class LLMSpeaker(_BM):
+    id: str
+    role: str
+    voiceTag: str = "neutral"
+
+
 class LLMDialogue(_BM):
-    speaker: str
+    # v2: speakerId is the stable foreign key; legacy speaker/role are accepted
+    # so a model that falls back to the old shape is still salvageable.
+    speakerId: str = ""
+    speaker: str = ""
     role: str = ""
     text_en: str
     text_zh: str
@@ -825,14 +1032,77 @@ class LLMPattern(_BM):
 
 class LLMArtifact(_BM):
     background: LLMBackground
+    speakers: list[LLMSpeaker] = []
     dialogue: list[LLMDialogue]
     vocabulary: list[LLMVocab]
     listening_questions: list[LLMQuestion]
     core_sentence_patterns: list[LLMPattern]
 
 
-def validate_extra(art: LLMArtifact, p: GenerateIn) -> None:
+def _norm_role(s: str) -> str:
+    """Normalize a role name for loose matching (LLMs may rephrase slightly)."""
+    return re.sub(r"\s+", "", (s or "").strip().lower())
+
+
+def _ensure_speakers(art: LLMArtifact) -> None:
+    """Derive speakers from dialogue lines when the model did not emit them
+    (legacy output shape). Mutates art.speakers in place."""
+    if art.speakers:
+        return
+    seen: list[LLMSpeaker] = []
+    idx: dict = {}
+    for d in art.dialogue:
+        key = (d.speakerId or d.speaker or "speaker_1").strip() or "speaker_1"
+        if key not in idx:
+            idx[key] = "speaker_%d" % (len(seen) + 1)
+            seen.append(LLMSpeaker(id=idx[key], role=d.role or key, voiceTag="neutral"))
+    art.speakers = seen
+
+
+def validate_artifact(art: LLMArtifact, p: GenerateIn) -> None:
     errs = []
+    fmt = (p.format or "discussion").strip().lower()
+    spec = FORMATS.get(fmt, FORMATS["discussion"])
+    _ensure_speakers(art)
+    # 1. headcount vs format
+    n = len(art.speakers)
+    mode = spec["speakerMode"]
+    if mode[0] == "fixed" and n != mode[1]:
+        errs.append("出场人数应为 %d，实际 %d" % (mode[1], n))
+    elif mode[0] == "range" and not (mode[1] <= n <= mode[2]):
+        errs.append("出场人数应在 [%d, %d]，实际 %d" % (mode[1], mode[2], n))
+    # 2. role provenance
+    if spec["roleSelectionMode"] == "exact-fill":
+        wanted = [_norm_role(r) for r in request_roles(p)]
+        for sp in art.speakers:
+            if _norm_role(sp.role) not in wanted:
+                errs.append("出场角色「%s」不在指定填槽中" % sp.role)
+    else:
+        cands = {_norm_role(c) for c in ((p.roleSelection or {}).get("candidates") or [])}
+        for sp in art.speakers:
+            if sp.role and _norm_role(sp.role) not in cands:
+                errs.append("出场角色「%s」不在候选池中" % sp.role)
+    # 3. speakerId consistency
+    ids = {sp.id for sp in art.speakers}
+    if len(ids) != len(art.speakers):
+        errs.append("speakers 存在重复 id")
+    for i, d in enumerate(art.dialogue):
+        sid = d.speakerId or d.speaker
+        if not sid:
+            errs.append("dialogue[%d] 缺少 speakerId" % i)
+        elif sid not in ids:
+            errs.append("dialogue[%d] 引用了未声明的 speakerId: %s" % (i, sid))
+    # 4. asymmetric dialogue: lead opens and holds a fair share of turns
+    if fmt == "dialogue" and p.asymmetric:
+        lead_id = next((sp.id for sp in art.speakers if sp.voiceTag == "lead"), None)
+        valid_lines = [d for d in art.dialogue if (d.speakerId or d.speaker) in ids]
+        if lead_id:
+            lead_lines = sum(1 for d in valid_lines if (d.speakerId or d.speaker) == lead_id)
+            if valid_lines and (valid_lines[0].speakerId or valid_lines[0].speaker) != lead_id:
+                errs.append("不对称对话未由 lead 角色开场")
+            if lead_lines < len(valid_lines) * 0.3:
+                errs.append("lead 角色话轮占比过低（%d/%d）" % (lead_lines, len(valid_lines)))
+    # --- quality guards (unchanged) ---
     target_words = LENGTH_WORDS.get(parse_sec(p.length) or 120, 290)
     total_words = sum(len(re.findall(r"[a-zA-Z']+", s.text_en)) for s in art.dialogue)
     if total_words > target_words * 3:
@@ -913,7 +1183,7 @@ def call_llm_with_retry(p: GenerateIn, action: str = "generate") -> dict:
             raw = (resp.choices[0].message.content or "").strip()
             data = json.loads(raw)
             art = LLMArtifact.model_validate(data)
-            validate_extra(art, p)
+            validate_artifact(art, p)
             _record_usage(cfg, action, last_usage)
             return art.model_dump(by_alias=True)
         except Exception as e:  # noqa: BLE001
@@ -958,6 +1228,10 @@ def health():
 
 
 def build_artifact(p: GenerateIn, action: str = "generate") -> dict:
+    # Pre-flight structure validation — pure code, no LLM involved.
+    pre_errs = validate_request(p)
+    if pre_errs:
+        raise HTTPException(422, detail="; ".join(pre_errs))
     # Build a Generation Artifact from the real LLM (no DB writes).
     if p.test_mode or os.environ.get("TELG_MOCK_LLM") == "1":
         return mock_generate(p)
@@ -967,13 +1241,18 @@ def build_artifact(p: GenerateIn, action: str = "generate") -> dict:
         raise HTTPException(502, detail=str(e))  # noqa: B904
     sec = parse_sec(p.length) or 120
     total_ms = sec * 1000
+    fmt = (p.format or "discussion").strip().lower()
+    speakers = payload.get("speakers") or []
     # No estimated timestamps here: start_ms/end_ms are written only by the
     # TTS pass (real durations + gap). The timeline stays authoritative.
     meta = {
         "title": p.topic or "Untitled", "topic": p.topic or "Untitled",
-        "domain": p.domainLabel or p.domain or "Engineering", "role": p.role or "",
-        "scenario": p.scenario or "Technical Discussion",
-        "dialogue_type": re.sub(r"[^a-z]+", "_", (p.scenario or "").lower()),
+        "domain": p.domainLabel or p.domain or "Engineering",
+        "format": fmt, "asymmetric": bool(p.asymmetric),
+        "speakerCount": len(speakers), "speakers": speakers,
+        "context": p.context or "",
+        "scenario": (p.context or "")[:120],
+        "dialogue_type": fmt,
         "difficulty": "Level " + str(p.difficulty), "length": p.length,
         "llm_provider": "DeepSeek" if not (p.llm_config or {}).get("provider") else (p.llm_config or {}).get("provider"),
         "tts_provider": "edge-tts", "voice": "en-US-GuyNeural + en-US-JennyNeural",
@@ -988,6 +1267,7 @@ def build_artifact(p: GenerateIn, action: str = "generate") -> dict:
         "id": "gen-" + str(int(time.time() * 1000)),
         "meta": meta,
         "background": payload["background"],
+        "speakers": speakers,
         "dialogue": payload["dialogue"],
         "vocabulary": payload["vocabulary"],
         "listening_questions": payload["listening_questions"],
@@ -1352,11 +1632,31 @@ async def synthesize(mid: str, body: SynthIn | None = None):
         conn.close()
         raise HTTPException(502, "TTS synthesis failed [model_missing]: %s" % e)
     try:
+        # Speaker -> voice assignment: one voice per speaker so every line of
+        # the same person sounds identical. lead -> first voice, respond ->
+        # second (when available), remaining speakers cycle through the list.
+        spk_voices: dict = {}
+        speakers = meta.get("speakers") or []
+        if speakers:
+            for idx, sp in enumerate(speakers):
+                sid = str(sp.get("id") or "")
+                if not sid:
+                    continue
+                vt = sp.get("voiceTag") or "neutral"
+                vi = 1 if (vt == "respond" and len(vs) > 1) else (0 if vt == "lead" else idx)
+                spk_voices[sid] = vs[vi % len(vs)]
+        else:  # legacy materials: assign by first-appearance order of speaker names
+            order: list = []
+            for s in segs:
+                if s["speaker"] and s["speaker"] not in order:
+                    order.append(s["speaker"])
+            for i, name in enumerate(order):
+                spk_voices[name] = vs[i % len(vs)]
         times = []
         start = 0
         for i, seg in enumerate(segs):
             text = (seg["text_en"] or "").strip() or "…"
-            voice = vs[i % len(vs)]
+            voice = spk_voices.get(seg["speaker"]) or vs[i % len(vs)]
             # each sentence is normalized to 24k mono WAV so duration is
             # sample-exact and the merge pass sees one consistent format
             wav_path = STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i))
@@ -1640,8 +1940,9 @@ def test_generate(c: TestLLMIn):
     p = GenerateIn(
         topic="Tire Burst Stability Control",
         domain="automotive", domainLabel="Automotive Engineering",
-        role="Vehicle Dynamics Engineer",
-        scenario="Technical Discussion & Trade-off",
+        format="dialogue", asymmetric=True,
+        roles={"lead": "Vehicle Dynamics Lead", "respond": "Controls Engineer"},
+        context="Design review trade-off on burst-tire stability compensation: response time vs calibration conservatism",
         difficulty=3, length="120",
         advanced={"depth": 3, "breadth": 2, "tone": "neutral", "injections": "Stress lateral acceleration and yaw moment feedback"},
         llm_config={"base_url": c.base_url, "api_key": c.api_key, "model": c.model, "temperature": c.temperature},
