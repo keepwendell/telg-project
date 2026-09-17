@@ -3620,7 +3620,7 @@ function initGate() {
   state.user = AuthAPI.current();
   refreshAboutAccount();
   const ob = readOnboarding();
-  if (!state.user || !ob.done) {
+  if (!ob.done) {
     /* Onboarding (welcome + setup) lives in its own file — same localStorage. */
     try { location.replace('onboarding.html'); } catch (e) {}
     return;
