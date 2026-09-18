@@ -4485,10 +4485,10 @@ function toggleBookmark(idx) {
     if (btn) btn.classList.remove('active');
     showToast(I18N[state.lang]['bm.removed']);
   } else {
-    state.bookmarks.unshift({ mid: art.id, title: art.meta.title, idx: idx, speaker: s.speaker, text: s.text_en, time: s.start_ms, ts: Date.now() });
+    state.bookmarks.unshift({ mid: art.id, title: art.meta.title, idx: idx, speaker: s.speakerId || s.speaker, text: s.text_en, time: s.start_ms, ts: Date.now() });
     persistBookmarks();
     if (btn) btn.classList.add('active');
-    showToast(I18N[state.lang]['bm.added'] + (s.speaker || ''));
+    showToast(I18N[state.lang]['bm.added'] + (s.speakerId || s.speaker || ''));
   }
 }
 function removeBookmark(ts) {
@@ -4849,7 +4849,7 @@ function transcriptHTML(art) {
       '<div class="trow-head">' +
         '<div class="trow-id">' +
           '<span class="speaker-dot" style="background:' + c + '"></span>' +
-          '<span class="speaker-name">' + escapeHtml(speakerDisplay(art, s.speaker)) + '</span>' +
+          '<span class="speaker-name">' + escapeHtml(speakerDisplay(art, s.speakerId || s.speaker)) + '</span>' +
           '<span class="speaker-role">' + escapeHtml(s.role || '') + '</span>' +
           '<span class="playing-flag" data-flag="1"><span class="dot"></span>Playing</span>' +
         '</div>' +
@@ -5439,7 +5439,11 @@ function openTTSModal() {
         return { name: r.role ? r.name + ' · ' + r.role : r.name, voice: v };
       }));
     } else {
-      renderAdjustVoiceRoles(sanitizeRolesForProvider(cur.length ? cur : null, prov));
+      /* Saved voiceRoles carry name+voice and must win over the raw voice
+         string list — rebuilding from cur alone collapses names back to
+         "Speaker A/B". */
+      const pre = (saved && saved.length) ? saved : (cur.length ? cur : null);
+      renderAdjustVoiceRoles(sanitizeRolesForProvider(pre, prov));
     }
   });
   const ready = art.meta.audioReady === false;
@@ -5453,7 +5457,7 @@ function dialogueRoleNames(art) {
   const sps = (art.meta && Array.isArray(art.meta.speakers)) ? art.meta.speakers : [];
   const seen = [];
   (art.dialogue || []).forEach(d => {
-    const raw = String(d.speaker || '').trim();
+    const raw = String(d.speakerId || d.speaker || '').trim();
     if (!raw) return;
     let name = raw;
     let role = String(d.role || '').trim();
@@ -5634,7 +5638,7 @@ function exportMD(art) {
     '## Technical Principle', art.background.technical_principle, '',
     '## Engineering Scenario', art.background.engineering_scenario, '',
     '## Transcript');
-  art.dialogue.forEach(s => L.push('**' + s.speaker + '** (' + (s.start_ms != null && !Number.isNaN(Number(s.start_ms)) ? fmt(s.start_ms) + '–' + fmt(s.end_ms) : 'no timeline yet') + '): ' + s.text_en));
+  art.dialogue.forEach(s => L.push('**' + (s.speakerId || s.speaker) + '** (' + (s.start_ms != null && !Number.isNaN(Number(s.start_ms)) ? fmt(s.start_ms) + '–' + fmt(s.end_ms) : 'no timeline yet') + '): ' + s.text_en));
   L.push('', '## Vocabulary');
   art.vocabulary.forEach(v => L.push('- **' + v.en + '** (' + v.symbol + ') ' + v.zh + ' — ' + v.def));
   L.push('', '## Listening Questions');

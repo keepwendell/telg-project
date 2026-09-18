@@ -1094,6 +1094,9 @@ class LLMBackground(_BM):
     technical_background: str
     technical_principle: str
     engineering_scenario: str
+    technical_background_zh: str = ""
+    technical_principle_zh: str = ""
+    engineering_scenario_zh: str = ""
 
 
 class LLMVocab(_BM):
@@ -1108,12 +1111,18 @@ class LLMQuestion(_BM):
     options: list[str]
     answer: str
     explain: str
+    q_zh: str = ""
+    options_zh: list[str] = []
+    explain_zh: str = ""
 
 
 class LLMPattern(_BM):
     title: str
     pattern: str
     example: str
+    title_zh: str = ""
+    pattern_zh: str = ""
+    example_zh: str = ""
 
 
 class LLMArtifact(_BM):
