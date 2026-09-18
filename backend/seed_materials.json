@@ -122,7 +122,7 @@
           "Its intervention was far too delayed for the instant rolling resistance spike.",
           "The steering angle sensor lost its calibration frame."
         ],
-        "answer": 1,
+        "answer": "Its intervention was far too delayed for the instant rolling resistance spike.",
         "explain": "Segment 00:00 — Alex stresses the baseline ESC was \"far too sluggish to counteract the immediate rolling resistance spike.\"",
         "q_zh": "为什么基线ESC在爆胎事件中反应过慢？",
         "options_zh": [
@@ -139,7 +139,7 @@
           "Use wheel speed variance and estimated burst drag force in the target yaw rate calculation.",
           "Disconnect the electric powertrain immediately."
         ],
-        "answer": 1,
+        "answer": "Use wheel speed variance and estimated burst drag force in the target yaw rate calculation.",
         "explain": "Segment 00:32 — \"calibrate the feedforward compensator based on wheel speed variance and the direct estimated burst drag force...\"",
         "q_zh": "Priya对前馈补偿器提出了什么建议？",
         "options_zh": [
@@ -280,7 +280,7 @@
           "The transceiver waking up before the oscillator stabilizes",
           "A baud rate mismatch between nodes"
         ],
-        "answer": 1,
+        "answer": "The transceiver waking up before the oscillator stabilizes",
         "explain": "Segment 00:09 — Priya hypothesizes: \"Could be the transceiver waking up before the oscillator has stabilized.\"",
         "q_zh": "冷启动帧丢失的主要嫌疑是什么？",
         "options_zh": [
@@ -289,6 +289,25 @@
           "节点间波特率不匹配"
         ],
         "explain_zh": "片段00:09——Priya推测：“可能是收发器在振荡器稳定之前提前唤醒了。”"
+      },
+      {
+        "q": "What is the measured bit-error rate compared to?",
+        "options": [
+          "The company quality target",
+          "The CAN FD theoretical limit",
+          "The supplier datasheet value",
+          "The previous quarter average"
+        ],
+        "answer": "The company quality target",
+        "explain": "Alex: 'Around one point four times ten to the minus four, which is well above our threshold.'",
+        "q_zh": "测得的误码率与什么比较？",
+        "options_zh": [
+          "公司质量目标",
+          "CAN FD 理论极限",
+          "供应商数据手册值",
+          "上一季度平均值"
+        ],
+        "explain_zh": "Alex：'约为 1.4×10⁻⁴，远高于我们的阈值。'"
       }
     ],
     "core_sentence_patterns": [
@@ -423,7 +442,7 @@
           "On the estimated friction coefficient and the steering rate",
           "Only after ABS activates"
         ],
-        "answer": 1,
+        "answer": "On the estimated friction coefficient and the steering rate",
         "explain": "Segment 00:33 — Priya: \"we gate the intervention on the estimated friction coefficient and the steering rate, not just the yaw error alone.\"",
         "q_zh": "扭矩偏置干预应在何时被门控？",
         "options_zh": [
@@ -432,6 +451,25 @@
           "仅在ABS激活之后"
         ],
         "explain_zh": "片段00:33——Priya：“我们根据估计的摩擦系数和转向速率门控干预，而不仅仅依据横摆误差。”"
+      },
+      {
+        "q": "What risk does biasing torque too early create?",
+        "options": [
+          "The front axle exceeds its slip limit",
+          "Longitudinal traction is traded for yaw response",
+          "The differential overheats",
+          "The ESC calibration is reset"
+        ],
+        "answer": "Longitudinal traction is traded for yaw response",
+        "explain": "Alex: 'if we shift too early, we trade longitudinal traction for yaw response, and the driver feels the nose tuck in.'",
+        "q_zh": "过早偏置扭矩会带来什么风险？",
+        "options_zh": [
+          "前轴超过滑移极限",
+          "牺牲纵向牵引换取横摆响应",
+          "差速器过热",
+          "ESC 标定被重置"
+        ],
+        "explain_zh": "Alex：'如果转移过早，我们就会用纵向牵引换取横摆响应，驾驶员会感到车头下沉。'"
       }
     ],
     "core_sentence_patterns": [

@@ -1,5 +1,7 @@
 # TELG API 契约（API Contract）
 
+> ⚠️ 本文档为早期版本；LLM 链路相关字段已按 **v2.0 设计说明书**（`docs/设计/design-prompt链路设计说明书.md`）适配更新，冲突处以该说明书为准。
+>
 > 前端与后端通过 `/api/v1/*` 通信。同源部署（FastAPI 托管前端静态文件），无跨域问题。
 > 前端默认走真实后端；仅当「开发者模式 → 测试数据」启用固定数据集时，LLM 用模板消息返回、TTS 走 mock，不触网。
 
@@ -19,17 +21,20 @@
 
 ```json
 {
-  "topic": "Tire Burst Stability Control",
   "domain": "automotive", "domainLabel": "Automotive Engineering",
-  "role": "Vehicle Dynamics Engineer",
-  "scenario": "Technical Discussion & Trade-off",
+  "format": "dialogue",
+  "roles": { "a": "Vehicle Dynamics Lead", "b": "Controls Engineer" },
+  "context": "Design review on burst-tire compensation: response time vs calibration conservatism",
   "difficulty": 3, "length": "120",
   "advanced": {
-    "depth": 3, "breadth": 3, "vocabDensity": 28,
-    "tone": "neutral", "injections": "Stress lateral acceleration..."
+    "depth": 3, "injections": "Focus on yaw moment feedback", "directions": []
   },
   "llm_config": { "base_url": "...", "api_key": "...", "model": "...", "temperature": 0.7 }
 }
+
+> v2 变更：`topic / role / scenario / asymmetric / advanced.breadth / advanced.tone / advanced.vocabDensity / advanced.style` 已删除（`topic` 由 `context` 取代）；
+> `advanced.depth` = 句式复杂度（SYNTAX_COMPLEXITY_DEFS），`difficulty` = 词汇专业度（VOCAB_PROFICIENCY_DEFS）；
+> `discussion` 形态用 `roleSelection.candidates`（不带 speakerCount，出场人数由模型决定）。
 ```
 
 > 注：`llm_config` 仅随单次请求发送用于生成，**不持久化**；真实部署时由服务端 `.env` 管理。

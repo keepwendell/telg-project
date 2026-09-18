@@ -37,7 +37,8 @@ from openai import OpenAI
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
+from typing import Literal, Optional
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
@@ -504,30 +505,45 @@ def update_meta_json(conn: sqlite3.Connection, mid: str, patch: dict):
 # ----------------------------------------------------------------------------
 # Models
 # ----------------------------------------------------------------------------
+class Advanced(BaseModel):
+    """v2: typed advanced settings — depth = UI 句式复杂度, injections, directions."""
+    depth: int = 3                    # UI: 句式复杂度（SYNTAX_COMPLEXITY_DEFS）
+    injections: str = ""
+    directions: list[str] = []
+
+
+def _adv_dict(a) -> dict:
+    """Normalize Advanced (pydantic) or legacy dict into a plain dict."""
+    if isinstance(a, Advanced):
+        return {"depth": a.depth, "injections": a.injections, "directions": a.directions}
+    return a if isinstance(a, dict) else {}
+
+
 class GenerateIn(BaseModel):
-    topic: str
+    topic: Optional[str] = None    # 已由 context 取代（P2-3 去重）；保留兼容旧调用
     domain: str = ""
     domainLabel: str = ""
     # --- structured conversation format (v2) ---
-    # format: solo (1 speaker, exact-fill) | dialogue (2 speakers, exact-fill;
-    #   asymmetric=True uses lead/respond slots) | discussion (3-5 speakers,
-    #   candidate-pool with speakerCount)
-    format: str = "discussion"
-    asymmetric: bool = False
-    roles: dict = {}               # solo: {"speaker": "..."}; dialogue: {"a","b"} or {"lead","respond"}
-    roleSelection: dict = {}       # discussion: {"candidates": [...], "speakerCount": n}
-    context: str = ""              # free-text scene context (what/where the conversation happens)
-    # --- legacy fields (kept for dev endpoints; new frontend uses v2 fields) ---
-    role: str = ""
-    scenario: str = ""
-    difficulty: int = 3
-    length: str = "medium"
-    llm: str = ""
-    tts: str = ""
-    voice: str = ""
-    advanced: dict = {}
+    # format: solo (1 speaker, exact-fill) | dialogue (2 speakers, exact-fill) |
+    #   discussion (3-5 speakers, candidate-pool; headcount decided by the model)
+    format: str = "dialogue"
+    roles: dict = {}               # solo: {"speaker": "..."}; dialogue: {"a","b"}
+    roleSelection: dict = {}       # discussion: {"candidates": [...]}
+    context: str = ""              # free-text scene context (primary basis, highest priority)
+    difficulty: int = 3            # UI: 词汇专业度（VOCAB_PROFICIENCY_DEFS）
+    length: str = "300"
+    advanced: Advanced = Field(default_factory=Advanced)
     llm_config: dict = {}          # {provider, base_url, api_key, model, temperature}
     test_mode: bool = False        # dev-only: use template response instead of a real LLM call
+
+    @model_validator(mode="before")
+    def coerce_advanced(cls, values):
+        """Drop legacy advanced keys (breadth/tone/vocabDensity/style) and accept dict."""
+        adv = values.get("advanced")
+        if isinstance(adv, dict):
+            values["advanced"] = {k: v for k, v in adv.items()
+                                  if k in {"depth", "injections", "directions"}}
+        return values
 
 
 # ----------------------------------------------------------------------------
@@ -538,7 +554,7 @@ class GenerateIn(BaseModel):
 # ----------------------------------------------------------------------------
 FORMATS = {
     "solo":       {"speakerMode": ("fixed", 1), "roleSelectionMode": "exact-fill"},
-    "dialogue":   {"speakerMode": ("fixed", 2), "roleSelectionMode": "exact-fill", "supportsAsymmetric": True},
+    "dialogue":   {"speakerMode": ("fixed", 2), "roleSelectionMode": "exact-fill"},
     "discussion": {"speakerMode": ("range", 3, 5), "roleSelectionMode": "candidate-pool"},
 }
 
@@ -551,13 +567,6 @@ def request_roles(p: GenerateIn) -> list[str]:
         return [v] if v else []
     if fmt == "dialogue":
         r = p.roles or {}
-        if p.asymmetric:
-            out = []
-            for k in ("lead", "respond"):
-                v = r.get(k, "").strip()
-                if v:
-                    out.append(v)
-            return out
         out = []
         for k in ("a", "b"):
             v = r.get(k, "").strip()
@@ -583,8 +592,7 @@ def validate_request(p: GenerateIn) -> list[str]:
     elif fmt == "dialogue":
         roles = request_roles(p)
         if len(roles) != 2 or not all(x.strip() for x in roles):
-            errs.append("dialogue 形态需要恰好 2 个角色" +
-                        ("（roles.lead / roles.respond）" if p.asymmetric else "（roles.a / roles.b）"))
+            errs.append("dialogue 形态需要恰好 2 个角色（roles.a / roles.b）")
     else:  # discussion
         rs = p.roleSelection or {}
         cands = rs.get("candidates") or []
@@ -696,7 +704,7 @@ TEMPLATE_PATTERNS = [
 
 
 def mock_generate(p: GenerateIn) -> dict:
-    t = (p.topic or "").lower()
+    t = ((p.topic or "") + " " + (p.context or "")).lower()
     seeds = json.loads(SEED_PATH.read_text(encoding="utf-8"))
     if re.search(r"tire|burst|blowout", t):
         base = seeds[0]
@@ -705,7 +713,7 @@ def mock_generate(p: GenerateIn) -> dict:
     elif re.search(r"torque|vectoring|turn|yaw", t):
         base = seeds[2]
     else:
-        topic = p.topic or "the control problem"
+        topic = p.topic or p.context or "the control problem"
         base = {
             "meta": {
                 "domain": "Engineering", "role": "Engineer", "scenario": "Technical Discussion",
@@ -731,15 +739,14 @@ def mock_generate(p: GenerateIn) -> dict:
         }
     art = json.loads(json.dumps(base))
     art["id"] = "gen-" + str(int(time.time() * 1000))
-    art["meta"]["title"] = p.topic or base["meta"]["title"]
-    art["meta"]["topic"] = p.topic or base["meta"]["topic"]
+    art["meta"]["title"] = p.topic or p.context or base["meta"]["title"]
+    art["meta"]["topic"] = p.topic or p.context or base["meta"]["topic"]
     art["meta"]["domain"] = p.domainLabel or base["meta"]["domain"]
     art["meta"]["scenario"] = p.context or base["meta"]["scenario"]
     art["meta"]["context"] = p.context or ""
     # v2 structured speakers: derive from the request format
     fmt = (p.format or "discussion").strip().lower()
     art["meta"]["format"] = fmt
-    art["meta"]["asymmetric"] = bool(p.asymmetric)
     # Normalize dialogue lines to speakerId (seed rows carry legacy "speaker" names).
     mapping: dict = {}
     for d in art["dialogue"]:
@@ -758,22 +765,13 @@ def mock_generate(p: GenerateIn) -> dict:
         art["meta"]["speakerCount"] = 1
     elif fmt == "dialogue":
         roles = request_roles(p)
-        if p.asymmetric and len(roles) == 2:
-            art["meta"]["roles"] = {"lead": roles[0], "respond": roles[1]}
-            art["meta"]["asymmetric"] = True
-            art["speakers"] = [
-                {"id": "speaker_1", "role": roles[0], "voiceTag": "lead"},
-                {"id": "speaker_2", "role": roles[1], "voiceTag": "respond"},
-            ]
-        else:
-            while len(roles) < 2:
-                roles.append("Engineer %d" % (len(roles) + 1))
-            art["meta"]["roles"] = {"a": roles[0], "b": roles[1]}
-            art["meta"]["asymmetric"] = False
-            art["speakers"] = [
-                {"id": "speaker_1", "role": roles[0], "voiceTag": "lead"},
-                {"id": "speaker_2", "role": roles[1], "voiceTag": "respond"},
-            ]
+        while len(roles) < 2:
+            roles.append("Engineer %d" % (len(roles) + 1))
+        art["meta"]["roles"] = {"a": roles[0], "b": roles[1]}
+        art["speakers"] = [
+            {"id": "speaker_1", "role": roles[0], "voiceTag": "lead"},
+            {"id": "speaker_2", "role": roles[1], "voiceTag": "respond"},
+        ]
         art["dialogue"] = [
             {**d, "speakerId": "speaker_1" if i % 2 == 0 else "speaker_2"}
             for i, d in enumerate(art["dialogue"])
@@ -818,12 +816,10 @@ def mock_generate(p: GenerateIn) -> dict:
             }
             for d in art["dialogue"]
         ]
-    adv = p.advanced or {}
-    art["meta"]["depth"] = adv.get("depth", 3)
-    art["meta"]["breadth"] = adv.get("breadth", 3)
-    art["meta"]["tone"] = adv.get("tone", "neutral")
-    art["meta"]["ttsStyle"] = adv.get("style")
-    art["meta"]["speechRate"] = adv.get("vocabDensity")
+    adv = _adv_dict(p.advanced)
+    art["meta"]["depth"] = adv.get("depth", 3)  # v2: 句式复杂度
+    art["meta"]["speaker_voice_map"] = build_speaker_voice_map(
+        art["meta"].get("speakers") or [], voices_of(art["meta"]))
     art["meta"]["audio_url"] = "/api/v1/audio/" + art["id"] + ".mp3"
     art["meta"]["total_duration_ms"] = int(art["meta"]["total_duration_ms"] or 0)
     return art
@@ -840,157 +836,218 @@ DIRECTION_DEFS = {
 }
 LENGTH_WORDS = {60: 140, 90: 215, 120: 290, 180: 435, 240: 580, 300: 725, 480: 1160, 720: 1740, 900: 2175}
 
-DIFFICULTY_DEFS = {
-    1: "短句为主，每句 8-15 词；技术词汇密度约 10%，出现即伴随解释；不含复合从句。",
-    2: "标准工程词汇，每句 10-20 词；术语约 20% 且伴随解释；复合从句不超过 1 层。",
-    3: "真实工程师讨论，每句 12-25 词；术语密集约 35% 但有上下文支撑；含权衡与因果推理；复合从句不超过 2 层。",
-    4: "高密度技术交流，每句 15-30 词；术语约 50% 且不加解释；隐含推理；允许复杂从句。",
-    5: "主审级评审，每句 18-35 词；术语密集约 65% 且跨域引用；常省略主语；隐含含义为主。",
+# v2: 两轴分离 —— 词汇专业度只约束词汇，句式复杂度只约束句法。
+VOCAB_PROFICIENCY_DEFS = {
+    1: "L1 生活化：日常聊天用语，贴近生活场景，术语密度约 10%。",
+    2: "L2 职场化：基础商务沟通，通用职场表达，术语密度约 25%。",
+    3: "L3 技术化：基础技术术语，常见工程表达，术语密度约 40%。",
+    4: "L4 专业化：领域专业词汇，准确的技术用语，术语密度约 55%。",
+    5: "L5 学术化：学术级词汇，接近论文与讲座，术语密度约 65%。",
 }
 
-BREADTH_DEFS = {
-    1: "单人讲解：一位工程师系统讲解（speaker 用真实人名或岗位名，全程一致）。",
-    2: "双人技术讨论：两位工程师一问一答推进（每位 speaker 用真实人名或岗位名，如 Alex / Priya）。",
-    3: "三人小组讨论：加入测试/仿真第三视角，围绕同一问题多轮交锋（三人各用真实人名或岗位名）。",
-    4: "跨团队评审：动力、控制、安全等不同岗位协作决策（speaker 用具体岗位名或人名）。",
-    5: "全链路多方：从开发、整车集成到量产/供应商多视角，体现端到端权衡（多岗位轮转，各自用真实人名或岗位名）。",
+SYNTAX_COMPLEXITY_DEFS = {
+    1: "L1 简单：短句为主，结构直白清晰，平均每句 8-15 词。",
+    2: "L2 基础：简单并列复合，连接词基础，平均每句 12-20 词。",
+    3: "L3 常用：含常用从句，表达有层次，平均每句 15-25 词。",
+    4: "L4 复杂：多从句嵌套，句式富有变化，平均每句 18-30 词。",
+    5: "L5 学术：长难句频繁，学术式行文，平均每句 20-35 词。",
 }
 
-TONE_DEFS = {
-    "neutral": "冷静客观的日常工作讨论。",
-    "urgent": "模拟生产/测试现场紧急排查：语速感急促、直截了当、短句多。",
-    "interview": "技术面试问答：一问一答、层层深入、要求对方解释原理。",
-    "collaborative": "团队协作：积极回应、主动补全信息、互相确认理解。",
-    "debate": "技术辩论：观点碰撞、给出反对理由与数据依据。",
-    "mentoring": "导师带教：解释性强、带引导性提问。",
-}
-
-DEPTH_DEFS = {
-    1: "概览级：讲清概念与用途，不深入机理。",
-    2: "核心概念：覆盖主要术语与基本工作原理。",
-    3: "机理与权衡：解释工作机制，讨论参数权衡与设计取舍。",
-    4: "深入推导：包含公式、量级数据、时域/频域细节。",
-    5: "主审级：研究前沿、边界条件、局限性与权衡深度分析。",
-}
-
-LLM_SYSTEM_PROMPT = """你是 TELG 技术英语听力素材生成引擎，为研发工程师生成真实、自然、可直接用于听力训练的双语技术对话（英文对话 + 中文翻译）。
-
-## 输出契约（硬约束，违反即失败）
-- 必须输出合法 JSON 对象。禁止 Markdown 代码块、注释、或任何 JSON 之外的文字。JSON 示例仅供参考，输出时不得包含注释。
-- JSON 结构（字段名必须完全一致；所有 *_zh 字段是对应英文内容的标准中文翻译）：
+LLM_SYSTEM_PROMPT = """你是 TELG 沉浸式场景听力素材生成引擎。
+你的任务是为语言学习者生成"像真实发生一样"的双语对话素材，
+让学习者在沉浸式场景中自然习得词汇、句型与表达。
+学习者可能来自不同身份与阶段：职场人、学生、求职者、技术从业者、
+管理者、创业者等。他们通过选择领域、角色、场景语境、时长、
+词汇专业度、句式复杂度来定制属于自己的听力素材。
+因此，你的输出不是"教科书对话"，也不是"技术文档朗读"，
+而是有场景、有角色、有目的、有情绪的真实交流。
+技术领域只是你支持的众多领域之一，不是默认领域。
+你的输出会被 TTS 合成、被前端按字段渲染、被学习者用于听力与词汇训练，
+因此每个字段都必须严格合规。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【一、输出契约（硬约束）】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 只输出一个合法 JSON 对象，不要 Markdown、代码块、注释、解释、前后缀说明。
+2. 字段名严格一致，不得增删字段，不得改大小写。
+3. 所有 *_zh 字段必须是对应英文的准确中文翻译，不是改写、不是摘要。
+4. 禁止输出 start_ms、end_ms、duration 等时间戳字段；时间戳由 TTS 写入。
+5. 禁止编造具体版本号、性能数字、公司内部架构、真实人名、真实产品缺陷。
+   不确定的指标用定性描述（如"明显下降""量级相当"）。
+6. 字符串不得为空、不得只含空白；数组不得为空。
+7. 禁止在 text_en 中出现中文字符；禁止在 text_zh 中出现整句英文（术语可保留英文）。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【二、JSON Schema（字段级）】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {
   "background": {
     "technical_background": "英文：该主题工程背景，2-3 句",
-    "technical_principle": "英文：核心技术原理，2-3 句，可含公式符号如 C_alpha",
+    "technical_principle": "英文：核心技术原理，2-3 句",
     "engineering_scenario": "英文：这段内容发生在什么工作场景，1-2 句",
-    "technical_background_zh": "上述工程背景的中文翻译",
-    "technical_principle_zh": "上述技术原理的中文翻译",
-    "engineering_scenario_zh": "上述工作场景的中文翻译"
+    "technical_background_zh": "对应中文翻译",
+    "technical_principle_zh": "对应中文翻译",
+    "engineering_scenario_zh": "对应中文翻译"
   },
   "speakers": [
-    {"id": "speaker_1", "role": "说话人的具体角色名（如 Sales Consultant / Calibration Engineer / Interviewer）", "voiceTag": "lead | respond | neutral"}
+    {"id": "speaker_1", "role": "具体角色名", "voiceTag": "lead | respond | neutral"}
   ],
   "dialogue": [
-    {"speakerId": "speaker_1（必须属于 speakers[].id）", "text_en": "英文台词", "text_zh": "对应中文翻译"}
+    {"speakerId": "speaker_1", "text_en": "英文台词", "text_zh": "对应中文翻译"}
   ],
   "vocabulary": [
     {"en": "英文术语", "zh": "标准译法", "symbol": "符号，无则空串", "def": "英文释义"}
   ],
   "listening_questions": [
-    {"q": "问题", "options": ["选项1", "选项2", "选项3"], "answer": "正确选项的完整原文", "explain": "答案出自哪句台词",
-     "q_zh": "问题的中文翻译", "options_zh": ["各选项的中文翻译，与 options 一一对应"], "explain_zh": "答案出处的中文翻译"}
+    {"q": "问题", "options": ["选项1", "选项2", "选项3"],
+     "answer": "正确选项的完整原文", "explain": "答案出自哪句台词",
+     "q_zh": "问题的中文翻译", "options_zh": ["各选项中文翻译"],
+     "explain_zh": "答案出处的中文翻译"}
   ],
   "core_sentence_patterns": [
     {"title": "句型名", "pattern": "句式模板", "example": "例句",
-     "title_zh": "句型名的中文翻译", "pattern_zh": "句式模板的中文翻译", "example_zh": "例句的中文翻译"}
+     "title_zh": "句型名的中文翻译", "pattern_zh": "句式模板的中文翻译",
+     "example_zh": "例句的中文翻译"}
   ]
 }
-- speakers[].id 必须是稳定的 speaker_1 / speaker_2 / … 标识；dialogue 每句的 speakerId 必须指向 speakers 中已声明的 id。严禁 dialogue 中出现 speakers 之外的说话人。
-- 说话人数量、角色、出场方式由用户消息中的「形态」（solo / dialogue / discussion）约束决定，必须严格遵守。
-- dialogue 元素中不得出现 start_ms/end_ms/voice 等字段。
-
-## 质量红线（按优先级排序，违反前者比违反后者更严重）
-1. 技术真实性：所有概念、参数、因果必须真实，宁浅勿错；严禁编造工程原理。
-2. 可听性：对话必须像真实工程师在现场讨论——有语气词、有追问、有观点碰撞；严禁教科书腔与 "Today we are going to talk about..." 式生硬开头。
-3. 信息密度：每句都要携带具体信息（数值、时序、参数、权衡、因果），删除所有空泛寒暄。
-- text_en 必须是地道工程英语口语；text_zh 是 text_en 的准确中文翻译，工程术语用标准译法。
-
-## 对话结构（由用户消息中的「形态」决定，严格遵守）
-- solo（单人讲解/演讲/课程）：speakers 恰好 1 人，全程一人连贯讲解，可带少量自问自答，但不得出现第二个说话人。
-- dialogue 对称：speakers 恰好 2 人，双方对等交流，围绕焦点来回推进。
-- dialogue 不对称（用户消息指定 lead/respond）：speakers 恰好 2 人，lead 角色主动开场、掌控话题节奏与提问，respond 角色回应并可反问；lead 话轮占比应明显高于 respond。
-- discussion：speakers 的数量与角色按用户消息从候选池中挑选，不得使用候选池之外的角色，围绕同一焦点多轮交锋。
-
-## 角色命名（硬约束）
-- speakers[].role 使用具体、真实的角色名（如 "4S店销售顾问"、"Calibration Engineer"、"Supplier QA Manager"、"Interviewer"）；严禁 "Engineer A"、"Speaker 1" 式占位。
-- 同一角色全部台词使用完全一致的 speakerId，拼写不得漂移。
-
+字段级规则：
+- speakers[].id 用 speaker_1 / speaker_2 / ... 命名；
+  dialogue[].speakerId 必须且只能引用已声明的 id。
+- speakers[].role 用具体真实角色名，禁用 "Engineer A" / "Speaker 1" 占位。
+- dialogue 每句 1–4 句英文，单句不超过 60 词。
+- vocabulary.en 必须是对话中出现或强相关的术语；同一术语不重复出现。
+- listening_questions.answer 是 options 中的完整原文，必须唯一正确。
+- listening_questions.options 至少 2 个、建议 4 个；干扰项看似合理但明确错误。
+- core_sentence_patterns.pattern 是可迁移句型模板，example 取自或改写自对话。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【三、词汇专业度字典（只约束词汇）】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+L1 生活化：日常聊天用语，贴近生活，术语密度约 10%
+L2 职场化：基础商务沟通，术语密度约 25%
+L3 技术化：基础技术术语，常见工程表达，术语密度约 40%
+L4 专业化：领域专业词汇，准确技术用语，术语密度约 55%
+L5 学术化：学术级词汇，接近论文与讲座，术语密度约 65%
+禁止：本轴不得影响句子结构、从句层数、句长。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【四、句式复杂度字典（只约束句法）】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+L1 简单：短句为主，直白清晰，平均 8–15 词
+L2 基础：简单并列复合，平均 12–20 词
+L3 常用：含常用从句，有层次，平均 15–25 词
+L4 复杂：多从句嵌套，富有变化，平均 18–30 词
+L5 学术：长难句频繁，学术式行文，平均 20–35 词
+禁止：本轴不得影响词汇难度、术语密度、技术深度。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【五、对话结构硬约束】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+solo（单人讲解）：speakers 恰好 1 人，全程一人连贯讲解，
+                  可带少量自问自答，但不得出现第二个说话人。
+dialogue（双人对话）：speakers 恰好 2 人，双方对等交流，
+                  围绕焦点来回推进，无主次结构。
+discussion（多人讨论）：speakers 3–5 人，全部来自用户提供的候选角色；
+                  每位至少发言 2 次；存在观点碰撞或信息互补，禁止轮流念稿。
+通用：
+- 开场 1–2 轮交代场景或抛出问题；
+- 中段围绕焦点展开，含具体信息、权衡或排查；
+- 收尾自然，不要总结陈词、不要"希望这对你有帮助"式客套。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【六、生成方向字典（仅 refine）】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+重写：保持范围与结构，只调整措辞与表达。
+扩写：补充更多技术细节与论证，篇幅可增加。
+聚焦：收敛到单一侧面深入展开，删减其他分支。
+发散：换成不同工程视角，与上一版明显不同。
+生成方向仅作用于 refine，首次生成忽略。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【七、领域适配规则】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- 领域由用户在 <scenario><domain> 中指定，可能是技术、职场、学生、商务、学术等。
+- 你需根据领域自动选择：术语体系、常见角色、典型场景、交流目的。
+- 技术领域：术语准确、机制合规、宁浅勿错。
+- 职场领域：目标导向、有协作与分歧、有上下级或跨部门关系。
+- 学生领域：有课程、考试、社团、宿舍、求职等典型场景。
+- 商务领域：有谈判、汇报、客户沟通、跨文化差异。
+- 学术领域：有研讨、答辩、文献讨论、实验协作。
+- 若领域未在以上列出，按该领域真实交流方式生成，不得套用技术模板。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【八、质量红线（按优先级）】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+① 场景真实性：无论技术、职场、学生还是商务场景，都要符合该场景的真实交流方式；
+   技术内容宁浅勿错，严禁编造；非技术场景不得强行植入技术味。
+② 可听性：有现场感、语气词、追问、反驳、澄清；
+   避免教科书腔、避免新闻播报腔、避免 AI 味套话。
+③ 信息密度：每句带具体信息；删除空泛寒暄、重复确认、无信息量过渡。
+④ 教学价值：词汇、题目、句型必须能在对话中找到依据；
+   题目难度需与词汇专业度、句式复杂度大致对齐。
+⑤ 沉浸感：对话应让学习者感觉"自己就在现场"；
+   要有具体场合、具体对象、具体目的；避免泛泛而谈。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【九、翻译规则】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- text_zh 是 text_en 的准确翻译，保持语序自然、术语一致。
+- 技术术语优先使用行业通用中文译名；无通用译名时保留英文。
+- 翻译中不得引入原文没有的信息，不得删减原文信息。
+- 中文标点使用全角；英文标点使用半角。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【十、优先级与冲突解决】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+当设置之间存在冲突时，按以下优先级：
+1. 场景语境（context）—— 最高，冲突时以语境为准。
+2. 对话形态与角色候选 —— 硬约束，不得违反。
+3. 词汇专业度与句式复杂度 —— 软调节，可在语境需要时略微偏离。
+4. 生成方向与改进指令 —— 仅 refine 时生效。
+若无法同时满足所有约束，优先保证：技术真实性 > 结构合规 > 难度对齐 > 篇幅精确。
 请直接输出 JSON。"""
 
 
 def build_user_prompt(p: GenerateIn, action: str = "generate") -> str:
     """需求简报式 user prompt：把参数组织成任务陈述，让模型理解"为什么生成"而非"填什么字段"。
-    生成约束（难度/广度/深度等可执行化定义）随请求动态组装，System 保持完全静态以命中缓存。"""
-    advanced = p.advanced if isinstance(p.advanced, dict) else {}
-    breadth = advanced.get("breadth", 2)
+    v2：词汇专业度 / 句式复杂度两轴分离；System 保持完全静态以命中缓存。"""
+    advanced = _adv_dict(p.advanced)
     depth = advanced.get("depth", 3)
-    tone = advanced.get("tone", "neutral")
     sec = parse_sec(p.length) or 120
     target_words = LENGTH_WORDS.get(sec, 290)
     turns = max(4, round(target_words / 38))  # ~38 词/轮 → 轮数，避免篇幅与时长脱节
-    domain = p.domainLabel or p.domain or "Engineering"
-    fmt = (p.format or "discussion").strip().lower()
+    domain = p.domainLabel or p.domain or "General"
+    fmt = (p.format or "dialogue").strip().lower()
 
     # --- format-specific role/structure lines ---
     if fmt == "solo":
         roles = request_roles(p)
         struct = [
             "- 形态：单人讲解独白（solo），全程 1 位讲者",
-            "- 讲者角色：" + (roles[0] if roles else "领域工程师"),
+            "- 讲者角色：" + (roles[0] if roles else "领域专家"),
         ]
     elif fmt == "dialogue":
         roles = request_roles(p)
-        if p.asymmetric and len(roles) == 2:
-            struct = [
-                "- 形态：双人不对称对话（dialogue，一方主导）",
-                "- 主导方 lead：" + roles[0] + "（主动开场、掌控话题节奏与提问）",
-                "- 应答方 respond：" + roles[1] + "（回应并可反问）",
-            ]
-        else:
-            while len(roles) < 2:
-                roles.append("Engineer %d" % (len(roles) + 1))
-            struct = [
-                "- 形态：双人平等对话（dialogue，对称）",
-                "- 角色：" + roles[0] + " 与 " + roles[1] + "（双方对等交流）",
-            ]
+        while len(roles) < 2:
+            roles.append("Engineer %d" % (len(roles) + 1))
+        struct = [
+            "- 形态：双人平等对话（dialogue，对称）",
+            "- 角色：" + roles[0] + " 与 " + roles[1] + "（双方对等交流，无主次结构）",
+        ]
     else:  # discussion
         rs = p.roleSelection or {}
         cands = [c for c in (rs.get("candidates") or []) if isinstance(c, str) and c.strip()]
-        n = rs.get("speakerCount")
-        head = ("，出场 " + str(n) + " 人" if isinstance(n, int) and (3 <= n <= 5) else "，出场 3–5 人（由你根据语境确定）")
         pool = ("、".join(cands) if cands else "（未指定，请按领域自行构思）")
         struct = [
-            "- 形态：多人讨论（discussion）" + head,
+            "- 形态：多人讨论（discussion），出场 3–5 人（由你根据语境确定）",
             "- 候选角色：" + pool,
-            "- 从候选角色中挑选最贴合语境的出场人选；候选不足或不适配时，可补充贴合该领域/语境的真实角色",
+            "- 从候选角色中挑选最贴合语境的出场人选；候选名单不足 3 位或与语境不适配时，可补充贴合该领域/语境的真实角色（禁止占位名）",
         ]
 
     lines = [
-        "请生成一套可直接用于听力训练的技术英语素材（英文内容 + 中文翻译）。",
+        "请生成一套可直接用于听力训练的双语素材（英文内容 + 中文翻译）。",
         "",
         "## 本次任务",
-        "- 主题：" + (p.topic or ""),
-        "- 领域：" + domain + "（必须符合该领域研发工程师的真实语境与术语惯例）",
+        "- 主题：" + (p.topic or p.context or ""),
+        "- 领域：" + domain + "（必须符合该领域真实语境与术语惯例）",
     ]
     lines += struct
     lines += [
         "- 场景语境：" + (p.context or "通用专业场景"),
-        "- 语气：" + TONE_DEFS.get(tone, TONE_DEFS["neutral"]),
+        "- 词汇专业度 Level " + str(p.difficulty) + "：" + VOCAB_PROFICIENCY_DEFS.get(p.difficulty, VOCAB_PROFICIENCY_DEFS[3]),
+        "- 句式复杂度 Level " + str(depth) + "：" + SYNTAX_COMPLEXITY_DEFS.get(depth, SYNTAX_COMPLEXITY_DEFS[3]),
         "",
         "## 生成约束",
-        "- 难度 Level " + str(p.difficulty) + "：" + DIFFICULTY_DEFS.get(p.difficulty, DIFFICULTY_DEFS[3]),
-        "- 广度 Level " + str(breadth) + "：" + BREADTH_DEFS.get(breadth, BREADTH_DEFS[2]),
-        "- 技术深度：" + DEPTH_DEFS.get(depth, DEPTH_DEFS[3]),
         "- 时长 " + str(p.length) + " 秒，目标总词数约 " + str(target_words) + " 词（约 " + str(turns) + " 轮对话，宁精勿灌水）",
         "- 特殊要求：" + (advanced.get("injections") or "无"),
     ]
@@ -1005,6 +1062,8 @@ def build_user_prompt(p: GenerateIn, action: str = "generate") -> str:
         "## 内容看点",
         "请根据主题自行确定一个最有价值的讨论焦点（如某参数/方案的权衡、一次故障排查、一场评审分歧），"
         "让内容围绕该焦点自然展开、有张力；不要平铺直叙地罗列知识点。",
+        "",
+        "只输出合法 JSON，不要 Markdown、注释、解释。",
     ]
     if action == "regenerate":
         lines.insert(1, "（本次为重新生成：请更换切入角度或结构，内容与上一版不雷同，质量更优。）")
@@ -1071,6 +1130,16 @@ def _norm_role(s: str) -> str:
     return re.sub(r"\s+", "", (s or "").strip().lower())
 
 
+def _is_placeholder_role(role: str) -> bool:
+    """占位角色名检测：Engineer A / Speaker 1 / Expert B / 角色2 等。"""
+    r = _norm_role(role)
+    if not r:
+        return True
+    return bool(re.match(
+        r"^(engineer|speaker|expert|person|staff|worker|member|角色|专家|人员|工程师|发言人)"
+        r"[ _\-]?[a-z0-9\u4e00-\u9fff]$", r, re.I))
+
+
 def _ensure_speakers(art: LLMArtifact) -> None:
     """Derive speakers from dialogue lines when the model did not emit them
     (legacy output shape). Mutates art.speakers in place."""
@@ -1086,72 +1155,167 @@ def _ensure_speakers(art: LLMArtifact) -> None:
     art.speakers = seen
 
 
-def validate_artifact(art: LLMArtifact, p: GenerateIn) -> None:
-    errs = []
-    fmt = (p.format or "discussion").strip().lower()
-    spec = FORMATS.get(fmt, FORMATS["discussion"])
+class ValidationIssue(_BM):
+    """Single validation finding. blocking=True → triggers a retry; False → warning only."""
+    zone: str            # "A" | "B" | "C" | "D" | "global"
+    path: str
+    code: str
+    message: str
+    blocking: bool
+
+
+ZONE_FIELDS = {
+    "A": {"speakers", "background", "dialogue"},
+    "B": {"vocabulary"},
+    "C": {"listening_questions"},
+    "D": {"core_sentence_patterns"},
+}
+
+
+def validate_artifact(art: LLMArtifact, p: GenerateIn) -> list[ValidationIssue]:
+    """v2: returns issues instead of raising; asymmetric checks removed;
+    semantic checks (coverage / grounding / word-count deviation) are warnings."""
+    issues: list[ValidationIssue] = []
+    fmt = (p.format or "dialogue").strip().lower()
+    spec = FORMATS.get(fmt, FORMATS["dialogue"])
     _ensure_speakers(art)
     # 1. headcount vs format
     n = len(art.speakers)
     mode = spec["speakerMode"]
     if mode[0] == "fixed" and n != mode[1]:
-        errs.append("出场人数应为 %d，实际 %d" % (mode[1], n))
+        issues.append(ValidationIssue(zone="A", path="speakers", code="headcount_mismatch",
+                                      message="出场人数应为 %d，实际 %d" % (mode[1], n), blocking=True))
     elif mode[0] == "range" and not (mode[1] <= n <= mode[2]):
-        errs.append("出场人数应在 [%d, %d]，实际 %d" % (mode[1], mode[2], n))
+        issues.append(ValidationIssue(zone="A", path="speakers", code="headcount_out_of_range",
+                                      message="出场人数应在 [%d, %d]，实际 %d" % (mode[1], mode[2], n), blocking=True))
     # 2. role provenance
     if spec["roleSelectionMode"] == "exact-fill":
         wanted = [_norm_role(r) for r in request_roles(p)]
         for sp in art.speakers:
             if _norm_role(sp.role) not in wanted:
-                errs.append("出场角色「%s」不在指定填槽中" % sp.role)
+                issues.append(ValidationIssue(zone="A", path="speakers", code="role_not_in_slots",
+                                              message="出场角色「%s」不在指定填槽中" % sp.role, blocking=True))
     else:
         cands = {_norm_role(c) for c in ((p.roleSelection or {}).get("candidates") or [])}
-        for sp in art.speakers:
-            if sp.role and _norm_role(sp.role) not in cands:
-                errs.append("出场角色「%s」不在候选池中" % sp.role)
+        if len(cands) >= 3:
+            # 候选名单足够 → 出场角色必须全部来自候选池
+            for sp in art.speakers:
+                if sp.role and _norm_role(sp.role) not in cands:
+                    issues.append(ValidationIssue(zone="A", path="speakers", code="role_not_in_candidates",
+                                                  message="候选名单已足够，出场角色「%s」应来自候选池" % sp.role, blocking=True))
+        else:
+            # 候选名单不足 → 允许补充领域真实角色，但禁止占位名
+            for sp in art.speakers:
+                if sp.role and _norm_role(sp.role) not in cands and _is_placeholder_role(sp.role):
+                    issues.append(ValidationIssue(zone="A", path="speakers", code="placeholder_role",
+                                                  message="补充角色「%s」为占位名，请使用领域真实角色名" % sp.role, blocking=True))
     # 3. speakerId consistency
     ids = {sp.id for sp in art.speakers}
     if len(ids) != len(art.speakers):
-        errs.append("speakers 存在重复 id")
+        issues.append(ValidationIssue(zone="A", path="speakers", code="duplicate_id",
+                                      message="speakers 存在重复 id", blocking=True))
     for i, d in enumerate(art.dialogue):
         sid = d.speakerId or d.speaker
         if not sid:
-            errs.append("dialogue[%d] 缺少 speakerId" % i)
+            issues.append(ValidationIssue(zone="A", path="dialogue[%d]" % i, code="missing_speaker_id",
+                                          message="缺少 speakerId", blocking=True))
         elif sid not in ids:
-            errs.append("dialogue[%d] 引用了未声明的 speakerId: %s" % (i, sid))
-    # 4. asymmetric dialogue: lead opens and holds a fair share of turns
-    if fmt == "dialogue" and p.asymmetric:
-        lead_id = next((sp.id for sp in art.speakers if sp.voiceTag == "lead"), None)
-        valid_lines = [d for d in art.dialogue if (d.speakerId or d.speaker) in ids]
-        if lead_id:
-            lead_lines = sum(1 for d in valid_lines if (d.speakerId or d.speaker) == lead_id)
-            if valid_lines and (valid_lines[0].speakerId or valid_lines[0].speaker) != lead_id:
-                errs.append("不对称对话未由 lead 角色开场")
-            if lead_lines < len(valid_lines) * 0.3:
-                errs.append("lead 角色话轮占比过低（%d/%d）" % (lead_lines, len(valid_lines)))
-    # --- quality guards (unchanged) ---
-    target_words = LENGTH_WORDS.get(parse_sec(p.length) or 120, 290)
-    total_words = sum(len(re.findall(r"[a-zA-Z']+", s.text_en)) for s in art.dialogue)
-    if total_words > target_words * 3:
-        errs.append("dialogue 总词数 %d 超过目标 %d 的 3 倍，请压缩篇幅" % (total_words, target_words))
+            issues.append(ValidationIssue(zone="A", path="dialogue[%d]" % i, code="unknown_speaker_id",
+                                          message="引用了未声明的 speakerId: %s" % sid, blocking=True))
+    # 4. quality guards (blocking)
+    target = LENGTH_WORDS.get(parse_sec(p.length) or 120, 290)
+    total = sum(len(re.findall(r"[a-zA-Z']+", s.text_en)) for s in art.dialogue)
+    if total > target * 3:
+        issues.append(ValidationIssue(zone="A", path="dialogue", code="word_count_over",
+                                      message="总词数 %d 超过目标 %d 的 3 倍，请压缩篇幅" % (total, target), blocking=True))
     if len(art.dialogue) < 3:
-        errs.append("dialogue 至少 3 句")
+        issues.append(ValidationIssue(zone="A", path="dialogue", code="dialogue_too_short",
+                                      message="dialogue 至少 3 句", blocking=True))
     for i, s in enumerate(art.dialogue):
         if not s.text_en or not s.text_en.strip():
-            errs.append("dialogue[%d].text_en 为空" % i)
+            issues.append(ValidationIssue(zone="A", path="dialogue[%d].text_en" % i, code="empty",
+                                          message="text_en 为空", blocking=True))
         if re.search(r"[\u4e00-\u9fff]", s.text_en):
-            errs.append("dialogue[%d].text_en 含中文" % i)
+            issues.append(ValidationIssue(zone="A", path="dialogue[%d].text_en" % i, code="contains_chinese",
+                                          message="text_en 含中文", blocking=True))
     if len(art.vocabulary) < 4:
-        errs.append("vocabulary 至少 4 条")
+        issues.append(ValidationIssue(zone="B", path="vocabulary", code="too_few",
+                                      message="vocabulary 至少 4 条", blocking=True))
     if len(art.listening_questions) < 2:
-        errs.append("listening_questions 至少 2 题")
+        issues.append(ValidationIssue(zone="C", path="listening_questions", code="too_few",
+                                      message="listening_questions 至少 2 题", blocking=True))
     for i, q in enumerate(art.listening_questions):
         if len(q.options) < 2:
-            errs.append("question[%d] 选项少于 2" % i)
+            issues.append(ValidationIssue(zone="C", path="listening_questions[%d]" % i, code="options_too_few",
+                                          message="选项少于 2", blocking=True))
+        if q.answer not in q.options:
+            issues.append(ValidationIssue(zone="C", path="listening_questions[%d]" % i, code="answer_not_in_options",
+                                          message="answer 不在 options 中", blocking=True))
     if len(art.core_sentence_patterns) < 2:
-        errs.append("core_sentence_patterns 至少 2 条")
-    if errs:
-        raise ValueError("; ".join(errs))
+        issues.append(ValidationIssue(zone="D", path="core_sentence_patterns", code="too_few",
+                                      message="core_sentence_patterns 至少 2 条", blocking=True))
+    # 5. semantic warnings (non-blocking)
+    dialogue_text = " ".join(d.text_en for d in art.dialogue).lower()
+    hits = sum(1 for v in art.vocabulary if v.en.lower() in dialogue_text)
+    if art.vocabulary and hits / len(art.vocabulary) < 0.3:
+        issues.append(ValidationIssue(zone="B", path="vocabulary", code="low_coverage",
+                                      message="词汇覆盖率低于 30%", blocking=False))
+    for i, q in enumerate(art.listening_questions):
+        if q.answer and q.answer.lower() not in dialogue_text:
+            issues.append(ValidationIssue(zone="C", path="listening_questions[%d]" % i, code="not_grounded",
+                                          message="答案关键词未在对话中出现", blocking=False))
+    if not (target * 0.75 <= total <= target * 1.25):
+        issues.append(ValidationIssue(zone="A", path="dialogue", code="word_count_deviation",
+                                      message="词数 %d 偏离目标 %d ±25%%" % (total, target), blocking=False))
+    return issues
+
+
+class ArtifactPatch(_BM):
+    """v2: zone-scoped correction. Only fields of `zone` may be set; merge verifies them."""
+    zone: Literal["A", "B", "C", "D"]
+    background: Optional[LLMBackground] = None
+    speakers: Optional[list[LLMSpeaker]] = None
+    dialogue: Optional[list[LLMDialogue]] = None
+    vocabulary: Optional[list[LLMVocab]] = None
+    listening_questions: Optional[list[LLMQuestion]] = None
+    core_sentence_patterns: Optional[list[LLMPattern]] = None
+
+
+def merge_patch(base: LLMArtifact, patch: ArtifactPatch) -> LLMArtifact:
+    """Apply a zone patch on top of base; every field of the zone must be present."""
+    data = base.model_dump()
+    patch_data = patch.model_dump(exclude_none=True)
+    for field in ZONE_FIELDS[patch.zone]:
+        if field not in patch_data:
+            raise ValueError("patch 缺少 zone=%s 的字段 %s" % (patch.zone, field))
+        data[field] = patch_data[field]
+    return LLMArtifact(**data)
+
+
+def _patch_user_prompt(p: GenerateIn, action: str, base: LLMArtifact,
+                       zone: str, issues: list[ValidationIssue]) -> str:
+    """User prompt for a zone-scoped repair call (fallback mode: full JSON + lock)."""
+    zone_issues = [i for i in issues if i.zone == zone]
+    lines = [build_user_prompt(p, action), "",
+             "## 校验失败反馈（仅修正以下问题）"]
+    for i in zone_issues:
+        lines.append("- [%s] %s：%s" % (i.code, i.path, i.message))
+    locked = "、".join(sorted(set(LLMArtifact.model_fields) - ZONE_FIELDS[zone]))
+    lines.append("请只修正上述问题。其他字段（%s）必须与上一版完全一致，"
+                 "重新输出完整 JSON（不得输出任何 JSON 之外的内容）。" % locked)
+    return "\n".join(lines)
+
+
+def _log_warnings(warnings: list[ValidationIssue]) -> None:
+    """Non-blocking issues are observable but never block generation."""
+    if not warnings:
+        return
+    try:
+        import sys
+        print("[TELG] validate warnings: " + " | ".join("[%s] %s" % (i.code, i.message) for i in warnings),
+              file=sys.stderr)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 class LLMGenerationError(RuntimeError):
@@ -1173,6 +1337,13 @@ def _llm_endpoint(cfg: dict) -> tuple[str, str, str]:
 
 
 def call_llm_with_retry(p: GenerateIn, action: str = "generate") -> dict:
+    """v2: full generation + zone-scoped retry.
+
+    attempt 1: full artifact; blocking issues trigger up to 2 more rounds.
+    Each round patches failed zones (A: speakers/background/dialogue, B: vocabulary,
+    C: listening_questions, D: patterns) via full-JSON + zone-lock calls,
+    then re-validates the merged artifact. Warnings never block.
+    """
     cfg = p.llm_config or {}
     base, key, model = _llm_endpoint(cfg)
     temp = float(cfg.get("temperature") or 0.7)
@@ -1186,38 +1357,78 @@ def call_llm_with_retry(p: GenerateIn, action: str = "generate") -> dict:
     # System prompt is fully static (no per-request substitution) so the
     # stable prefix hits provider context caching; all dynamic params live
     # in the user prompt (需求简报).
-    system = LLM_SYSTEM_PROMPT
     # Bound output so long dialogues are never silently truncated by the model.
     max_tokens = int(target_words * 9) + 800
     client = OpenAI(base_url=base, api_key=key, timeout=60)
-    errors = []
-    last_usage = None
     json_fmt = True   # some OpenAI-compatible endpoints reject response_format
-    for attempt in range(3):
-        user = build_user_prompt(p, action)
-        if errors:
-            user += ("\n\n## 校验失败反馈\n你上次输出未通过校验：\n" + "\n".join(errors)
-                     + "\n请只修正上述问题、保留其余内容，重新输出完整 JSON（不得输出任何 JSON 之外的内容）。")
+
+    def chat(user: str) -> dict:
+        nonlocal json_fmt
+        kwargs = dict(model=model, temperature=temp, max_tokens=max_tokens, messages=[
+            {"role": "system", "content": LLM_SYSTEM_PROMPT},
+            {"role": "user", "content": user},
+        ])
+        if json_fmt:
+            kwargs["response_format"] = {"type": "json_object"}
         try:
-            kwargs = dict(model=model, temperature=temp, max_tokens=max_tokens, messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ])
-            if json_fmt:
-                kwargs["response_format"] = {"type": "json_object"}
             resp = client.chat.completions.create(**kwargs)
-            last_usage = getattr(resp, "usage", None)
-            raw = (resp.choices[0].message.content or "").strip()
-            data = json.loads(raw)
-            art = LLMArtifact.model_validate(data)
-            validate_artifact(art, p)
-            _record_usage(cfg, action, last_usage)
-            return art.model_dump(by_alias=True)
         except Exception as e:  # noqa: BLE001
-            errors.append("%s" % e)
-            if json_fmt and re.search(r"response_format|json_object|json mode|not supported|unsupported", "%s" % e, re.I):
-                json_fmt = False   # retry without the structured-output flag
-    raise LLMGenerationError("LLM generation failed after 3 attempts: " + " | ".join(errors[-2:]))
+            msg = "%s" % e
+            if json_fmt and any(k in msg.lower() for k in ("response_format", "response format", "json_object", "json")):
+                json_fmt = False
+                resp = client.chat.completions.create(**kwargs)
+            else:
+                raise
+        _record_usage(cfg, action, getattr(resp, "usage", None))
+        raw = (resp.choices[0].message.content or "").strip()
+        return json.loads(raw)
+
+    # --- full generation: up to 3 call-level attempts (network / JSON / schema) ---
+    art = None
+    call_errors: list[str] = []
+    for _attempt in range(1, 4):
+        try:
+            data = chat(build_user_prompt(p, action))
+            art = LLMArtifact.model_validate(data)
+            break
+        except Exception as e:  # noqa: BLE001 — transient LLM failures get retried
+            call_errors.append("%s" % e)
+            continue
+    if art is None:
+        raise LLMGenerationError(
+            "LLM generation failed after 3 attempts: " + " | ".join(call_errors[-2:]))
+
+    issues = validate_artifact(art, p)
+    blocking = [i for i in issues if i.blocking]
+    _log_warnings([i for i in issues if not i.blocking])
+    if not blocking:
+        return art.model_dump(by_alias=True)
+
+    # --- zone-scoped repair: up to 2 rounds, patching failed zones A/B/C/D ---
+    for attempt in range(2, 4):
+        for zone in sorted({i.zone for i in blocking if i.zone in ZONE_FIELDS}):
+            try:
+                raw = chat(_patch_user_prompt(p, action, art, zone, blocking))
+                raw_art = LLMArtifact.model_validate(raw)
+            except Exception:  # noqa: BLE001 — a failed patch round is retried as a whole
+                continue
+            try:
+                locked = set(LLMArtifact.model_fields) - ZONE_FIELDS[zone]
+                base_dump = art.model_dump()
+                for f in locked:
+                    if raw_art.model_dump()[f] != base_dump[f]:
+                        raise ValueError("锁定字段 %s 被修改" % f)
+                art = merge_patch(art, ArtifactPatch(
+                    zone=zone, **{f: getattr(raw_art, f) for f in ZONE_FIELDS[zone]}))
+            except Exception:  # noqa: BLE001 — lock violation or missing field → discard patch
+                continue
+        issues = validate_artifact(art, p)
+        blocking = [i for i in issues if i.blocking]
+        _log_warnings([i for i in issues if not i.blocking])
+        if not blocking:
+            return art.model_dump(by_alias=True)
+    raise LLMGenerationError(
+        "校验失败：" + "；".join(i.message for i in blocking))
 
 
 def _record_usage(cfg: dict, action: str, usage) -> None:
@@ -1273,9 +1484,9 @@ def build_artifact(p: GenerateIn, action: str = "generate") -> dict:
     # No estimated timestamps here: start_ms/end_ms are written only by the
     # TTS pass (real durations + gap). The timeline stays authoritative.
     meta = {
-        "title": p.topic or "Untitled", "topic": p.topic or "Untitled",
+        "title": p.topic or p.context or "Untitled", "topic": p.topic or p.context or "Untitled",
         "domain": p.domainLabel or p.domain or "Engineering",
-        "format": fmt, "asymmetric": bool(p.asymmetric),
+        "format": fmt,
         "speakerCount": len(speakers), "speakers": speakers,
         "context": p.context or "",
         "scenario": (p.context or "")[:120],
@@ -1285,9 +1496,8 @@ def build_artifact(p: GenerateIn, action: str = "generate") -> dict:
         "tts_provider": "edge-tts", "voice": "en-US-GuyNeural + en-US-JennyNeural",
         "total_duration_ms": total_ms, "tag": p.domainLabel or p.domain or "Engineering",
         "filter": p.domainLabel or p.domain or "Engineering",
-        "depth": (p.advanced or {}).get("depth", 3), "breadth": (p.advanced or {}).get("breadth", 2),
-        "tone": (p.advanced or {}).get("tone", "neutral"),
-        "ttsStyle": (p.advanced or {}).get("style"), "speechRate": (p.advanced or {}).get("vocabDensity"),
+        "depth": (p.advanced.depth if isinstance(p.advanced, Advanced) else (p.advanced or {}).get("depth", 3)),
+        "speaker_voice_map": build_speaker_voice_map(speakers, ["en-US-GuyNeural", "en-US-JennyNeural"]),
         "audio_url": "/api/v1/audio/gen-none.mp3", "generated": True, "saved": False, "audioReady": False,
     }
     return {
@@ -1391,6 +1601,26 @@ def voices_of(meta: dict) -> list[str]:
     """Parse 'VoiceA + VoiceB' (or a single voice) from meta.voice into a list."""
     vs = [v.strip() for v in re.split(r"[+]", meta.get("voice") or "") if v.strip()]
     return vs or ["en-US-GuyNeural"]
+
+
+def build_speaker_voice_map(speakers: list, voice_list: list[str]) -> dict:
+    """speakerId -> voice name, decoupled from array order.
+
+    lead -> first voice, respond -> second (when available),
+    remaining speakers cycle through the list. Full names are stored
+    (e.g. en-US-GuyNeural) so the map survives normalize_voice rounding."""
+    vs = [normalize_voice(v) for v in voice_list if v.strip()] or ["en-US-GuyNeural"]
+    out: dict = {}
+    for idx, sp in enumerate(speakers):
+        if not isinstance(sp, dict):
+            continue
+        sid = str(sp.get("id") or "")
+        if not sid:
+            continue
+        vt = sp.get("voiceTag") or "neutral"
+        vi = 1 if (vt == "respond" and len(vs) > 1) else (0 if vt == "lead" else idx)
+        out[sid] = vs[vi % len(vs)]
+    return out
 
 
 # Voices verified against the real edge-tts endpoint (en-*).
@@ -1664,7 +1894,16 @@ async def synthesize(mid: str, body: SynthIn | None = None):
         # second (when available), remaining speakers cycle through the list.
         spk_voices: dict = {}
         speakers = meta.get("speakers") or []
-        if speakers:
+        # v2: per-speaker voice map wins unless the caller explicitly
+        # supplied a voice list (then the map is ignored on purpose).
+        user_voices_supplied = bool(raw_voices and str(raw_voices).strip())
+        voice_map = meta.get("speaker_voice_map") or {}
+        if speakers and not user_voices_supplied and isinstance(voice_map, dict) and voice_map:
+            for sp in speakers:
+                sid = str(sp.get("id") or "")
+                if sid and voice_map.get(sid):
+                    spk_voices[sid] = str(voice_map[sid])
+        if speakers and not spk_voices:
             for idx, sp in enumerate(speakers):
                 sid = str(sp.get("id") or "")
                 if not sid:
@@ -1815,12 +2054,15 @@ class LLMProfileOut(_BM):
 PROFILE_SYSTEM_PROMPT = """你是 TELG 学习档案生成器，根据用户提供的画像信息，生成一份结构化学习档案。
 
 ## 输出契约（硬约束）
-- 只输出合法 JSON 对象：{"role_portrait": "…", "domain_profile": "…", "focus_tone": "…"}，禁止任何其他内容。
-- role_portrait：基于用户职位/角色，扩写为 2-3 句的专业画像（该角色的工作语境、常用沟通对象、典型英文表达需求），英文。
-- domain_profile：基于用户练习领域，扩写为 3-4 句领域档案（该领域技术术语惯例、典型工作场景、角色画像；领域术语准确、宁浅勿错），英文。
-- focus_tone：基于用户的专注方向与练习场景，给出 1-2 句训练建议与语气偏好（如 interview 场景偏问答层层深入、meeting 偏汇报陈述），英文。
-- 未提供的字段（如无 focus）对应输出保持简洁，不编造。
-
+- 只输出合法 JSON 对象：
+  {"role_portrait": "…", "domain_profile": "…", "focus_tone": "…"}
+- role_portrait：基于用户职位/角色，扩写为 2-3 句专业画像
+  （该角色的工作语境、常用沟通对象、典型英文表达需求），英文。
+- domain_profile：基于用户练习领域，扩写为 3-4 句领域档案
+  （该领域术语惯例、典型工作场景、角色画像；术语准确、宁浅勿错），英文。
+- focus_tone：基于用户的专注方向与练习场景，给出 1-2 句训练建议与语气偏好，
+  英文。
+- 未提供的字段保持简洁，不编造。
 请直接输出 JSON。"""
 
 
@@ -1967,11 +2209,11 @@ def test_generate(c: TestLLMIn):
     p = GenerateIn(
         topic="Tire Burst Stability Control",
         domain="automotive", domainLabel="Automotive Engineering",
-        format="dialogue", asymmetric=True,
-        roles={"lead": "Vehicle Dynamics Lead", "respond": "Controls Engineer"},
+        format="dialogue",
+        roles={"a": "Vehicle Dynamics Lead", "b": "Controls Engineer"},
         context="Design review trade-off on burst-tire stability compensation: response time vs calibration conservatism",
         difficulty=3, length="120",
-        advanced={"depth": 3, "breadth": 2, "tone": "neutral", "injections": "Stress lateral acceleration and yaw moment feedback"},
+        advanced={"depth": 3, "injections": "Stress lateral acceleration and yaw moment feedback"},
         llm_config={"base_url": c.base_url, "api_key": c.api_key, "model": c.model, "temperature": c.temperature},
     )
     t0 = time.time()
@@ -2200,18 +2442,21 @@ class OnboardGenOut(_BM):
     scenarios: list[str]
 
 
-ONBOARD_SYSTEM_PROMPT = """你是 TELG 听力素材生成器的一次性初始化引擎，根据用户问卷回答，同时生成「学习档案」与「推荐配置」。
+ONBOARD_SYSTEM_PROMPT = """你是 TELG 听力素材生成器的一次性初始化引擎，根据用户问卷回答，
+同时生成「学习档案」与「推荐配置」。
 
 ## 输出契约（硬约束）
 - 只输出合法 JSON 对象：
   {"role_portrait": "…", "domain_profile": "…", "focus_tone": "…",
-   "domains": [{"id": "…", "name": "…", "desc": "…"}], "roles": ["…"], "scenarios": ["…"]}
-- role_portrait：基于用户职位/角色，扩写为 2-3 句专业画像（工作语境、沟通对象、典型英文表达需求），英文。
-- domain_profile：基于用户练习领域，扩写为 3-4 句领域档案（术语惯例、典型工作场景、角色画像；术语准确宁浅勿错），英文。
-- focus_tone：基于专注方向与练习场景，给出 1-2 句训练建议与语气偏好，英文。
-- domains：4-6 个与该用户紧密相关的技术领域，第一个必须是主练习领域；id 用 kebab-case 小写英文标识（若与内置领域 automotive/semiconductor/energy/ai-software/medical/fintech/aerospace/general 匹配则沿用），name 为英文领域名，desc 为不超过 20 字的中文描述。
-- roles：3-6 个该领域研发一线真实岗位（英文岗位名，如 Process Engineer）。
-- scenarios：3-6 个贴合该用户工作场景的英文练习场景短语（如 Process Review Meeting）。
+   "domains": [{"id": "…", "name": "…", "desc": "…"}],
+   "roles": ["…"], "scenarios": ["…"]}
+- role_portrait / domain_profile / focus_tone：规则同学习档案生成
+  （工作语境、沟通对象、典型表达需求；领域术语惯例与典型场景；训练建议与语气偏好），英文。
+- domains：4-6 个与该用户紧密相关的领域，第一个必须是主练习领域；
+  id 用 kebab-case 小写英文标识（若与内置领域 automotive/semiconductor/energy/ai-software/medical/fintech/aerospace/general 匹配则沿用），
+  name 为英文领域名，desc 为不超过 20 字的中文描述。
+- roles：3-6 个该领域一线真实岗位（英文岗位名），要求真实、专业、可对话。
+- scenarios：3-6 个贴合该用户工作场景的英文练习场景短语，真实可演。
 - 严格贴合问卷中的角色、领域、语言方向与专注方向，禁止输出无关通用内容。
 
 请直接输出 JSON。"""
@@ -2308,14 +2553,20 @@ class LLMRecsOut(_BM):
     scenarios: list[str]
 
 
-RECOMMEND_SYSTEM_PROMPT = """你是 TELG 听力素材生成器的推荐配置引擎，根据用户的学习档案，为其推荐「领域 / 角色 / 场景」三组选项，作为新建素材弹窗的默认下拉选项。
+RECOMMEND_SYSTEM_PROMPT = """你是 TELG 听力素材生成器的推荐配置引擎，根据用户的学习档案，
+为其推荐「领域 / 角色 / 场景」三组选项，作为新建素材弹窗的默认下拉选项。
 
 ## 输出契约（硬约束）
-- 只输出合法 JSON 对象：{"domains": [...], "roles": [...], "scenarios": [...]}，禁止任何其他内容。
-- domains：4-6 个与该用户紧密相关的技术领域，第一个必须是用户的主练习领域；每项 {"id": "kebab-case小写英文标识", "name": "英文领域名（如 Semiconductor）", "desc": "一句中文描述"}；id 若与已知内置领域（automotive/semiconductor/energy/ai-software/medical/fintech/aerospace/general）匹配则沿用内置 id，否则用 kebab-case 新 id；desc 不超过 20 字。
-- roles：3-6 个该领域研发一线常见真实岗位（英文岗位名，如 Process Engineer、Yield Engineer），要求真实、专业、可对话。
+- 只输出合法 JSON 对象：
+  {"domains": [...], "roles": [...], "scenarios": [...]}
+- domains：4-6 个与该用户紧密相关的领域，第一个必须是用户的主练习领域；
+  每项 {"id": "kebab-case小写英文标识", "name": "英文领域名（如 Semiconductor）", "desc": "一句中文描述"}；
+  id 若与已知内置领域（automotive/semiconductor/energy/ai-software/medical/fintech/aerospace/general）匹配则沿用内置 id，
+  否则用 kebab-case 新 id；desc 不超过 20 字。
+- roles：3-6 个该领域一线常见真实岗位（英文岗位名，如 Process Engineer、Yield Engineer），
+  要求真实、专业、可对话。
 - scenarios：3-6 个贴合该用户工作场景的英文练习场景短语（如 Process Review Meeting、Yield Failure RCA），真实可演。
-- 严格贴合用户档案中的角色、领域、专注方向与画像，禁止输出与档案无关的通用内容。
+- 严格贴合用户档案中的角色、领域、专注方向与画像，禁止输出无关通用内容。
 
 请直接输出 JSON。"""
 

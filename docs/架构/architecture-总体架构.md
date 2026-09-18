@@ -1,5 +1,7 @@
 # TELG 总体架构（Architecture）
 
+> ⚠️ 本文档为早期版本；LLM 链路字段（depth/breadth/tone/asymmetric 等）已按 **v2.0 设计说明书**（`docs/设计/design-prompt链路设计说明书.md`）重新定义，冲突处以该说明书为准。
+
 ## 1. 系统拓扑
 
 ```

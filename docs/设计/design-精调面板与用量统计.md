@@ -1,6 +1,8 @@
 # TELG 设计思路：Refine 面板重构 + LLM Token 用量统计
 
 > 版本：2026-09-16 · 状态：draft（待评审）· 关联文档：[总体架构](../架构/architecture-总体架构.md) / [接口契约](../架构/api-contract-接口契约.md) / [需求规格](../产品/requirements-需求规格.md)
+>
+> ⚠️ 本文档中 refine 面板的字段描述（breadth/tone/vocabDensity/asymmetric/speakerCount）已被 **v2.0 设计说明书**（`docs/设计/design-prompt链路设计说明书.md`）取代：上述字段已删除，refine 仅保留 词汇专业度/句式复杂度/时长/生成方向/改进指令。
 
 ---
 

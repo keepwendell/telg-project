@@ -504,7 +504,7 @@ discussion（多人讨论）：speakers 3–5 人，全部来自用户提供的�
 **format 分支结构描述**：
 - solo：`- 形态：单人讲解独白（solo），全程 1 位讲者；- 讲者角色：<role>`
 - dialogue：`- 形态：双人平等对话（dialogue，对称）；- 角色：<a> 与 <b>（双方对等交流）`
-- discussion：`- 形态：多人讨论（discussion），出场 3–5 人（由你根据语境确定）；- 候选角色：<candidates>；- 从候选角色中挑选最贴合语境的出场人选`
+- discussion：`- 形态：多人讨论（discussion），出场 3–5 人（由你根据语境确定）；- 候选角色：<candidates>；- 从候选角色中挑选最贴合语境的出场人选；候选名单不足 3 位或与语境不适配时，可补充贴合该领域/语境的真实角色（禁止占位名）`
 **refine 时首行插入**：
 ```text
 （本次为重新生成：请更换切入角度或结构，内容与上一版不雷同，质量更优。）
@@ -564,7 +564,7 @@ discussion（多人讨论）：speakers 3–5 人，全部来自用户提供的�
 ### 8.1 阻断性校验
 - JSON 合法性、Schema 字段类型、必填、枚举；
 - 人数与形态：solo=1；dialogue=2；discussion=3–5；
-- 角色来源：exact-fill 精确匹配 / candidate-pool 池内匹配；
+- 角色来源：exact-fill 精确匹配；candidate-pool（discussion）：候选名单 ≥3 位时出场角色必须全部来自候选池；候选名单不足 3 位时允许补充领域真实角色，但补充角色禁止占位名（Engineer A / Speaker 1 等）；
 - speakerId 一致性：禁止未声明 / 重复；
 - `text_en` 无中文；`text_zh` 含中文；
 - 词汇 ≥4、题目 ≥2 且选项 ≥2、句型 ≥2；
@@ -912,5 +912,6 @@ TTS 按 `speakerId` 映射，不按数组顺序。
 |---|---|---|
 | v1.0 | — | 初稿 |
 | v2.0 | — | 基于前端与后端实际代码核对，修正字段语义、删除僵尸参数、扩展 System Prompt、新增分区重试、统一 4 条链路定位 |
+| v2.1 | 2026-09-18 | discussion 恢复「候选不足可补充角色」：校验改为候选池 ≥3 严格池内、<3 允许补充真实角色（禁止占位名）；mock 种子数据 answer 统一为完整选项原文、每题补足 ≥2；修复 call_llm_with_retry 调用级重试、i18n contextRequired 访问、datasetGenerate/进度条 context 兜底 |
 ---
 **本设计说明书为 TELG LLM 链路的唯一产品与技术口径，后续实现以本文档为准。**
