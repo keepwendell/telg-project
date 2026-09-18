@@ -563,7 +563,7 @@ def request_roles(p: GenerateIn) -> list[str]:
     """Ordered role names for exact-fill formats; [] for discussion."""
     fmt = (p.format or "").strip().lower()
     if fmt == "solo":
-        v = ((p.roles or {}).get("speaker") or p.role or "").strip()
+        v = ((p.roles or {}).get("speaker") or "").strip()
         return [v] if v else []
     if fmt == "dialogue":
         r = p.roles or {}
@@ -587,12 +587,13 @@ def validate_request(p: GenerateIn) -> list[str]:
     if not spec:
         return ["format 必须为 solo / dialogue / discussion（收到：%r）" % (p.format or "")]
     if fmt == "solo":
-        if len(request_roles(p)) != 1:
-            errs.append("solo 形态需要恰好 1 个讲者角色（roles.speaker）")
+        roles = request_roles(p)
+        if len(roles) > 1:
+            errs.append("solo 形态最多 1 个讲者角色（roles.speaker）；未提供时由 LLM 补充")
     elif fmt == "dialogue":
         roles = request_roles(p)
-        if len(roles) != 2 or not all(x.strip() for x in roles):
-            errs.append("dialogue 形态需要恰好 2 个角色（roles.a / roles.b）")
+        if len(roles) > 2 or not all(x.strip() for x in roles):
+            errs.append("dialogue 形态最多 2 个角色（roles.a / roles.b）；未提供或不足时由 LLM 补充")
     else:  # discussion
         rs = p.roleSelection or {}
         cands = rs.get("candidates") or []
@@ -949,8 +950,13 @@ solo（单人讲解）：speakers 恰好 1 人，全程一人连贯讲解，
                   可带少量自问自答，但不得出现第二个说话人。
 dialogue（双人对话）：speakers 恰好 2 人，双方对等交流，
                   围绕焦点来回推进，无主次结构。
-discussion（多人讨论）：speakers 3–5 人，全部来自用户提供的候选角色；
+discussion（多人讨论）：speakers 3–5 人，优先采用用户提供的候选角色；
+                  候选名单不足或与语境不适配时可补充贴合领域/语境的真实角色；
                   每位至少发言 2 次；存在观点碰撞或信息互补，禁止轮流念稿。
+角色规则（通用）：
+- 用户明确提供的角色优先采用；数量不足或未提供时，由你补充符合该领域与场景的
+  真实角色名（具体职位/头衔，如 "Powertrain Calibration Engineer"）。
+- 禁止使用 "Speaker A"、"Engineer 1"、"Expert B"、"角色 2" 等占位名。
 通用：
 - 开场 1–2 轮交代场景或抛出问题；
 - 中段围绕焦点展开，含具体信息、权衡或排查；
@@ -1021,16 +1027,19 @@ def build_user_prompt(p: GenerateIn, action: str = "generate") -> str:
         roles = request_roles(p)
         struct = [
             "- 形态：单人讲解独白（solo），全程 1 位讲者",
-            "- 讲者角色：" + (roles[0] if roles else "领域专家"),
+            "- 讲者角色：" + (roles[0] if roles else "由你按领域与语境指定 1 位真实角色（禁止占位名）"),
         ]
     elif fmt == "dialogue":
         roles = request_roles(p)
-        while len(roles) < 2:
-            roles.append("Engineer %d" % (len(roles) + 1))
-        struct = [
-            "- 形态：双人平等对话（dialogue，对称）",
-            "- 角色：" + roles[0] + " 与 " + roles[1] + "（双方对等交流，无主次结构）",
-        ]
+        if len(roles) == 2:
+            struct = ["- 形态：双人平等对话（dialogue，对称）",
+                      "- 角色：" + roles[0] + " 与 " + roles[1] + "（双方对等交流，无主次结构）"]
+        elif len(roles) == 1:
+            struct = ["- 形态：双人平等对话（dialogue，对称）",
+                      "- 角色：" + roles[0] + " 与另一位由你补充的领域真实角色（双方对等交流，无主次结构；禁止占位名）"]
+        else:
+            struct = ["- 形态：双人平等对话（dialogue，对称）",
+                      "- 角色：由你补充 2 位该领域真实角色（双方对等交流，无主次结构；禁止占位名）"]
     else:  # discussion
         rs = p.roleSelection or {}
         cands = [c for c in (rs.get("candidates") or []) if isinstance(c, str) and c.strip()]
@@ -1212,27 +1221,31 @@ def validate_artifact(art: LLMArtifact, p: GenerateIn) -> list[ValidationIssue]:
     elif mode[0] == "range" and not (mode[1] <= n <= mode[2]):
         issues.append(ValidationIssue(zone="A", path="speakers", code="headcount_out_of_range",
                                       message="出场人数应在 [%d, %d]，实际 %d" % (mode[1], mode[2], n), blocking=True))
-    # 2. role provenance
+    # 2. role provenance —— 用户角色是优先项，不是硬性填槽：
+    #    用户提供的角色应被采用；不足或未提供时允许 LLM 补充领域真实角色
+    #    （补充角色仅记 warning；占位名仍阻断，保证可听性）
     if spec["roleSelectionMode"] == "exact-fill":
         wanted = [_norm_role(r) for r in request_roles(p)]
         for sp in art.speakers:
-            if _norm_role(sp.role) not in wanted:
-                issues.append(ValidationIssue(zone="A", path="speakers", code="role_not_in_slots",
-                                              message="出场角色「%s」不在指定填槽中" % sp.role, blocking=True))
+            rn = _norm_role(sp.role)
+            if wanted and rn not in wanted:
+                issues.append(ValidationIssue(zone="A", path="speakers", code="role_supplemented",
+                                              message="出场角色「%s」为用户未指定的补充角色" % sp.role, blocking=False))
+            if _is_placeholder_role(sp.role):
+                issues.append(ValidationIssue(zone="A", path="speakers", code="placeholder_role",
+                                              message="角色「%s」为占位名，请使用领域真实角色名" % sp.role, blocking=True))
     else:
         cands = {_norm_role(c) for c in ((p.roleSelection or {}).get("candidates") or [])}
-        if len(cands) >= 3:
-            # 候选名单足够 → 出场角色必须全部来自候选池
-            for sp in art.speakers:
-                if sp.role and _norm_role(sp.role) not in cands:
-                    issues.append(ValidationIssue(zone="A", path="speakers", code="role_not_in_candidates",
-                                                  message="候选名单已足够，出场角色「%s」应来自候选池" % sp.role, blocking=True))
-        else:
-            # 候选名单不足 → 允许补充领域真实角色，但禁止占位名
-            for sp in art.speakers:
-                if sp.role and _norm_role(sp.role) not in cands and _is_placeholder_role(sp.role):
-                    issues.append(ValidationIssue(zone="A", path="speakers", code="placeholder_role",
-                                                  message="补充角色「%s」为占位名，请使用领域真实角色名" % sp.role, blocking=True))
+        for sp in art.speakers:
+            if not sp.role:
+                continue
+            rn = _norm_role(sp.role)
+            if cands and rn not in cands:
+                issues.append(ValidationIssue(zone="A", path="speakers", code="role_supplemented",
+                                              message="候选名单不足，已补充角色「%s」" % sp.role, blocking=False))
+            if _is_placeholder_role(sp.role):
+                issues.append(ValidationIssue(zone="A", path="speakers", code="placeholder_role",
+                                              message="补充角色「%s」为占位名，请使用领域真实角色名" % sp.role, blocking=True))
     # 3. speakerId consistency
     ids = {sp.id for sp in art.speakers}
     if len(ids) != len(art.speakers):

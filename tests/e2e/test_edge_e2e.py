@@ -15,8 +15,9 @@ with sync_playwright() as p:
     for _wl in range(20):
         if pg.evaluate("state.library.length") > 0: break
         pg.wait_for_timeout(400)
-    # 素材准备：清空环境时先 mock 生成 2 条（第 1 条合成音频，供 K1 seek / K3 删除后仍可播放）
-    if pg.evaluate("state.library.length") == 0:
+    # 素材准备：mock dataset 自带 1 条预置素材，不足 2 条时再生成补充
+    # （第 1 条合成音频，供 K1 seek / K3 删除后仍可播放）
+    if pg.evaluate("state.library.length") < 2:
         pg.keyboard.press('Control+k'); pg.wait_for_timeout(300)
         pg.evaluate("(()=>{state.genScene.context='Edge Test Scene One'; renderGenScene();})()"); pg.wait_for_timeout(100)
         pg.evaluate("document.getElementById('btn-generate').click(); true"); pg.wait_for_timeout(2500)

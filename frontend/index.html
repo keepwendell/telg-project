@@ -5187,13 +5187,11 @@ function collectParams() {
   };
   if (fmt === 'solo') {
     const r = (sc.roles || []).filter(Boolean);
-    payload.roles = { speaker: r[0] || genRoleCandidates()[0] || '' };
+    /* 用户角色是优先项：没选就留空，由 LLM 按领域与语境补充真实角色 */
+    payload.roles = { speaker: r[0] || '' };
   } else if (fmt === 'dialogue') {
     const r = (sc.roles || []).filter(Boolean);
-    const pool = genRoleCandidates();
-    const a = r[0] || pool[0] || '';
-    const b = r[1] || pool.find(x => x !== a) || '';
-    payload.roles = { a: a, b: b };
+    payload.roles = { a: r[0] || '', b: r[1] || '' };
   } else {
     const cands = (sc.roles || []).filter(Boolean);
     /* candidates are a preference, not a hard roster — headcount and final
