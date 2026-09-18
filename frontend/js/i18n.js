@@ -1534,7 +1534,7 @@ function renderPlaylists() {
   rows.push(
     '<div class="pl-wrap">' +
       '<div class="playlist-row' + (allActive ? ' active' : '') + '" data-plid="__all__" title="' + escapeHtml(I18N[state.lang]['pl.all']) + '">' +
-        '<div class="ic" style="min-width:0"><svg class="icon" style="width:15px;height:15px"><use href="#i-waveform"/></svg><span class="t-12" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(I18N[state.lang]['pl.all']) + '</span></div>' +
+        '<div class="ic" style="min-width:0"><svg class="icon" style="width:18px;height:18px"><use href="#i-waveform"/></svg><span class="t-12" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(I18N[state.lang]['pl.all']) + '</span></div>' +
         '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><span class="pill mono">' + filtered.length + '</span></div>' +
       '</div>' +
       '<div class="pl-expand" data-plid="__all__">' + allExp + '</div>' +
@@ -1544,7 +1544,7 @@ function renderPlaylists() {
     const cls = 'playlist-row' + (active ? ' active' : '') + (state.plRenamingId === p.id ? ' renaming' : '');
     const nameCell = state.plRenamingId === p.id
       ? '<div class="pl-row-input-wrap"><input class="pl-rename-input" value="' + escapeHtml(p.name) + '" data-rid="' + p.id + '"/></div>'
-      : '<div class="ic" style="min-width:0"><svg class="icon" style="width:15px;height:15px"><use href="#i-folder"/></svg><span class="t-12" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(p.name) + '</span></div>';
+      : '<div class="ic" style="min-width:0"><svg class="icon" style="width:18px;height:18px"><use href="#i-folder"/></svg><span class="t-12" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(p.name) + '</span></div>';
     const members = p.materialIds.filter(id => state.library.some(m => m.id === id));
     const exp = members.length
       ? members.map(id => {
@@ -1781,12 +1781,12 @@ function renderOverviewCard(art) {
   const en = String(ov.text_en || '').trim();
   const zh = String(ov.text_zh || '').trim();
   const narr = (art && art.meta && art.meta.narration) || null;
-  const hasNarr = !!(narr && narr.text_en && (Number(narr.end_ms) || 0) > 0);
+  const hasNarr = true;  /* always show overview card */
   const L = I18N[state.lang] || {};
-  const badge = hasNarr ? '<span class="narr-badge">' + (L['narr.badge'] || 'Story · Narration') + '</span>' : '';
+  const badge = hasNarr ? '<span class="narr-badge">' + (L['narr.badge'] || 'Scene Overview') + '</span>' : '';
   const btn = hasNarr
     ? '<button class="narr-btn" id="btn-narr-play" title="Play narration">' +
-      '<svg class="icon" style="width:15px;height:15px"><use href="#i-volume"/></svg>' +
+      '<svg class="icon" style="width:18px;height:18px"><use href="#i-volume"/></svg>' +
       '<span class="narr-waves"><i></i><i></i><i></i></span></button>'
     : '';
   el.classList.toggle('narr-card', hasNarr);
