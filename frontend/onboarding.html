@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TELG — Setup &amp; Onboarding</title>
+<title>Scenear — Setup &amp; Onboarding</title>
 <style>
 /* ============================================================
-   TELG — Onboarding
+   Scenear — Onboarding
    Shares design tokens / base components with frontend/index.html
    ============================================================ */
 :root{
@@ -217,7 +217,7 @@ html[data-theme="light"] .ob-shell{box-shadow:0 30px 80px rgba(20,24,32,.16),0 4
   </div>
   <div class="ob-shell">
     <div class="ob-brand">
-      <div class="ob-brand-mark">TELG</div>
+      <div class="ob-brand-mark">Scenear</div>
       <div class="ob-brand-sub" id="ob-brand-sub"></div>
     </div>
     <div class="ob-rail" id="ob-rail"></div>
@@ -256,9 +256,9 @@ function escapeHtml(x){ return String(x==null?'':x).replace(/[&<>"']/g, c => ({'
 const STEPS = ['account','llm','survey','confirm'];
 const T = {
   zh: {
-    brandSub: '首次启动向导',
+    brandSub: '为耳朵定制，让场景掷地有声。',
     stepLabels: ['账号', 'LLM 配置', '个性化', '确认'],
-    'acc.title': '欢迎使用 TELG',
+    'acc.title': '欢迎使用 场景听',
     'acc.sub': '创建本地账号以开始使用，账号数据仅保存在本机浏览器。',
     'acc.tabRegister': '创建账号', 'acc.tabLogin': '登录',
     'acc.username': '用户名', 'acc.password': '密码', 'acc.password2': '确认密码',
@@ -291,9 +291,9 @@ const T = {
     'back': '上一步', 'toastRegisterOk': '账号已创建'
   },
   en: {
-    brandSub: 'First-run setup',
+    brandSub: 'Crafted for your ears. Scenes that resonate.',
     stepLabels: ['Account', 'LLM', 'Profile', 'Confirm'],
-    'acc.title': 'Welcome to TELG',
+    'acc.title': 'Welcome to Scenear',
     'acc.sub': 'Create a local account to get started. Your account data stays in this browser.',
     'acc.tabRegister': 'Create account', 'acc.tabLogin': 'Log in',
     'acc.username': 'Username', 'acc.password': 'Password', 'acc.password2': 'Confirm password',
