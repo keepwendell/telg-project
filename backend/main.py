@@ -46,7 +46,7 @@ DB_PATH = BASE_DIR / "telg.db"
 SEED_PATH = BASE_DIR / "seed_materials.json"
 STORAGE_DIR = BASE_DIR / "storage" / "audio"
 
-app = FastAPI(title="Scenear API", version="0.2.0")
+app = FastAPI(title="Scenear API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

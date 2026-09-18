@@ -92,9 +92,9 @@ a{color:inherit;text-decoration:none}
 
 /* ---------- header ---------- */
 .brand{display:flex;align-items:center;gap:8px;user-select:none}
-.brand-mark{font-size:15px;font-weight:600;letter-spacing:-0.01em}
+.brand-mark{font-size:17px;font-weight:700;letter-spacing:-0.01em;color:var(--on-surface);background:linear-gradient(180deg,var(--primary),color-mix(in srgb,var(--primary) 60%,transparent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .brand-sep{color:var(--outline);font-size:11px}
-.brand-name{color:var(--on-variant);font-size:12px}
+.brand-name{color:var(--on-variant);font-size:13px;font-weight:500;letter-spacing:.02em}
 .version-pill{margin-left:2px;padding:1px 6px;border-radius:4px;background:var(--surface-high);color:var(--on-variant);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line)}
 .nav-seg{display:flex;align-items:center;gap:2px;padding:2px;background:var(--surface-low);border:1px solid var(--line);border-radius:6px;margin-left:4px}
 .nav-seg a{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;color:var(--on-variant);font-size:12px;transition:color .15s var(--ease),background .15s var(--ease)}
@@ -1065,9 +1065,9 @@ html[data-theme="light"] #gen-panel{
     <a class="brand" href="#">
       <span class="brand-mark">Scenear</span>
       <span class="brand-sep">/</span>
-      <span class="brand-name nowrap">Listening</span>
+      <span class="brand-name nowrap">场景听</span>
     </a>
-    <span class="version-pill nowrap">v1.0 MVP</span>
+    <span class="version-pill nowrap">v0.1.0</span>
   </div>
   <div class="header-right">
     <button class="btn-icon" id="btn-sidebar" title="Materials"><svg class="icon"><use href="#i-menu"/></svg></button>
@@ -1602,7 +1602,7 @@ html[data-theme="light"] #gen-panel{
           </div>
         </div>
         <div>
-          <textarea class="input" id="adj-voice-text" rows="4" data-i18n-ph="settings.tts.testTextPh" placeholder="Enter text to audition with each role…">Crafted for your ears. Scenes that resonate. 为耳朵定制，让场景掷地有声。</textarea>
+          <textarea class="input" id="adj-voice-text" rows="4" data-i18n-ph="settings.tts.testTextPh" placeholder="Enter text to audition with each role…">Scenear — Crafted for your ears. Scenes that resonate. 场景听 — 为耳朵定制，让场景掷地有声。</textarea>
           <div class="t-10" id="adj-single-hint" style="display:none;margin-top:8px;padding:7px 10px;border-radius:6px;background:color-mix(in srgb,var(--warning) 12%,transparent);color:var(--warning)"></div>
           <div class="voice-roles" id="adj-voice-roles" style="margin-top:8px"></div>
           <div class="tts-voice-foot" style="margin-top:8px">
@@ -1876,7 +1876,7 @@ html[data-theme="light"] #gen-panel{
             <div class="s-desc" data-i18n="settings.tts.voicehint">Type text, then play to audition.</div>
           </div>
           <div class="tts-voice-zone">
-            <textarea class="input" id="cfg-tts-test-text" rows="4" data-i18n-ph="settings.tts.testTextPh" placeholder="Enter text to audition with each role…">Crafted for your ears. Scenes that resonate. 为耳朵定制，让场景掷地有声。</textarea>
+            <textarea class="input" id="cfg-tts-test-text" rows="4" data-i18n-ph="settings.tts.testTextPh" placeholder="Enter text to audition with each role…">Scenear — Crafted for your ears. Scenes that resonate. 场景听 — 为耳朵定制，让场景掷地有声。</textarea>
             <div class="voice-roles" id="voice-roles"></div>
             <div class="tts-voice-foot">
               <button class="btn-role-add" id="btn-role-add"><svg class="icon"><use href="#i-plus"/></svg><span data-i18n="settings.tts.addRole">Add role</span></button>
@@ -2069,7 +2069,7 @@ html[data-theme="light"] #gen-panel{
         <div class="s-row">
           <div class="s-info">
             <div class="s-name" data-i18n="settings.about.version">Version</div>
-            <div class="s-desc" data-i18n="settings.about.versionDesc">v1.0 MVP — single-file frontend, FastAPI backend.</div>
+            <div class="s-desc" data-i18n="settings.about.versionDesc">v0.1.0 — single-file frontend, FastAPI backend.</div>
           </div>
           <div class="s-ctrl"><span class="t-11 mono dim">v1.0.0</span></div>
         </div>
@@ -3094,7 +3094,7 @@ const I18N = {
     'settings.developer.testDataHint': 'Corpus source for take-over — the selected dataset replaces the LLM result.',
     'settings.shortcuts.sub': 'Global keyboard shortcuts — work wherever the app is focused.',
     'settings.about.sub': 'Scenear — scene-based bilingual listening materials, crafted for your ears.',
-    'settings.about.product': 'Product', 'settings.about.version': 'Version', 'settings.about.versionDesc': 'v1.0 MVP — single-file frontend, FastAPI backend.',
+    'settings.about.product': 'Product', 'settings.about.version': 'Version', 'settings.about.versionDesc': 'v0.1.0 — single-file frontend, FastAPI backend.',
     'settings.about.engine': 'Engines', 'settings.about.engineDesc': 'LLM: OpenAI-compatible — DeepSeek / Kimi / Ark / Qwen / Ollama. TTS: edge-tts / Piper / CosyVoice.',
     'settings.about.backend': 'Backend Contract', 'settings.about.backendDesc': 'GET /api/v1/health · POST /api/v1/generate · GET/PATCH/DELETE /api/v1/materials · POST /materials/:id/synthesize',
     'settings.about.status': 'Status', 'settings.about.statusDesc': 'Live backend by default; Test Data in Developer settings switches to fixed templates.', 'settings.about.mock': 'Mock',
@@ -3275,7 +3275,7 @@ const I18N = {
     'settings.developer.testDataHint': '语料接管的数据源——所选数据集将替代 LLM 结果。',
     'settings.shortcuts.sub': '全局快捷键——应用聚焦时均生效。',
     'settings.about.sub': '场景听——场景化双语听力素材生成器，为耳朵定制，让场景掷地有声。',
-    'settings.about.product': '产品', 'settings.about.version': '版本', 'settings.about.versionDesc': 'v1.0 MVP——单文件前端 + FastAPI 后端。',
+    'settings.about.product': '产品', 'settings.about.version': '版本', 'settings.about.versionDesc': 'v0.1.0——单文件前端 + FastAPI 后端。',
     'settings.about.engine': '引擎', 'settings.about.engineDesc': 'LLM：OpenAI 兼容——DeepSeek / Kimi / Ark / Qwen / Ollama。TTS：edge-tts / Piper / CosyVoice。',
     'settings.about.backend': '后端契约', 'settings.about.backendDesc': 'GET /api/v1/health · POST /api/v1/generate · GET/PATCH/DELETE /api/v1/materials · POST /materials/:id/synthesize',
     'settings.about.status': '状态', 'settings.about.statusDesc': '默认连接真实后端；开发者模式中的测试数据可切换为固定模板。', 'settings.about.mock': 'Mock',
