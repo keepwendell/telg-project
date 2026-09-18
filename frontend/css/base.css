@@ -1,0 +1,30 @@
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+html[data-theme="light"]{color-scheme:light}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--on-surface);
+  font-family:var(--font-sans); font-size:13px; line-height:18px;
+  letter-spacing:-0.003em; -webkit-font-smoothing:antialiased; overscroll-behavior:none;
+}
+::selection{background:var(--primary); color:var(--on-primary)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--surface-highest);border-radius:5px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;transition:opacity .15s var(--ease),background .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease)}
+input,select,textarea{font-family:inherit;color:inherit}
+
+/* ---- 全局动效基础 ---- */
+.modal,.gen-modal{transition:opacity .2s var(--ease),transform .2s var(--ease)}
+.trow{transition:background .15s var(--ease)}
+.seg-item{transition:background .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease)}
+.lib-row{transition:background .15s var(--ease)}
+.pill{transition:background .15s var(--ease),color .15s var(--ease)}
+
+/* ---- 全局主题切换过渡 ---- */
+html {
+  transition: background-color .3s var(--ease);
+}
+body, .modal, .panel, .lib-row, .trow, .seg-item, .pill, .btn, .input {
+  transition: background-color .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease), box-shadow .3s var(--ease);
+}

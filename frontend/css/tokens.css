@@ -1,0 +1,32 @@
+:root{
+  /* surfaces */
+  --bg:#121315; --bg-lowest:#0d0e10;
+  --surface-low:#1b1c1e; --surface:#1f2022; --surface-high:#292a2c; --surface-highest:#343537;
+  --on-surface:#e3e2e5; --on-variant:#c2c6d6;
+  --outline:#8c909f; --outline-variant:#424754;
+  --line:rgba(66,71,84,.35); --line-strong:rgba(66,71,84,.6);
+  /* accent */
+  --primary:#adc6ff; --on-primary:#002e6a; --primary-dim:#4d8eff;
+  --secondary:#b9c8de; --tertiary:#ffb786; --on-tertiary:#502400;
+  --error:#ffb4ab; --ok:#7dd8a0;
+  /* type */
+  --font-sans:"Geist",ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  /* radius — 苹果风更圆润 */
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  /* shadow — 苹果风柔和阴影 */
+  --shadow-sm:0 1px 3px rgba(0,0,0,.1);
+  --shadow-md:0 4px 20px rgba(0,0,0,.15);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.25);
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+html[data-theme="light"]{
+  --bg:#f4f4f6; --bg-lowest:#ffffff;
+  --surface-low:#f0f0f3; --surface:#e8e8ec; --surface-high:#dedee3; --surface-highest:#d3d3d9;
+  --on-surface:#1b1b1e; --on-variant:#4d4d57;
+  --outline:#7c7c88; --outline-variant:#cfcfd6;
+  --line:rgba(207,207,214,.9); --line-strong:rgba(150,150,160,.55);
+  --primary:#2e63c8; --on-primary:#ffffff; --primary-dim:#4d8eff;
+  --secondary:#55617a; --tertiary:#b5450f; --on-tertiary:#ffffff;
+  --error:#b3261e; --ok:#1f7a4d;
+}
