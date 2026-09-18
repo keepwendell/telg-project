@@ -269,6 +269,22 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .overview-card .ov-zh{margin-top:4px;color:var(--on-variant);font-size:13px}
 .overview-card .ov-en,.overview-card .ov-zh{filter:none!important;opacity:1!important}
 .overview-card.hidden{display:none}
+/* 情景引子（旁白）卡：与正文卡片明显区分——浅蓝底 + 蓝色侧边 + 徽标 + 独立播放键 */
+.overview-card.narr-card{background:color-mix(in srgb,var(--primary) 7%,var(--surface-high));border:1px solid color-mix(in srgb,var(--primary) 22%,var(--line));border-left:3px solid color-mix(in srgb,var(--primary) 85%,#fff)}
+.narr-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.narr-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--accent);text-transform:uppercase}
+.narr-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border-radius:7px;background:transparent;border:none;color:var(--accent);cursor:pointer;transition:background .15s var(--ease)}
+.narr-btn:hover{background:color-mix(in srgb,var(--primary) 12%,transparent)}
+.narr-btn svg{width:15px;height:15px}
+/* 播放中的声波动效：三道竖线依次脉动 */
+.narr-waves{display:none;align-items:flex-end;gap:1.5px;margin-left:5px;height:12px}
+.narr-btn.playing .narr-waves{display:inline-flex}
+.narr-waves i{display:block;width:2px;border-radius:1px;background:var(--accent);height:3px;animation:narr-wave .9s ease-in-out infinite}
+.narr-waves i:nth-child(2){animation-delay:.18s}
+.narr-waves i:nth-child(3){animation-delay:.36s}
+@keyframes narr-wave{0%,100%{height:3px}50%{height:11px}}
+/* 进度条上的旁白/正文分界标记 */
+#pb-narr-mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--accent);border-radius:1px;pointer-events:none;opacity:.9;box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent)}
 
 /* ---------- tabs (inspector) ---------- */
 .tabbar{display:flex;align-items:center;gap:2px;padding:8px 8px 0;overflow-x:auto;flex-shrink:0}
@@ -460,6 +476,11 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .vocab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
 .vocab-card{padding:14px;background:var(--bg-lowest);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;gap:6px}
 .q-card{padding:16px;background:var(--bg-lowest);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;gap:10px}
+/* Quiz 解析行：点击跳转到引用的对话句 */
+.q-expl{transition:color .15s var(--ease)}
+.q-expl:hover{color:var(--accent)}
+.q-expl-jump{margin-top:5px;font-size:10.5px;color:var(--accent);opacity:.85;letter-spacing:.02em}
+.q-expl:hover .q-expl-jump{opacity:1}
 .q-options{display:flex;flex-direction:column;gap:6px}
 .q-opt{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:6px;background:var(--surface-low);cursor:pointer;font-size:12px;transition:background .15s var(--ease)}
 .q-opt .i-zh{flex:0 0 100%;padding-left:21px}
@@ -1261,6 +1282,7 @@ html[data-theme="light"] #gen-panel{
       <div class="pb-seek" id="pb-seek">
         <div class="progress-track">
           <div class="progress-fill" id="pb-fill" style="width:0%"></div>
+          <div id="pb-narr-mark" style="display:none"></div>
           <div id="pb-thumb" style="position:absolute;top:50%;left:0%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--on-surface);opacity:0;transition:opacity .15s var(--ease)"></div>
         </div>
       </div>
@@ -1744,6 +1766,18 @@ html[data-theme="light"] #gen-panel{
         </div>
         <div class="s-row">
           <div class="s-info">
+            <div class="s-name" data-i18n="settings.playback.narr">Auto Narrate</div>
+            <div class="s-desc" data-i18n="settings.playback.narrhint">Play the storyline narration before the dialogue when playback starts. The narration always counts into the total duration.</div>
+          </div>
+          <div class="s-ctrl">
+            <div class="seg seg-theme" id="cfg-narr-seg" style="grid-template-columns:repeat(2,1fr)">
+              <button class="seg-item" data-narr-opt="on" data-i18n="settings.zh.on">On</button>
+              <button class="seg-item" data-narr-opt="off" data-i18n="settings.zh.off">Off</button>
+            </div>
+          </div>
+        </div>
+        <div class="s-row">
+          <div class="s-info">
             <div class="s-name" data-i18n="settings.playback.seek">Seek Step</div>
             <div class="s-desc" data-i18n="settings.playback.seekhint">Rewind / forward step for the player buttons.</div>
           </div>
@@ -1898,6 +1932,18 @@ html[data-theme="light"] #gen-panel{
                 <option value="1.1">1.1x (brisk)</option>
                 <option value="1.2">1.2x (fast)</option>
               </select>
+              <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="s-row">
+          <div class="s-info">
+            <div class="s-name" data-i18n="settings.tts.narrVoice">Narration Voice</div>
+            <div class="s-desc" data-i18n="settings.tts.narrVoicehint">Default voice for the storyline narration.</div>
+          </div>
+          <div class="s-ctrl">
+            <div class="select-wrap">
+              <select class="select" id="cfg-narr-voice"></select>
               <svg class="icon icon-sm select-arrow"><use href="#i-chevron-down"/></svg>
             </div>
           </div>
@@ -2991,6 +3037,9 @@ const state = {
   goalMin: 30,              /* daily listening target in minutes */
   volume: 0.75,
   loop: false,
+  autoNarr: (JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}).autoNarr !== false,
+  narrVoice: (JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}).narrVoice || 'en-US-JennyNeural',
+  narrOnly: false,           /* playing the narration segment alone */
   queuePlay: true,          /* continuous playback inside an active playlist */
   bookmarks: [],            /* [{mid, title, idx, speaker, text, time, ts}] persisted to localStorage */
   stats: { date: '', playSec: 0, quizTotal: 0, quizCorrect: 0 },
@@ -3130,7 +3179,7 @@ const I18N = {
     'settings.dev.label': 'Developer Mode', 'settings.dev.sub': 'Master switch — debug tools below are only available while ON. Release builds require a key.',
     'settings.general.secInterface': 'Interface', 'settings.general.secPlayback': 'Playback',
     'settings.appearance.hint': 'Dark / Light — saved on Apply.',
-    'settings.playback.speed': 'Default Speed', 'settings.playback.speedhint': 'Playback speed for newly opened materials.', 'settings.playback.seek': 'Seek Step', 'settings.playback.seekhint': 'Rewind / forward step for the player buttons.',
+    'settings.playback.speed': 'Default Speed', 'settings.playback.speedhint': 'Playback speed for newly opened materials.', 'settings.playback.seek': 'Seek Step', 'settings.playback.seekhint': 'Rewind / forward step for the player buttons.', 'settings.playback.narr': 'Auto Narrate', 'settings.playback.narrhint': 'Play the storyline narration before the dialogue when playback starts. The narration always counts into the total duration.', 'settings.tts.narrVoice': 'Narration Voice', 'settings.tts.narrVoicehint': 'Default voice for the storyline narration.', 'narr.badge': 'Story · Narration', 'narr.play': 'Play Narration', 'quiz.jump': 'Listen to the sentence',
     'settings.playback.zh': 'Chinese Subtitles', 'settings.playback.zhhint': 'Whether the Chinese line is shown by default.',
     'settings.llm.secEndpoint': 'Endpoint & Credentials', 'settings.llm.secParams': 'Generation Parameters',
     'settings.llm.testhint': 'Verifies base_url / api_key / model reachability.',
@@ -3311,7 +3360,7 @@ const I18N = {
     'settings.dev.label': '开发模式', 'settings.dev.sub': '总开关——仅开启时下方调试工具可用。正式发布版需密钥才能开启。',
     'settings.general.secInterface': '界面', 'settings.general.secPlayback': '播放',
     'settings.appearance.hint': '深色 / 浅色，应用后生效。',
-    'settings.playback.speed': '默认倍速', 'settings.playback.speedhint': '新素材的默认播放倍速。', 'settings.playback.seek': '快进退步长', 'settings.playback.seekhint': '播放器前进/后退按键的步长秒数。',
+    'settings.playback.speed': '默认倍速', 'settings.playback.speedhint': '新素材的默认播放倍速。', 'settings.playback.seek': '快进退步长', 'settings.playback.seekhint': '播放器前进/后退按键的步长秒数。', 'settings.playback.narr': '自动朗读旁白', 'settings.playback.narrhint': '播放开始时，先朗读情景旁白再接续正文对话。旁白时长始终计入总时长。', 'settings.tts.narrVoice': '旁白音色', 'settings.tts.narrVoicehint': '情景旁白的默认音色。', 'narr.badge': '情景引子 · 旁白', 'narr.play': '朗读旁白', 'quiz.jump': '收听原句',
     'settings.playback.zh': '中文字幕', 'settings.playback.zhhint': '默认是否显示中文字幕。',
     'settings.llm.secEndpoint': '接口与凭据', 'settings.llm.secParams': '生成参数',
     'settings.llm.testhint': '校验 base_url / api_key / model 连通性。',
@@ -3593,10 +3642,10 @@ async function onProviderChange(kind) {
   /* render immediately with the fallback pool so the UI never lags the switch,
      then refresh roles once the live voice list arrives */
   if (kind === 'adj') renderAdjustVoiceRoles(sanitizeRolesForProvider(currentAdjustVoiceRoles(), p));
-  else renderVoiceRoles(sanitizeRolesForProvider(currentVoiceRoles(), p));
+  else { renderVoiceRoles(sanitizeRolesForProvider(currentVoiceRoles(), p)); renderNarrVoiceSelect(p); }
   await loadTTSVoices(p, () => {
     if (kind === 'adj') renderAdjustVoiceRoles(sanitizeRolesForProvider(currentAdjustVoiceRoles(), p));
-    else renderVoiceRoles(sanitizeRolesForProvider(currentVoiceRoles(), p));
+    else { renderVoiceRoles(sanitizeRolesForProvider(currentVoiceRoles(), p)); renderNarrVoiceSelect(p); }
   });
 }
 async function loadTTSVoices(provider, thenApply) {
@@ -3649,6 +3698,20 @@ function renderVoiceRoles(voices) {
     if (typeof r === 'string') r = { name: 'Speaker ' + String.fromCharCode(65 + i), voice: r };
     return roleRowHTML(r, p);
   }).join('');
+}
+function renderNarrVoiceSelect(provider) {
+  const sel = $('cfg-narr-voice');
+  if (!sel) return;
+  const p = normalizeTTSProvider(provider || ttsProvider());
+  const pool = ttsVoicePool(p);
+  const cur = state.narrVoice || 'en-US-JennyNeural';
+  sel.innerHTML = pool.map(v => {
+    const id = typeof v === 'string' ? v : (v && v.id);
+    if (!id) return '';
+    const label = ttsVoiceLabel(id, p);
+    return '<option value="' + escapeHtml(id) + '"' + (id === cur ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+  }).join('');
+  if (!sel.value && pool.length) sel.value = (typeof pool[0] === 'string' ? pool[0] : pool[0].id);
 }
 function addVoiceRole() {
   const cur = currentVoiceRoles();
@@ -4966,10 +5029,30 @@ function questionsHTML(art) {
           ((qt.options_zh && qt.options_zh[oi]) ? '<div class="i-zh t-11" style="margin-top:2px">' + escapeHtml(qt.options_zh[oi]) + '</div>' : '') +
           '<span class="ok-tag" data-ok="1" style="display:none">✓ Correct</span>' +
         '</label>').join('') + '</div>' +
-      '<div class="t-11 dim" data-expl="1" style="display:none;border-top:1px solid var(--line);padding-top:8px">' + qt.explain +
+      '<div class="q-expl" data-qidx="' + qi + '" data-expl="1" title="Jump to the cited sentence" style="display:none;border-top:1px solid var(--line);padding-top:8px;cursor:pointer">' + qt.explain +
         (qt.explain_zh ? '<div class="i-zh" style="margin-top:4px">' + escapeHtml(qt.explain_zh) + '</div>' : '') +
+        '<div class="q-expl-jump">↩ <span data-i18n="quiz.jump">Listen to the sentence</span></div>' +
       '</div>' +
     '</div>').join('');
+}
+/* Quiz 解析行点击：从 explain 文本提取时间戳（Segment 00:00 / 片段00:09），
+   跳到对话中时间最接近的句子并自动播放。LLM 时间戳可能与合成时间轴有小偏差，
+   按句中点最近匹配做容错。 */
+function seekToExplain(qidx) {
+  const art = currentArtifact();
+  if (!art || !art.dialogue || !art.dialogue.length) return;
+  const qt = (art.listening_questions || [])[qidx];
+  const txt = (qt && (qt.explain || '')) || '';
+  const m = String(txt).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (!m) { showToast('No timestamp in the explanation', 'warn'); return; }
+  const ms = (parseInt(m[1]) * 60 + parseInt(m[2]) + (m[3] ? parseInt(m[3]) : 0)) * 1000;
+  let best = 0, bestD = Infinity;
+  art.dialogue.forEach((s, i) => {
+    const mid = (Number(s.start_ms) + Number(s.end_ms)) / 2;
+    const d = Math.abs(mid - ms);
+    if (d < bestD) { bestD = d; best = i; }
+  });
+  seekSentence(best, true);
 }
 function patternsHTML(art) {
   return art.core_sentence_patterns.map(p =>
@@ -5095,9 +5178,43 @@ function renderOverviewCard(art) {
   if (!ov || !ov.text_en) { el.classList.add('hidden'); el.innerHTML = ''; return; }
   const en = String(ov.text_en || '').trim();
   const zh = String(ov.text_zh || '').trim();
-  el.innerHTML = '<div class="ov-en">' + escapeHtml(en) + '</div>' +
+  const narr = (art && art.meta && art.meta.narration) || null;
+  const hasNarr = !!(narr && narr.text_en && (Number(narr.end_ms) || 0) > 0);
+  const L = I18N[state.lang] || {};
+  const badge = hasNarr ? '<span class="narr-badge">' + (L['narr.badge'] || 'Story · Narration') + '</span>' : '';
+  const btn = hasNarr
+    ? '<button class="narr-btn" id="btn-narr-play" title="Play narration">' +
+      '<svg class="icon" style="width:15px;height:15px"><use href="#i-volume"/></svg>' +
+      '<span class="narr-waves"><i></i><i></i><i></i></span></button>'
+    : '';
+  el.classList.toggle('narr-card', hasNarr);
+  el.innerHTML = '<div class="narr-head">' + badge + btn + '</div>' +
+    '<div class="ov-en">' + escapeHtml(en) + '</div>' +
     (zh ? '<div class="ov-zh">' + escapeHtml(zh) + '</div>' : '');
   el.classList.remove('hidden');
+}
+function narrEndMs(art) {
+  const n = art && art.meta && art.meta.narration;
+  return n ? (Number(n.end_ms) || 0) : 0;
+}
+function hasNarration(art) {
+  const n = art && art.meta && art.meta.narration;
+  return !!(n && n.text_en && (Number(n.end_ms) || 0) > 0);
+}
+/* 手动播放旁白：进度条跳到旁白段起点播放（仅旁白，播完停在旁白段末尾）。
+   旁白与正文在同一个合成文件里，播放互斥由同一 audio 天然保证。 */
+function playNarration() {
+  const art = currentArtifact();
+  if (!art || art.meta.audioReady !== true) { showToast('Audio not synthesized yet — click Synthesize Audio', 'warn'); return; }
+  if (!hasNarration(art)) return;
+  seek(0, false);
+  state.narrOnly = true;
+  play();
+}
+function toggleNarration() {
+  if (state.narrOnly && state.playing) { pause(); return; }
+  if (state.narrOnly && !state.playing) { play(); return; }
+  playNarration();
 }
 function setListenMode(mode) {
   state.listenMode = mode;
@@ -5750,7 +5867,8 @@ function synthesizeAudio() {
         let storedVoices = (t.tts && t.tts.voice) || (t.tts && t.tts.voices) || '';
         if (Array.isArray(storedVoices)) storedVoices = storedVoices.map(x => (x && x.voice) || x).filter(Boolean).join(' + ');
         ttsCfg = { voices: storedVoices, rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1,
-                   provider: normalizeTTSProvider(art.meta.tts_provider || (t.tts && t.tts.provider) || 'edge-tts') };
+                   provider: normalizeTTSProvider(art.meta.tts_provider || (t.tts && t.tts.provider) || 'edge-tts'),
+                   narrator: state.narrVoice || (t.narrVoice) || 'en-US-JennyNeural' };
       } catch (e) {}
       const r = await API.synthesize(art.id, ttsCfg);
       if (r.audio_url) art.meta.audio_url = r.audio_url;
@@ -5763,6 +5881,8 @@ function synthesizeAudio() {
         art.dialogue = fresh.dialogue;
         if (fresh.meta && fresh.meta.audio_url) art.meta.audio_url = fresh.meta.audio_url;
         if (fresh.meta && fresh.meta.total_duration_ms) art.meta.total_duration_ms = fresh.meta.total_duration_ms;
+        if (fresh.meta && fresh.meta.narration) art.meta.narration = fresh.meta.narration;
+        else if (fresh.meta && !fresh.meta.narration) delete art.meta.narration;
       }
       hideSynthError();
       steps.forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
@@ -5898,6 +6018,7 @@ function toastNeedSynth() { showToast('Synthesize audio first — click Set Voic
 function playArtifact(art) {
   state.current = art;
   state.time = 0;
+  state.narrOnly = false;   /* new material → back to the full timeline */
   hideSynthError();   /* a new material must not keep the previous failure banner */
   pause();
   renderMaterial();
@@ -5956,6 +6077,11 @@ function tick() {
   } else {
     state.time = Math.min(state.time + dt, total);
   }
+  /* 旁白单独播放（mock 路径）：旁白段播完即停，不接续正文 */
+  if (state.narrOnly) {
+    const nEnd = narrEndMs(art);
+    if (nEnd > 0 && state.time >= nEnd) { state.narrOnly = false; state.time = nEnd; pause(); return; }
+  }
   if (state.time >= total) { state.time = total; pause(); }
   syncHighlight();
   renderPlayerBar();
@@ -5981,6 +6107,16 @@ function setPlayIcon(playing) {
     if (!state.playing) return;
     const art = currentArtifact();
     state.time = Math.min(audio.currentTime * 1000, art.meta.total_duration_ms || 0);
+    /* 旁白单独播放：旁白段播完即停，不接续正文 */
+    if (state.narrOnly) {
+      const nEnd = narrEndMs(art);
+      if (nEnd > 0 && state.time >= nEnd) {
+        state.narrOnly = false;
+        state.time = nEnd;
+        pause();
+        return;
+      }
+    }
     if (state.loop) {
       const idx = currentSegIndex();
       if (idx >= 0 && state.time >= (art.dialogue[idx] ? art.dialogue[idx].end_ms : 0)) {
@@ -6029,6 +6165,12 @@ function play() {
   const art = currentArtifact();
   if (!art || art.meta.audioReady !== true) { showToast('Audio not synthesized yet — click Synthesize Audio', 'warn'); return; }
   if (state.time >= art.meta.total_duration_ms) state.time = 0;
+  /* 自动旁白开关（关）：从头播放时跳过旁白段直接播正文；
+     总时长/进度条仍含旁白时段。旁白单独播放（narrOnly）不受影响。 */
+  if (!state.narrOnly && state.time === 0 && !state.autoNarr && hasNarration(art)) {
+    const nEnd = narrEndMs(art);
+    if (nEnd > 0 && nEnd < (art.meta.total_duration_ms || 0)) state.time = nEnd;
+  }
   state.playing = true;
   setPlayIcon(true);
   /* Playback always uses the real <audio> element — Test Data mode only swaps
@@ -6052,6 +6194,7 @@ function pause() {
 function togglePlay() { state.playing ? pause() : play(); }
 function seek(ms, autoplay) {
   const art = currentArtifact();
+  state.narrOnly = false;   /* manual seek leaves narration-only mode */
   state.time = Math.max(0, Math.min(ms, art.meta.total_duration_ms));
   try { $('pb-audio').currentTime = state.time / 1000; } catch (e) {}
   syncHighlight();
@@ -6073,9 +6216,21 @@ function nextSentence() {
   seekSentence(Math.min(idx + 1, art.dialogue.length - 1));
 }
 function prevSentence() {
-  const art = currentArtifact(), idx = currentSegIndex(), cur = art.dialogue[idx];
-  if (cur && state.time > cur.start_ms + 300) seekSentence(idx);
-  else seekSentence(Math.max(0, idx - 1));
+  const art = currentArtifact(), idx = currentSegIndex();
+  if (idx > 0) {
+    const cur = art.dialogue[idx];
+    if (state.time > cur.start_ms + 300) seekSentence(idx);
+    else seekSentence(idx - 1);
+  } else if (idx === 0) {
+    const cur = art.dialogue[0];
+    if (state.time > cur.start_ms + 300) seekSentence(0);
+    else if (hasNarration(art)) { seek(0, false); state.narrOnly = true; }   /* 句首再退 → 旁白段 */
+    else seekSentence(0);
+  } else {
+    /* idx === -1（位于旁白段）：回到旁白段起点 */
+    if (hasNarration(art)) { seek(0, false); state.narrOnly = true; }
+    else seekSentence(0);
+  }
 }
 function syncHighlight() {
   const art = currentArtifact(), idx = currentSegIndex();
@@ -6121,6 +6276,15 @@ function renderPlayerBar() {
   const pct = total ? (state.time / total * 100) : 0;
   $('pb-fill').style.width = pct + '%';
   $('pb-thumb').style.left = pct + '%';
+  /* 旁白/正文分界标记：完整时间轴上标出旁白段结束点 */
+  const nEnd = narrEndMs(art);
+  const nm = $('pb-narr-mark');
+  if (nm) {
+    if (nEnd > 0 && total && nEnd < total) { nm.style.display = ''; nm.style.left = (nEnd / total * 100) + '%'; }
+    else nm.style.display = 'none';
+  }
+  const nb = $('btn-narr-play');
+  if (nb) nb.classList.toggle('playing', state.narrOnly && state.playing);
   const sp = CONFIG.speeds[state.speedIdx];
   $('pb-speed-label').textContent = sp === 1 ? '1.0x' : (sp + 'x');
   $('pb-back-num').textContent = state.seekStep;
@@ -6236,9 +6400,11 @@ function pickAnswer(opt) {
   } else {
     opt.classList.add('wrong');
     opt.style.color = 'var(--error)';
-    const okOpt = card.querySelectorAll('.q-opt')[ansIdx];
-    okOpt.classList.add('correct');
-    okOpt.querySelector('[data-ok]').style.display = '';
+    const okOpt = (ansIdx >= 0) ? card.querySelectorAll('.q-opt')[ansIdx] : null;
+    if (okOpt) {
+      okOpt.classList.add('correct');
+      okOpt.querySelector('[data-ok]').style.display = '';
+    }
     card.querySelector('[data-expl]').style.display = '';
   }
   saveStats();
@@ -6687,14 +6853,17 @@ function openModal() {
   const gmS = $('cfg-goal-min'); if (gmS) gmS.value = String(state.goalMin);
   const zhSeg = document.querySelector('#cfg-zh-seg [data-zh-opt="' + (state.zhVisible ? 'on' : 'off') + '"]');
   if (zhSeg) setSeg($('cfg-zh-seg'), zhSeg);
+  const narrSeg = document.querySelector('#cfg-narr-seg [data-narr-opt="' + (state.autoNarr ? 'on' : 'off') + '"]');
+  if (narrSeg) setSeg($('cfg-narr-seg'), narrSeg);
+  renderNarrVoiceSelect();
   try {
     const cfg = JSON.parse(localStorage.getItem('telg-settings') || 'null');
     if (cfg && cfg.tts) {
       const prov = normalizeTTSProvider(cfg.tts.provider);
       $('cfg-tts-provider').value = prov;
       const stored = cfg.tts.voices || (cfg.tts.voice ? String(cfg.tts.voice).split(' + ') : null);
-      loadTTSVoices(prov).then(() => renderVoiceRoles(sanitizeRolesForProvider(stored, prov)));
-    } else { renderVoiceRoles(null); loadTTSVoices(ttsProvider()); }
+      loadTTSVoices(prov).then(() => { renderVoiceRoles(sanitizeRolesForProvider(stored, prov)); renderNarrVoiceSelect(prov); });
+    } else { renderVoiceRoles(null); loadTTSVoices(ttsProvider()).then(() => renderNarrVoiceSelect()); }
   } catch (e) { renderVoiceRoles(null); }
   applyDebugStates();
 }
@@ -6837,6 +7006,8 @@ function saveModal() {
     seekStep: $('cfg-seek-step').value,
     goalMin: $('cfg-goal-min').value,
     zhDefault: (document.querySelector('#cfg-zh-seg .seg-item.active') || {}).dataset.zhOpt || 'on',
+    autoNarr: (document.querySelector('#cfg-narr-seg .seg-item.active') || {}).dataset.narrOpt || 'on',
+    narrVoice: (document.querySelector('#cfg-narr-voice') || {}).value || 'en-US-JennyNeural',
     llm: { provider: $('cfg-llm-provider').value, model: $('cfg-llm-model').value, baseUrl: $('cfg-llm-base').value, apiKey: $('cfg-llm-key').value, temperature: $('cfg-llm-temp').value },
     tts: { provider: $('cfg-tts-provider').value, voices: currentVoiceRoles(), voice: currentVoiceRoles().map(x => x.voice).filter(Boolean).join(' + '), speechRate: $('cfg-tts-rate').value }
   };
@@ -6853,6 +7024,8 @@ function saveModal() {
   const gm = parseInt(cfg.goalMin, 10);
   if ([15, 30, 45, 60, 90].includes(gm)) state.goalMin = gm;
   state.zhVisible = cfg.zhDefault !== 'off';
+  state.autoNarr = cfg.autoNarr !== 'off';
+  state.narrVoice = cfg.narrVoice || 'en-US-JennyNeural';
   updateSeekStep();
   applyLang();
   applyTheme();
@@ -6952,6 +7125,9 @@ function onClick(e) {
   if (e.target.id === 'cfg-llm-mock') { toggleLlmMock(); return; }
   if (e.target.id === 'cfg-tts-mock') { toggleTtsMock(); return; }
   if (e.target.closest('#cfg-zh-seg .seg-item')) { const opt = e.target.closest('#cfg-zh-seg .seg-item'); setSeg($('cfg-zh-seg'), opt); return; }
+  if (e.target.closest('#cfg-narr-seg .seg-item')) { const opt = e.target.closest('#cfg-narr-seg .seg-item'); setSeg($('cfg-narr-seg'), opt); return; }
+  if (e.target.closest('#btn-narr-play')) { toggleNarration(); return; }
+  if (e.target.closest('.q-expl')) { seekToExplain(Number(e.target.closest('.q-expl').dataset.qidx)); return; }
   if (e.target.id === 'cfg-llm-temp') { const tv = $('cfg-temp-val'); if (tv) tv.textContent = e.target.value; return; }
   if (e.target.id === 'cfg-test-data') { selectTestData(e.target.value); return; }
   if (e.target.id === 'engine-modal') { closeModal(); return; }

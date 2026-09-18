@@ -647,6 +647,7 @@ class SynthIn(BaseModel):
     voices: str | list | None = None
     rate: float | None = None
     provider: str | None = None   # 'edge-tts' | 'kokoro'; None falls back to meta
+    narrator: str | None = None   # 旁白音色；None 回退 meta.narration.voice 或默认
 
 
 # ----------------------------------------------------------------------------
@@ -2006,14 +2007,38 @@ async def synthesize(mid: str, body: SynthIn | None = None):
             for i, name in enumerate(order):
                 spk_voices[name] = vs[i % len(vs)]
         times = []
+        # 情景引子（旁白）段：素材有 overview 时把它合成为旁白前缀段，
+        # 始终并入总时长与时间轴（关闭自动旁白仅播放起点跳过，进度条仍完整展示）。
+        # 旁白音色优先级：请求 narrator > meta.narration.voice > 默认女声旁白。
+        narr = (meta.get("overview") or {})
+        narr_text = (narr.get("text_en") or "").strip()
+        default_narr = "en-US-JennyNeural" if engine.name == "edge-tts" else (vs[0] if vs else "af_bella")
+        narr_voice = (body.narrator or "").strip() or (meta.get("narration") or {}).get("voice") or default_narr
         start = 0
+        n_files = len(segs)
+        if narr_text:
+            narr_wav = STORAGE_DIR / ("%s-seg-0.wav" % mid)
+            await engine.synthesize_seg(narr_text, narr_voice, rate, narr_wav, mid, 0)
+            dur = probe_ms(narr_wav)
+            meta["narration"] = {
+                "text_en": narr_text,
+                "text_zh": (narr.get("text_zh") or "").strip(),
+                "voice": narr_voice,
+                "start_ms": 0,
+                "end_ms": dur,
+            }
+            start = dur + gap_ms
+            n_files += 1
+        else:
+            meta.pop("narration", None)
         for i, seg in enumerate(segs):
             text = (seg["text_en"] or "").strip() or "…"
             voice = spk_voices.get(seg["speaker"]) or vs[i % len(vs)]
             # each sentence is normalized to 24k mono WAV so duration is
-            # sample-exact and the merge pass sees one consistent format
-            wav_path = STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i))
-            await engine.synthesize_seg(text, voice, rate, wav_path, mid, i)
+            # sample-exact and the merge pass sees one consistent format.
+            # seg-0 is reserved for the narration prefix; dialogue segs shift +1.
+            wav_path = STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i + 1))
+            await engine.synthesize_seg(text, voice, rate, wav_path, mid, i + 1)
             # The TTS output is kept untouched (no silence trimming). The gap
             # below absorbs the ~30-130ms lead/trail padding TTS models add, so
             # start_ms/end_ms land on segment boundaries and the voice follows
@@ -2023,8 +2048,8 @@ async def synthesize(mid: str, body: SynthIn | None = None):
             start += dur + gap_ms
         gap = ensure_gap(STORAGE_DIR, gap_ms)
         out_path = STORAGE_DIR / (mid + ".mp3")
-        merge_mp3(STORAGE_DIR, mid, len(segs), out_path, gap)
-        for i in range(len(segs)):
+        merge_mp3(STORAGE_DIR, mid, n_files, out_path, gap)
+        for i in range(n_files):
             (STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i))).unlink(missing_ok=True)
     except Exception as e:  # noqa: BLE001
         conn.close()

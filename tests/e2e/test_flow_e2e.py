@@ -130,11 +130,21 @@ with sync_playwright() as p:
     pg.evaluate("document.getElementById('btn-pb-speed').click(); true"); pg.wait_for_timeout(300)
     pg.evaluate("(()=>{const t=Array.from(document.querySelectorAll('#speed-menu button')).find(x=>x.textContent.trim().startsWith('1.5')); t.click();})()"); pg.wait_for_timeout(200)
     log('I2 倍速切 1.5x', pg.evaluate("document.getElementById('pb-speed-label').textContent")=='1.5x', pg.evaluate("document.getElementById('pb-speed-label').textContent"))
+    # 定位到对话中段（真实收听位置，避开旁白前缀段）再测前后句切换
+    pg.evaluate("(()=>{const a=currentArtifact(); const d=a.dialogue||[]; if(d.length>2) seek(Number(d[1].start_ms)+50,false); else seekSentence(Math.max(0,d.length-2),false);})()"); pg.wait_for_timeout(150)
     pg.evaluate("nextSentence(); true"); pg.wait_for_timeout(200)
     idx1 = pg.evaluate("currentSegIndex()")
     pg.evaluate("prevSentence(); true"); pg.wait_for_timeout(200)
     idx2 = pg.evaluate("currentSegIndex()")
     log('I3 K/J 前后句切换', idx1>idx2, f'{idx2}->{idx1}')
+    # 旁白段：从第 1 句句首 prev 应退回旁白段（currentSegIndex()==-1）
+    _narrRet = None
+    try:
+        pg.evaluate("(()=>{if(hasNarration(currentArtifact())){seek(Number(currentArtifact().dialogue[0].start_ms),false); prevSentence();}})"); pg.wait_for_timeout(150)
+        _narrRet = pg.evaluate("hasNarration(currentArtifact()) ? currentSegIndex() : 'skip'")
+        log('I3b 第1句 prev 退回旁白段', _narrRet == -1, str(_narrRet))
+    except Exception as _e:
+        log('I3b 第1句 prev 退回旁白段', False, 'exception')
     _i4b = pg.evaluate("document.getElementById('inspector').classList.contains('hidden')")
     pg.evaluate("document.getElementById('btn-pb-subs').click(); true"); pg.wait_for_timeout(600)
     _i4a = pg.evaluate("document.getElementById('inspector').classList.contains('hidden')")
