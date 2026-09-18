@@ -242,12 +242,11 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .trow.active .trow-time{color:var(--primary);font-weight:500}
 .speaker-name{font-size:11px;font-weight:600}
 .speaker-role{font-size:11px;color:var(--outline)}
-.trow-actions{display:flex;align-items:center;gap:2px;opacity:0;transition:opacity .15s var(--ease);flex-shrink:0}
-.trow:hover .trow-actions,.trow.active .trow-actions{opacity:1}
-.trow-actions button{display:inline-flex;align-items:center;justify-content:center;width:24px;height:22px;border-radius:4px;color:var(--outline)}
+.trow-actions{display:flex;align-items:center;gap:2px;flex-shrink:0}
+.trow-actions button{display:inline-flex;align-items:center;justify-content:center;width:24px;height:22px;border-radius:4px;color:var(--outline);opacity:0;transition:opacity .15s var(--ease),background .15s,color .15s}
+.trow:hover .trow-actions button,.trow.active .trow-actions button{opacity:1}
 .trow-actions button:hover{background:var(--surface-high);color:var(--on-surface)}
-.trow-actions button.active{color:var(--primary)}
-.trow-actions button.active::after{content:"";position:absolute;left:20%;right:20%;bottom:1px;height:1.5px;background:var(--primary)}
+.trow-actions button[data-act="bookmark"].active{opacity:1;color:var(--primary)}
 .pb-loop-btn.on{border-color:var(--primary);color:var(--primary)}
 .trow-actions .rate-btn{width:auto;padding:0 5px;font-family:var(--font-mono);font-size:10px}
 .trow-en{font-size:13.5px;line-height:20px;margin-top:2px}
@@ -1010,6 +1009,7 @@ html[data-theme="light"] #gen-panel{
   <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
   <symbol id="i-bookmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-bookmark-fill" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
   <symbol id="i-queue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14"/></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
@@ -4482,12 +4482,12 @@ function toggleBookmark(idx) {
   if (found >= 0) {
     state.bookmarks.splice(found, 1);
     persistBookmarks();
-    if (btn) btn.classList.remove('active');
+    if (btn) { btn.classList.remove('active'); const u = btn.querySelector('use'); if (u) u.setAttribute('href', '#i-bookmark'); }
     showToast(I18N[state.lang]['bm.removed']);
   } else {
     state.bookmarks.unshift({ mid: art.id, title: art.meta.title, idx: idx, speaker: s.speakerId || s.speaker, text: s.text_en, time: s.start_ms, ts: Date.now() });
     persistBookmarks();
-    if (btn) btn.classList.add('active');
+    if (btn) { btn.classList.add('active'); const u = btn.querySelector('use'); if (u) u.setAttribute('href', '#i-bookmark-fill'); }
     showToast(I18N[state.lang]['bm.added'] + (s.speakerId || s.speaker || ''));
   }
 }
@@ -4857,7 +4857,7 @@ function transcriptHTML(art) {
           (hasTs ? '<span class="trow-time">' + fmt(s.start_ms) + ' – ' + fmt(s.end_ms) + '</span>' : '') +
           '<span class="trow-actions">' +
             '<button data-act="sloop" ' + (playable ? '' : 'disabled ') + 'title="Loop this sentence"><svg class="icon icon-sm"><use href="#i-repeat"/></svg></button>' +
-            '<button data-act="bookmark" class="' + (isBookmarked(art.id, i) ? 'active' : '') + '" ' + (playable ? '' : 'disabled ') + 'title="Bookmark phrase"><svg class="icon icon-sm"><use href="#i-bookmark"/></svg></button>' +
+            '<button data-act="bookmark" class="' + (isBookmarked(art.id, i) ? 'active' : '') + '" ' + (playable ? '' : 'disabled ') + 'title="Bookmark phrase"><svg class="icon icon-sm"><use href="#' + (isBookmarked(art.id, i) ? 'i-bookmark-fill' : 'i-bookmark') + '"/></svg></button>' +
           '</span>' +
         '</div>' +
       '</div>' +
@@ -5644,8 +5644,9 @@ function exportMD(art) {
   L.push('', '## Listening Questions');
   art.listening_questions.forEach((qt, i) => {
     L.push((i + 1) + '. ' + qt.q);
-    qt.options.forEach((o, oi) => L.push('   ' + String.fromCharCode(65 + oi) + '. ' + o + (oi === qt.answer ? ' ✓' : '')));
-    L.push('   Answer: ' + String.fromCharCode(65 + qt.answer) + ' — ' + qt.explain);
+    qt.options.forEach((o, oi) => L.push('   ' + String.fromCharCode(65 + oi) + '. ' + o + (oi === quizAnswerIndex(qt) ? ' ✓' : '')));
+    const _ai = quizAnswerIndex(qt);
+    L.push('   Answer: ' + (_ai >= 0 ? String.fromCharCode(65 + _ai) : '?') + ' — ' + qt.explain);
   });
   L.push('', '## Sentence Patterns');
   art.core_sentence_patterns.forEach(p => L.push('- **' + p.title + '**: ' + p.pattern));
@@ -6015,6 +6016,13 @@ function setSpeed(sp) {
 }
 
 /* ---------------- QUESTIONS ---------------- */
+/* v2 answer is the full option text; legacy artifacts may carry a numeric
+   index. Resolve to the option index either way. */
+function quizAnswerIndex(qt) {
+  if (typeof qt.answer === 'number') return qt.answer;
+  if (Array.isArray(qt.options)) return qt.options.indexOf(qt.answer);
+  return -1;
+}
 function pickAnswer(opt) {
   const card = opt.closest('.q-card');
   const inPv = !!card.closest('#pv-questions');
@@ -6027,7 +6035,8 @@ function pickAnswer(opt) {
   card.querySelector('[data-expl]').style.display = 'none';
   opt.querySelector('input').checked = true;
   state.stats.quizTotal++;
-  if (oi === qt.answer) {
+  const ansIdx = quizAnswerIndex(qt);
+  if (oi === ansIdx) {
     state.stats.quizCorrect++;
     opt.classList.add('correct');
     opt.querySelector('[data-ok]').style.display = '';
@@ -6035,7 +6044,7 @@ function pickAnswer(opt) {
   } else {
     opt.classList.add('wrong');
     opt.style.color = 'var(--error)';
-    const okOpt = card.querySelectorAll('.q-opt')[qt.answer];
+    const okOpt = card.querySelectorAll('.q-opt')[ansIdx];
     okOpt.classList.add('correct');
     okOpt.querySelector('[data-ok]').style.display = '';
     card.querySelector('[data-expl]').style.display = '';
