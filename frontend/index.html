@@ -254,10 +254,10 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .zh-toggle{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono);letter-spacing:.04em;color:var(--outline);cursor:pointer;padding:2px 6px;border-radius:5px;border:1px solid transparent;transition:all .15s var(--ease)}
 .zh-toggle:hover{color:var(--on-surface)}
 .zh-toggle.on{color:var(--primary);background:var(--surface-low);border-color:var(--line)}
-.playing-flag{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--primary);margin-left:6px}
-.playing-flag .dot{background:var(--primary)}
-.playing-flag.paused{color:var(--warning)}
-.playing-flag.paused .dot{background:var(--warning)}
+.playing-flag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--ok);margin-left:6px}
+.playing-flag .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.playing-flag.paused{color:#e8b339}
+.playing-flag.paused .dot{background:#e8b339}
 .blind-mode .trow-zh{opacity:0}
 .blind-mode.zh-on .trow-zh{opacity:1;filter:blur(5px);transition:filter .2s var(--ease)}
 .blind-mode.zh-on .trow-zh:hover{filter:none}
