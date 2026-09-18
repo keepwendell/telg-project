@@ -4,53 +4,62 @@
 
 | 参数 | 示例 | 作用 |
 |---|---|---|
-| Topic | Tire Burst Stability Control | 决定技术主题（自由输入 + Presets） |
-| Dialogue Type | 双人技术讨论 | 决定内容结构 |
-| Length | 60 / 120 / 180s | 控制内容长度（Segmented Control） |
-| Difficulty | Level 1–5 | 控制英语难度 |
-| Domain / Role / Scenario | Automotive / Vehicle Dynamics Engineer / Technical Discussion | 决定技术语境与角色 |
-| Voice | en-US-GuyNeural | TTS 音色（按角色设置，可增删角色） |
+| 场景语境（context） | 一次爆胎稳定性控制的英文技术评审，讨论响应时间与标定保守度的取舍 | **最高优先级**：决定主题、场合、讨论焦点 |
+| 对话形态（format） | 双人对话 | 决定内容结构（solo / dialogue / discussion） |
+| 练习领域（domain） | Automotive Engineering | 决定术语体系与典型场景 |
+| 对话角色（roles） | Vehicle Dynamics Lead / Controls Engineer | 决定出场角色（按形态从候选/偏好中挑选） |
+| 时长（length） | 5 分钟 | 控制内容长度（2 / 5 / 8 / 12 / 15 分钟） |
+| 词汇专业度（difficulty） | L3 技术化 | 控制术语密度与用词（L1 生活化 – L5 学术化） |
+| 句式复杂度（depth） | L3 常用 | 控制句长与从句（L1 简单 – L5 学术长难句） |
+| 合成引擎 / 音色 | edge-tts / Kokoro | TTS 合成（按角色设置音色，可增删角色） |
 
-### Dialogue Type（第一阶段）
+### 对话形态（Dialogue Format）
 
-1. 双人技术讨论（Technical Discussion）
-2. 单人技术讲解（Single Technical Deep-Dive）
-3. 技术面试问答（Technical Interview）
-4. 工程问题分析（Root-Cause Failure Analysis）
+1. **solo（单人讲解）**：全程 1 位讲者连贯讲解，可少量自问自答；
+2. **dialogue（双人对话）**：恰好 2 人，双方对等交流、无主次结构；
+3. **discussion（多人讨论）**：从候选角色中选 3–5 人出场，观点碰撞或信息互补。
 
-后续扩展：Code Review / Design Review / Test Discussion / Calibration Discussion / Project Meeting / Technical Presentation / Job Interview / Daily Engineering Communication。
+> 早期规划中的 Dialogue Type（双人技术讨论 / 单人讲解 / 技术面试 / 故障分析）已由"场景语境 + 对话形态"取代：场景描述决定讨论焦点，形态决定结构。
 
-### 进阶参数（Advanced，默认收起）
+### 附加参数
 
-- Technical Depth（1–5）：技术深度
-- Breadth（1–5）：话题谈论广度（涉及角色/相关维度）
-- Vocabulary Density（%）：术语密度
-- Dialogue Style / Tone：语气（neutral / cheerful / serious / urgent 等，模拟工作紧急、面试压力等情感色彩）
-- Custom Instructions：自定义注入
+- **生成方向（仅 Refine）**：重写 / 扩写 / 聚焦 / 发散；
+- **改进指令（injections）**：自定义注入（如"强调 yaw moment 反馈"）。
+- 已删除：Technical Depth、Breadth、Vocabulary Density、Style / Tone（早期僵尸参数，v2.0 起不再提交与消费）。
 
-## 2. 英语难度体系（Level 1–5）
+## 2. 难度体系：双轴独立（词汇专业度 × 句式复杂度）
 
-目标**不是**简单按 CEFR 生硬划分，而是综合控制：
+难度拆成两个独立轴，可自由组合（如"专业词汇 + 简单句式"适合刚入领域者）：
 
-`vocabulary · sentence complexity · technical terminology density · speaking speed · grammar complexity · implicit meaning · dialogue naturalness`
+**词汇专业度（difficulty，只约束词汇与术语密度，不牵涉句法）**
 
-| Level | 描述 | 示例 |
-|---|---|---|
-| L1 | 简单句、低技术词汇密度 | — |
-| L2 | 标准工程表述 | — |
-| L3 | 正常工程师之间的技术讨论 | "The cornering stiffness drops significantly after the tire burst, so we need to compensate for the resulting yaw moment." |
-| L4 | 深度技术讨论 | — |
-| L5 | 接近真实外企研发会议 | "We should first determine whether the yaw response is mainly caused by the asymmetric tire forces or by the change in the effective rolling radius." |
+| Level | 中文 | 说明 | 术语密度 |
+|---|---|---|---|
+| L1 | 生活化 | 日常聊天用语，贴近生活 | ~10% |
+| L2 | 职场化 | 基础商务沟通，通用职场表达 | ~25% |
+| L3 | 技术化 | 基础技术术语，常见工程表达 | ~40% |
+| L4 | 专业化 | 领域专业词汇，准确的技术用语 | ~55% |
+| L5 | 学术化 | 学术级词汇，接近论文与讲座 | ~65% |
+
+**句式复杂度（depth，只约束句长与从句结构，不牵涉词汇难度）**
+
+| Level | 中文 | 说明 | 句长 |
+|---|---|---|---|
+| L1 | 简单 | 短句为主，直白清晰 | 8–15 词 |
+| L2 | 基础 | 简单并列复合 | 12–20 词 |
+| L3 | 常用 | 含常用从句，有层次 | 15–25 词 |
+| L4 | 复杂 | 多从句嵌套，富有变化 | 18–30 词 |
+| L5 | 学术 | 长难句频繁，学术式行文 | 20–35 词 |
 
 ## 3. 用户主工作流
 
 ```
-Choose Topic → Configure → Generate → Preview → Confirm → Listen → Replay → Review
+Describe Scenario → Configure → Generate → Preview → Confirm → Listen → Replay → Review
 ```
 
 具体步骤（当前实现）：
 
-1. 新建素材（⌘K / ⌘N / 左侧 + New）→ 输入 Topic、配置参数
+1. 新建素材（⌘K / ⌘N / 左侧 + New）→ 描述场景、配置参数
 2. 语料生成（3 步进度：Request → Validate → Timeline）→ 生成完成后处于 Draft 态（语料阶段，与 TTS 解耦）
 3. Adjust → Voice：调整音色/语气 → 合成音频（TTS 阶段）→ audioReady
 4. 发布（可改名，二次确认删除）→ 进入素材库
@@ -74,11 +83,11 @@ Choose Topic → Configure → Generate → Preview → Confirm → Listen → R
 
 ## 5. 成功标准（第一阶段）
 
-用户不需要手写 Prompt、不需要自己找英语材料、不需要自己找 TTS，**只输入一个技术主题，几十秒内获得一套可直接用于训练的技术英语听力素材**。
+用户不需要手写 Prompt、不需要自己找英语材料、不需要自己找 TTS，**只描述一个场景，几十秒内获得一套可直接用于训练的双语听力素材**。
 
 ## 6. 非目标（当前阶段不做）
 
-- 用户系统 / 学习记录持久化到服务端
-- 个性化推荐算法
-- 本地 LLM / 高级 TTS 模型部署（Provider 预留但首期只做 OpenAI-compatible + edge-tts）
-- 移动端适配（纯 PC Web App）
+- 用户系统 / 学习记录云端同步（本地账号已实现，云端同步属多端阶段）
+- 个性化推荐算法（当前由 LLM 推荐配置覆盖领域/角色/场景；个性化难度自适应未做）
+- 移动端适配（纯 PC Web App；多端演进方向见 [roadmap](../规划/roadmap-待办事项.md)）
+- 多用户体系 / 云同步 / 大规模部署（演进方向，见架构规划书）

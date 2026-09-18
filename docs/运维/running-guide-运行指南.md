@@ -1,30 +1,30 @@
 # TELG 运行指南（Windows 版）
 
-> 版本：2026-09-16 · 适用工程：telg-project（单文件前端 + FastAPI 后端）
-> 这篇指南带你在 Windows 电脑上把 TELG 跑起来：装环境 → 启动 → 生成素材 → 播放管理 → 跑测试。
-> Linux / macOS 的差异见 [第 6 节](#6-linux--macos-差异)。
+> 版本：2026-09-18 · 适用工程：telg-project（单文件前端 + FastAPI 后端）
+> 这篇指南带你在 Windows 电脑上把 TELG 跑起来：装环境 → 启动 → 生成素材 → 合成音频 → 播放学习 → 素材管理 → 跑测试。
+> Linux / macOS 的差异见 [第 7 节](#7-linux--macos-差异)。
 
 ---
 
 ## 0. 开始之前：先了解你要跑的是什么
 
-TELG 是一个纯 PC 的**技术英语听力工具**：你输入一个技术主题，它生成一段真实场景的技术英语对话，并合成可逐句跟读的音频。
+TELG 是一个**场景化双语听力素材生成器**：你描述一个真实会遇到的场景（一次技术评审、一场面试、一次客户沟通），它生成一套完整的听力素材——双语对话、场景背景、重点词汇、听力理解题、可迁移句型，并合成可逐句跟读的音频。领域不限于技术（支持技术 / 职场 / 学生 / 商务 / 学术等）。
 
-它由两部分组成：
+它由三部分组成：
 
 | 组件 | 位置 | 作用 |
 |------|------|------|
-| 后端 | `backend/main.py` | FastAPI 服务：调 LLM 生成语料、合成音频（edge-tts 在线 / Kokoro 本地离线，可切换）、存储素材到 SQLite |
-| 前端-主页面 | `frontend/index.html` | 单文件页面：生成/播放/管理界面（后端启动后会自动托管它） |
-| 前端-首启引导 | `frontend/onboarding.html` | 欢迎页 + 本地账号 + LLM 配置 + 个性化档案问卷（与主页面同源，共享 localStorage，可单独打开调试） |
+| 后端 | `backend/main.py` | FastAPI 服务：调 LLM 生成语料、校验与重试、合成音频（edge-tts 在线 / Kokoro 本地离线，可切换）、SQLite 持久化 |
+| 前端-主页面 | `frontend/index.html` | 单文件页面：生成 / 播放 / 素材库 / 设置（后端启动后自动托管） |
+| 前端-首启引导 | `frontend/onboarding.html` | 欢迎页 + 本地账号 + LLM 配置 + 个性化档案问卷（与主页面同源共享 localStorage） |
 
-所以**只要启动后端**，打开浏览器访问 `http://127.0.0.1:8000`，整个产品就都在了。
+**只要启动后端**，打开浏览器访问 `http://127.0.0.1:8000`，整个产品就都在了。
 
-**首次打开**会进入首启引导（`onboarding.html`）：注册本地账号 → 配置真实 LLM 并通过「测试连接」（不可跳过）→ 填写个性化问卷 → LLM 生成学习档案 → 确认后进入主页面。引导完成后主页面可直接打开；引导数据（账号、档案、学习目标）与主页面完全互通。调试时也可以单独打开 `http://127.0.0.1:8000/onboarding.html` 走一遍引导，或用 `http://127.0.0.1:8000/index.html` 直进主页面。
+**首次打开**会进入首启引导（onboarding.html）：注册本地账号 → 配置 LLM 并通过「测试连接」→ 填写个性化问卷 → LLM 生成学习档案与推荐配置 → 确认后进入主页面。引导数据与主页面完全互通；调试时可单独打开 `/onboarding.html` 走引导，或用 `/index.html` 直进主页面。
 
 你有两种使用方式，按需选择：
 
-- **路线 A（最快，离线）**：纯前端 + 内置测试数据，不需要后端、不需要装任何东西，5 分钟体验完整流程；
+- **路线 A（最快，离线）**：纯前端 + 内置测试数据，不需要后端、不需要装任何东西，几分钟体验完整流程；
 - **路线 B（完整功能，推荐）**：真实后端，接入你的 LLM API + TTS 合成（默认 edge-tts；网络不通时可选 Kokoro 本地离线引擎），生成真正可听的素材。
 
 下面从准备工作开始，两条路线都会带你们走到。
@@ -38,8 +38,8 @@ TELG 是一个纯 PC 的**技术英语听力工具**：你输入一个技术主�
 ### 1.1 安装 Python（3.10 或更高，推荐 3.11/3.12）
 
 1. 打开 <https://www.python.org/downloads/>，下载 Windows 安装包；
-2. 运行安装器，**务必勾选 "Add python.exe to PATH"**（这步漏了会导致命令找不到）；
-3. 装完后**新开一个终端**，验证：
+2. 运行安装器，**务必勾选 "Add python.exe to PATH"**（漏了会导致命令找不到）；
+3. 装完后**新开一个终端**验证：
 
 ```powershell
 python --version   # 应显示 Python 3.10.x 或更高
@@ -57,7 +57,7 @@ winget install Gyan.FFmpeg
 choco install ffmpeg -y
 ```
 
-装完**新开一个终端**（刷新 PATH），验证：
+装完**新开一个终端**（刷新 PATH）验证：
 
 ```powershell
 ffmpeg -version    # 有版本信息即 OK
@@ -71,30 +71,27 @@ ffprobe -version
 - `speech.platform.bing.com` —— **edge-tts** 语音合成（若改用 Kokoro 离线引擎则**不需要**此域名）
 - 你的 LLM API 域名（如 DeepSeek 的 `api.deepseek.com`）
 
-> 如果你的网络访问 `speech.platform.bing.com` 超时（常见于公司网络/部分地区），在设置页把 **Synthesis Engine 切换为 `Kokoro (Local offline)`** 即可离线合成，不依赖任何外网 TTS 服务。
+> 如果访问 `speech.platform.bing.com` 超时（常见于公司网络/部分地区），在**设置 → 合成引擎**切换为 `Kokoro (Local offline)` 即可离线合成，不依赖任何外网 TTS 服务。
 
 ### 1.4 放好工程目录
 
-把 `telg-project` 文件夹放到**无中文、无空格**的路径，例如 `D:\dev\telg-project`。
-（避免部分工具在中文/空格路径上出问题。）
+把 `telg-project` 文件夹放到**无中文、无空格**的路径，例如 `D:\dev\telg-project`（避免部分工具在中文/空格路径上出问题）。
 
 ---
 
-## 2. 路线 A：纯前端体验（最快，5 分钟，离线）
+## 2. 路线 A：纯前端体验（最快，几分钟，离线）
 
 不需要后端、不需要 ffmpeg、不需要 API Key，用内置测试数据走一遍完整流程：
 
-1. 双击打开 `frontend/index.html`（资源管理器 → 默认浏览器打开）；
-2. 右上角 **设置 → 开发者模式 → 测试数据**，选择任一固定数据集（`tire` / `canbus` / `tv`）；
-3. 回到首页，输入 Topic，点 **Generate** → 语料生成后 **Set Voice & Synthesize** → 发布 → 播放。
+1. 双击打开 `frontend/index.html`（默认浏览器打开）；
+2. 右上角 **设置 → 开发者模式 → 测试数据**，启用并选择任一固定数据集；
+3. 回到首页，描述一个场景，点 **Generate** → 语料生成 → 合成音频 → 发布 → 播放学习。
 
-> 这条路线走的是本地模板数据。如果页面提示「Cannot reach backend」，说明测试数据被切到了 Off——回到设置里选一个数据集即可。
+> 这条路线走的是本地模板数据（走 `mockMode()`，见 [第 5 节](#5-mock--真实切换)）。若页面提示无法连接后端，说明测试数据被切到了 Off——回设置里启用即可。
 
 ---
 
 ## 3. 路线 B：真实后端全功能（推荐，Windows 本地调试）
-
-一共 6 步，跟着走完就能生成一份真实的、可听的素材。
 
 ### 第 1 步：启动后端
 
@@ -108,11 +105,11 @@ cd D:\dev\telg-project\backend
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1        # 若提示“禁止运行脚本”，见 FAQ ③
+.venv\Scripts\Activate.ps1        # 若提示"禁止运行脚本"，见 FAQ ③
 pip install -r requirements.txt
 ```
 
-> **以后每次调试都不需要重复上面的步骤**。venv 建一次就一直能用，直接启动即可：
+> **以后每次调试不需要重复上面的步骤**。venv 建一次就一直能用：
 >
 > ```powershell
 > cd D:\dev\telg-project\backend
@@ -142,7 +139,7 @@ curl.exe -L -o "$dir\voices-v1.0.bin"  https://github.com/thewh1teagle/kokoro-on
 >
 > **注意**：`backend\models\` 已在 `.gitignore` 中排除——模型约 340MB，超过 GitHub 单文件 100MB 限制，**不能提交进仓库**。换环境/给同事时把 `backend\models\kokoro\` 整个目录一起复制即可。
 >
-> 文件校验大小：`kokoro-v1.0.onnx` = 325,505,369 字节；`voices-v1.0.bin` = 28,214,398 字节（防止下载中断导致合成报“文件损坏”）。
+> 文件校验大小：`kokoro-v1.0.onnx` = 325,505,369 字节；`voices-v1.0.bin` = 28,214,398 字节（防止下载中断导致合成报"文件损坏"）。
 >
 > **试听/合成偏慢？可试 INT8 量化模型（体积 325MB → 约 114MB）**。引擎会自动检测并优先使用它：
 >
@@ -152,13 +149,11 @@ curl.exe -L -o "$dir\voices-v1.0.bin"  https://github.com/thewh1teagle/kokoro-on
 >
 > 下载后**重启后端**即生效。**注意**：INT8 提速效果取决于机器——多核新 CPU 上通常更快；低核（如 2 核）CPU 实测反而更慢。若下载后试听变慢，删除该文件并重启即可回到 fp32 模型。若链接 404，到 thewh1teagle/kokoro-onnx 的 Releases 页面找 `model-files` 系列资产里带 `int8` 的文件。
 
-然后在设置页把 **Synthesis Engine 切换为 `Kokoro (Local offline)`**，音色列表会自动切换为 Kokoro 音色（如 Bella / Heart / Michael / Xiaobei…），试听与合成均在本机完成。
+然后在**设置 → 合成引擎**切换为 `Kokoro (Local offline)`，音色列表会自动切换为 Kokoro 音色（如 Bella / Heart / Michael / Xiaobei…），试听与合成均在本机完成。
 
 > Windows 若安装 `kokoro-onnx` 报编译错误，先装 Visual Studio Build Tools（"使用 C++ 的桌面开发"工作负载）后重试；若仍失败，可继续使用 edge-tts。
 >
-> 如果又把工程重新 clone 到了新目录（如 `telg-projectV2`），也**不必重建 venv**——直接复用旧目录的：
-> `D:\dev\telg-project\backend\.venv\Scripts\python.exe main.py`。
-> 只有换机器或换 Python 大版本时才需要重新建 venv。
+> 如果工程被 clone 到新目录（如 `telg-projectV2`），也**不必重建 venv**——直接复用旧目录的 `D:\dev\telg-project\backend\.venv\Scripts\python.exe main.py`。只有换机器或换 Python 大版本时才需要重新建 venv。
 
 启动成功后会看到：
 
@@ -166,11 +161,11 @@ curl.exe -L -o "$dir\voices-v1.0.bin"  https://github.com/thewh1teagle/kokoro-on
 Uvicorn running on http://127.0.0.1:8000
 ```
 
-**保持这个终端不要关闭**。
+**保持这个终端不要关闭。**
 
 ### 第 2 步：浏览器打开
 
-访问 <http://127.0.0.1:8000>，看到 TELG 主界面（深色）即成功。
+访问 <http://127.0.0.1:8000>，看到 TELG 主界面即成功。
 
 > ⚠️ **请务必通过这个地址访问**。TELG 的前端由后端托管，`/api/v1` 接口同源可用。
 > 不要直接双击 `index.html` 或单独开静态服务器——那样接口会打错地方，连接测试会报「Backend returned HTML instead of JSON」。
@@ -187,7 +182,7 @@ Uvicorn running on http://127.0.0.1:8000
 3. 点 **Test Connection** → 应显示模型名 + 延迟（毫秒），而不是红色报错；
 4. 点 **Apply** 保存。
 
-> Key 只随每次请求发送、不持久化存储——重启浏览器后需要重新填（这是刻意设计，见「设置」页说明）。
+> Key 只随每次请求发送、不持久化存储——重启浏览器后需要重新填（刻意设计，见「设置」页说明）。
 
 **环境变量（优先级低于页面配置，便于部署/换模型）**：
 
@@ -197,30 +192,50 @@ Uvicorn running on http://127.0.0.1:8000
 | `TELG_LLM_API_KEY` | API 密钥（兼容别名：`DEEPSEEK_API_KEY`） |
 | `TELG_LLM_MODEL` | 模型标识，如 `deepseek-chat` |
 
-> 生成请求默认携带 `response_format: json_object`；部分兼容端点不支持时后端会自动降级为普通 JSON 输出并重试。
+> 生成请求默认携带 `response_format: json_object`；部分兼容端点不支持时后端会自动降级为普通 JSON 输出并重试（最多 3 次，分区校验修复）。
 
 ### 第 4 步：生成你的第一份素材
 
-1. 首页输入一个技术主题，例如 `Tire Burst Stability Control`；
-2. 选择 Domain / Role / Scenario / Difficulty / Length（默认值即可）；
-3. 点 **Generate**，等待 LLM 返回（几秒到几十秒）；
-4. 生成后页面出现 Preview：技术背景、控制原理、对话文本、词汇、听力题。
+1. 首页点击 **新建素材**，在**场景语境**里描述真实场景，例如：
+   > 汽车底盘控制算法工程师的技术面试，面试官追问爆胎稳定性控制策略：车辆动力学、横摆稳定性、扭矩分配。
+2. 选择配置：
+   - **对话形态**：单人讲解 / 双人对话 / 多人讨论（3–5 人）；
+   - **练习领域**：可搜索内置领域或自定义；
+   - **对话角色**：按形态选择出场角色（从候选/学习偏好中挑选）；
+   - **时长**：2 / 5 / 8 / 12 / 15 分钟；
+   - **词汇专业度** L1–L5（生活化 → 学术化）；
+   - **句式复杂度** L1–L5（简单 → 学术长难句）。
+3. 点 **Generate**，等待 LLM 返回（几秒到几十秒）。生成后出现完整 Preview：场景背景、对话、词汇、听力题、句型，全部中英对照。
+
+> 生成后不满意可以继续精调（**Refine**）：重写 / 扩写 / 聚焦 / 发散 + 改进指令，在原文基础上重新生成，不推倒重来。
 
 ### 第 5 步：合成音频并播放
 
-1. 点 **Set Voice & Synthesize**（或语料区下方的合成按钮）；
-2. 在音频设置里确认音色、语速、情感（默认即可），点确认；
-3. 等待 edge-tts 逐句合成 + 拼接（几十秒），进度走完后**自动开始播放**；
-4. 播放时 Transcript 会逐句高亮，点击任意句子可跳转。
+1. 语料就绪后进入音频设置（Set Voice & Synthesize）：
+   - **合成引擎**：edge-tts（在线）或 Kokoro（本地离线）；
+   - 为每个角色选择音色（角色名与语料中声明一致，如 "Vehicle Dynamics Lead"）；
+   - 语速、音量等参数。
+2. 点确认合成，等待逐句合成 + 拼接（几十秒，进度走完**自动开始播放**）。
 
-### 第 6 步：素材管理与发布
+### 第 6 步：播放与学习
 
-合成完成后素材会进入左侧列表。你可以：
+- **中英对照**：Transcript 逐句对齐；翻译开关控制右侧面板（背景 / 词汇 / 题目 / 句型）中文块显隐；
+- **逐句高亮**：播放时当前句高亮，点击任意句跳转；
+- **精听控制**：单句循环 / Replay、倍速、±10 秒；
+- **盲听模式**：切换后文本模糊（先听后看），适合自测；
+- **点词查义**：点击对话中的词汇查看释义与积累；
+- **收藏**：句子右上角收藏标记（实心蓝常显），收藏句子进学习记录；
+- **听力题（Quiz）**：可自测，含答案与解析。
 
+### 第 7 步：素材管理与发布
+
+合成完成后素材进入左侧列表。你可以：
+
+- **发布**：三步进度（语料 → 合成 → 发布），发布后才算正式归档；
+- **调节**：已发布素材的全局调节按钮进入"离发布只差一步"的合成/配置页；语料区可继续 Refine（重写 / 扩写 / 聚焦 / 发散 / 改进指令）；
 - **重命名**：列表内直接改；
-- **调整**：改语料（重新生成）或改音色（重新合成）；
 - **删除**：需要二次确认；
-- **发布**：弹出对话框允许改文件名，发布后才算正式归档。
+- **播放列表**：组织素材成列表，全局播放条精听。
 
 ---
 
@@ -232,15 +247,25 @@ Uvicorn running on http://127.0.0.1:8000
 |------|------|----------|
 | 1 | `ffmpeg -version` | 显示版本信息 |
 | 2 | `.venv\Scripts\python.exe main.py` | `Uvicorn running on http://127.0.0.1:8000` |
-| 3 | 浏览器打开 `http://127.0.0.1:8000` | 显示 TELG 主界面（深色） |
+| 3 | 浏览器打开 `http://127.0.0.1:8000` | 显示 TELG 主界面（或首启引导） |
 | 4 | 设置 → LLM → Test Connection | 显示模型名 + 延迟，非红色报错 |
-| 5 | Generate 一个 Topic | 主区出现 Preview（背景/原理/对话/词汇/题目） |
-| 6 | Set Voice & Synthesize | 进度走完，自动播放真实音频；Transcript 逐句高亮 |
+| 5 | 新建素材 → Generate | 主区出现完整 Preview（背景/对话/词汇/题目/句型） |
+| 6 | 音频设置 → 合成 | 进度走完，自动播放真实音频；Transcript 逐句高亮 |
 | 7 | 刷新浏览器 | 素材仍在左侧列表（SQLite 持久化） |
 
 ---
 
-## 5. 遇到问题？常见问题（FAQ）
+## 5. Mock / 真实切换
+
+| 开关 | 位置 | 效果 |
+|---|---|---|
+| 开发者模式 → 测试数据 | 前端 `index.html` 设置页（读 `localStorage['telg-test-data']`） | 走 `mockMode()` 本地模板数据，不触网 |
+| `TELG_MOCK_LLM` | 后端环境变量 | 设为 1 时 generate 返回模板语料（测试链路用） |
+| `test_mode` 请求字段 | `/api/v1/generate` body | 使用模板响应（不调 LLM、不需 Key），验证生成管线其余环节 |
+
+---
+
+## 6. 遇到问题？常见问题（FAQ）
 
 | # | 现象 | 原因与解决 |
 |---|------|------------|
@@ -254,11 +279,12 @@ Uvicorn running on http://127.0.0.1:8000
 | ⑦b | 合成/试听报 `TTS model not downloaded`（Kokoro） | Kokoro 引擎的模型文件缺失：按 3.1 下载 `kokoro-v1.0.onnx` + `voices-v1.0.bin` 到 `backend\models\kokoro\`（工程内，推荐）或 `%USERPROFILE%\.cache\telg\kokoro\` |
 | ⑧ | `pip install` 慢/失败 | 换国内镜像：`pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple` |
 | ⑨ | Generate 报 `LLM API key not configured` | 设置里填 Key 并 **Apply**；或设置环境变量 `TELG_LLM_API_KEY`（兼容别名 `DEEPSEEK_API_KEY`；PowerShell：`$env:TELG_LLM_API_KEY="sk-..."`） |
-| ⑩ | 每次拉到新目录都要新建 venv 吗？ | **不需要**。venv 建一次即可复用：`D:\dev\telg-project\backend\.venv\Scripts\python.exe main.py`。仅换机器 / 换 Python 大版本才重建 |
+| ⑩ | Generate 反复失败 / 报校验错误 | LLM 输出未通过结构与质量校验会自动重试（最多 3 次）；换更强的模型（如 deepseek-chat → 更大上下文/更强推理模型）或简化场景描述 |
+| ⑪ | 每次拉到新目录都要新建 venv 吗？ | **不需要**。venv 建一次即可复用：`D:\dev\telg-project\backend\.venv\Scripts\python.exe main.py`。仅换机器 / 换 Python 大版本才重建 |
 
 ---
 
-## 6. 运行测试（可选）
+## 7. 运行测试（可选）
 
 工程自带 3 套 Playwright 端到端测试，跑一遍确认所有交互健康：
 
@@ -269,17 +295,18 @@ playwright install chromium
 
 # 然后运行三套测试
 cd D:\dev\telg-project
-python tests\e2e\test_flow_e2e.py      # 全链路 35 项
-python tests\e2e\test_tts_roles_e2e.py # TTS 角色 10 项
-python tests\e2e\test_edge_e2e.py      # 边缘场景 11 项
+python tests\e2e\test_flow_e2e.py      # 全链路主流程
+python tests\e2e\test_tts_roles_e2e.py # TTS 角色映射
+python tests\e2e\test_edge_e2e.py      # 边缘场景
 ```
 
 预期：三套全部通过，`console errors: []`。
 > e2e 通过注入 `localStorage['telg-test-data']` 走模板数据，**不依赖后端与网络**，随时可跑。
+> 单元测试目录 `tests/unit/` 当前为占位（README），计划补齐 Pydantic 模型 / 校验 / Prompt 构建等单测。
 
 ---
 
-## 7. Linux / macOS 差异
+## 8. Linux / macOS 差异
 
 | 事项 | Windows | Linux / macOS |
 |------|---------|---------------|
@@ -292,17 +319,19 @@ python tests\e2e\test_edge_e2e.py      # 边缘场景 11 项
 
 ---
 
-## 8. 打包与 Git（Windows）
+## 9. 打包与 Git（Windows）
 
 **打包 zip**（`scripts/package.sh` 是 bash 脚本）：
 - 方式 1：安装 Git for Windows（自带 Git Bash）→ 右键工程根目录 → "Git Bash Here" → `./scripts/package.sh`；
-- 方式 2：手动复制工程目录（排除 `.git/`、`backend/.venv/`、`backend/storage/audio/*.mp3`、`backend/telg.db`、`frontend/_shots/`、`__pycache__/`）。
+- 方式 2：手动复制工程目录（排除 `.git/`、`backend/.venv/`、`backend/models/`、`backend/storage/audio/*.mp3`、`backend/telg.db`、`frontend/_shots/`、`__pycache__/`）。
+
+> TELG 默认交付 `frontend/index.html` 单文件；只有明确要求打包 zip 或推送 GitHub 时才执行。
 
 **Git 推送**（如需同步远程）：
 ```powershell
 cd D:\dev\telg-project
 git add -A
-git commit -m "提交说明（中英双语，见 rules/author-rules-作者规则.md）"
+git commit -m "提交说明（中英双语标题：变更类型-标题，正文逐条列明变更点）"
 git push origin main
 ```
 > 若提示输入凭据，用 GitHub PAT：
@@ -311,17 +340,18 @@ git push origin main
 
 ---
 
-## 9. 数据在哪 / 怎么重置
+## 10. 数据在哪 / 怎么重置
 
 | 数据 | 位置 | 重置方式 |
 |------|------|----------|
 | SQLite 数据库 | `backend/telg.db` | 删除后重启后端（自动重建并播种种子素材） |
 | 合成音频 | `backend/storage/audio/*.mp3` | 可手动清理；素材状态会经启动迁移自动降为未合成 |
-| 前端设置 | 浏览器 `localStorage` | 开发者工具 → Application → Local Storage → 清除 |
+| Kokoro 模型 | `backend/models/kokoro/`（或用户缓存） | 删除后重新下载（见 3.1） |
+| 前端设置 / 本地账号 / 收藏 / 学习统计 | 浏览器 `localStorage` | 开发者工具 → Application → Local Storage → 清除（键如 `telg-account` / `telg-settings` / `telg-bookmarks`） |
 
 ---
 
-## 10. 运行时修复记录（历史）
+## 11. 运行时修复记录（历史）
 
 > 完整检查报告见 `reports/运行时问题检查/检查报告.md`。
 

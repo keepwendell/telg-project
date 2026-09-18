@@ -46,20 +46,20 @@ LLM、TTS、播放器、讲义之间的**共同数据源**，保证各模块内�
 ```json
 {
   "meta": {
-    "title": "Tire Burst Stability Control", "topic": "...",
-    "dialogue_type": "technical_discussion", "difficulty": "Level 3",
-    "length": "medium", "llm_provider": "deepseek",
+    "title": "Tire Burst Stability Control",
+    "format": "dialogue", "difficulty": 3, "depth": 3,
+    "length": "300", "llm_provider": "deepseek",
     "tts_provider": "edge-tts", "voice": "en-US-GuyNeural",
     "audio_url": "...", "total_duration_ms": 95000
   },
   "background": { "technical_background": "...", "technical_principle": "...", "engineering_scenario": "...",
     "technical_background_zh": "...", "technical_principle_zh": "...", "engineering_scenario_zh": "..." },
   "dialogue": [
-    { "id": 1, "speaker": "Engineer A", "text_en": "...", "text_zh": "...",
-      "start_ms": 0, "end_ms": 2300, "words": [] }
+    { "speakerId": "speaker_1", "role": "Vehicle Dynamics Lead", "text_en": "...", "text_zh": "...",
+      "start_ms": 0, "end_ms": 2300 }
   ],
-  "vocabulary": [ { "en": "yaw moment", "zh": "横摆力矩", "context_meaning": "..." } ],
-  "listening_questions": [ { "q": "...", "options": ["..."], "answer": 1, "explain": "...",
+  "vocabulary": [ { "en": "yaw moment", "zh": "横摆力矩", "def": "..." } ],
+  "listening_questions": [ { "q": "...", "options": ["..."], "answer": "正确选项完整原文", "explain": "...",
     "q_zh": "...", "options_zh": ["..."], "explain_zh": "..." } ],
   "core_sentence_patterns": [ { "title": "...", "pattern": "...", "example": "...",
     "title_zh": "...", "pattern_zh": "...", "example_zh": "..." } ]
@@ -82,7 +82,7 @@ TTSProvider: synthesize(text, voice, speed, lang) → audio + duration
 - LLM：OpenAI-compatible 通用契约（base_url + api_key + model 可配置，另支持环境变量 `TELG_LLM_BASE` / `TELG_LLM_API_KEY` / `TELG_LLM_MODEL`），兼容 DeepSeek / Qwen / Ollama / 豆包 Ark / Kimi / OpenAI / 企业内部 Gateway；前端提供预设厂商下拉与 **Custom** 手动接入，任意兼容端点开箱即用。
   - 生成请求默认携带 `response_format: json_object`；部分兼容端点不支持时后端自动降级为普通 JSON 输出并重试（系统提示词仍要求纯 JSON，模型校验层兜底）。
   - 鉴权：API Key 由前端随请求临时携带、不持久化存储；服务端环境变量作为部署级兜底。
-- TTS：首期 edge-tts（接入简单、英语效果好、无 Key）；Piper / sherpa-onnx / CosyVoice 后续按同一接口接入。
+- TTS：双引擎可切换——**edge-tts**（在线，默认，无 Key）+ **Kokoro-82M**（本地离线，可选安装，见运行指南）；Piper / sherpa-onnx / CosyVoice 预留，按同一接口接入。
 
 ## 5. 逐句 TTS 与时间轴（工程要点）
 
@@ -103,7 +103,7 @@ Audio 拼接（句间可插停顿，如 300ms）
 
 ## 7. 数据库 Schema（规划/现状）
 
-- `materials`：id, title, topic, domain, role, scenario, difficulty(1-5), depth/breadth(1-5), tone, status(draft/audio_ready/published), llm_provider/model, tts_voice_a/b, tts_style, tts_rate, total_duration_ms, audio_path, version
+- `materials`：id, title, domain, format, difficulty(1-5, 词汇专业度), depth(1-5, 句式复杂度), length(秒), status(draft/audio_ready/published), llm_provider/model, tts_voice_a/b, tts_rate, total_duration_ms, audio_path, version
 - `dialogue_segments`：id, material_id, seq, speaker, role, voice, text_en, text_zh, start_ms, end_ms
 - `vocabulary` / `listening_questions`（含 q_zh / options_zh / explain_zh）/ `core_sentence_patterns`（含 title_zh / pattern_zh / example_zh）
 - `playlists` / `playlist_materials`（多对多）
@@ -116,6 +116,6 @@ Audio 拼接（句间可插停顿，如 300ms）
 | 前端交互全链路 | ✅ 完成（mock 数据可完整跑通：生成→TTS→发布→播放→管理） |
 | 后端 CRUD / Provider 测试 / mock 生成 | ✅ 完成（FastAPI + SQLite） |
 | 真实 LLM 接入 | ✅ 完成（OpenAI 兼容通用契约 + pydantic 校验 + 失败重试 + json_object 自动降级；端到端验证通过） |
-| 真实 TTS 合成 | ❌ 占位（synthesize 仅置 audioReady，不产真实音频与时间戳） |
+| 真实 TTS 合成 | ✅ 完成（edge-tts 在线 / Kokoro 本地双引擎；逐句合成 + ffmpeg 拼接 + 时间戳真实回填，端到端验证通过） |
 | 异步任务/进度 | ❌ 前端 sleep 模拟，待 job 轮询 |
 | 安全 | ⚠️ Key 由后端管理（前端不持久化），部署需收紧 CORS/鉴权 |

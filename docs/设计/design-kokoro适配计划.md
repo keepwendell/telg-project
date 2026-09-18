@@ -1,6 +1,6 @@
 # TELG Kokoro 引擎适配计划（P1）
 
-> 版本：2026-09-16 · 状态：draft（待评审）· 关联文档：[TTS 引擎选型调研](./design-tts引擎选型.md) / [总体架构](../架构/architecture-总体架构.md) / [接口契约](../架构/api-contract-接口契约.md)
+> 版本：2026-09-16 · 状态：**done（2026-09-18 已接入：`requirements-tts-kokoro.txt` + 合成引擎切换 + INT8 支持，见运行指南 §3.1）** · 关联文档：[TTS 引擎选型调研](./design-tts引擎选型.md) / [总体架构](../架构/architecture-总体架构.md) / [接口契约](../架构/api-contract-接口契约.md)
 
 ---
 

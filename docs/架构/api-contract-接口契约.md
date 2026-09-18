@@ -15,7 +15,7 @@
 | DELETE | `/api/v1/materials/{mid}` | 删除素材 |
 | POST | `/api/v1/generate` | 生成语料（body=GenerateIn；test_mode 或环境变量 TELG_MOCK_LLM=1 时走 mock_generate） |
 | POST | `/api/v1/materials/{mid}/regenerate` | 基于原参数重新生成语料 |
-| POST | `/api/v1/materials/{mid}/synthesize` | 合成音频（当前为占位实现，仅置 audioReady） |
+| POST | `/api/v1/materials/{mid}/synthesize` | 合成音频（edge-tts / Kokoro 双引擎：逐句合成 + ffmpeg 拼接 + 时间戳回填） |
 
 ### GenerateIn（请求体）
 
@@ -84,9 +84,9 @@
 
 ## 5.1 LLM 生成实现细节（Phase 2 现状）
 
-- **结构化 Prompt**：将 difficulty(L1–5) / breadth(B1–5) / tone / depth / 目标词数 / Technical Grounding 约束组装为 system prompt；
-- **强约束输出**：`response_format: json_object` + pydantic 校验，失败自动重试（最多 3 次，带错误信息让模型自纠）；
-- **时间戳**：LLM 不产时间戳；当前用词数比例 + 300ms 句间停顿估算（占位），真实时间戳由 Phase 3 TTS 回填；
+- **结构化 Prompt**：将 difficulty（词汇专业度 L1–5）/ depth（句式复杂度 L1–5）/ 目标词数 / 场景语境 / 领域适配 / 对话结构等约束组装为 system prompt（breadth / tone / vocabDensity / style 等僵尸参数已删除）；
+- **强约束输出**：`response_format: json_object` + pydantic 校验，失败自动分区重试（最多 3 次，按 zone 局部修复并合并复验）；
+- **时间戳**：LLM 不产时间戳；`start_ms / end_ms` 由 TTS 逐句合成真实时长累加回填（句间插入停顿），非估算；
 - **凭证**：请求体 `llm_config`（与设置页同构，不持久化）或环境变量 `DEEPSEEK_API_KEY` / `TELG_LLM_BASE` / `TELG_LLM_MODEL`；
 - **regenerate**：`POST /materials/{mid}/regenerate` 原地重跑（id 保留、子表重建、状态回 draft），供 Refine 使用。
 
@@ -105,6 +105,6 @@
 ## 6. 约定与限制
 
 - 所有时间戳单位为毫秒（ms）；
-- `difficulty` 1–5 整数；`length` 字符串 "60" / "120" / "180"；
+- `difficulty` 1–5 整数（词汇专业度）；`depth` 1–5 整数（句式复杂度）；`length` 秒字符串 "120" / "300" / "480" / "720" / "900"（对应 2 / 5 / 8 / 12 / 15 分钟）；
 - 删除素材应级联清理播放列表关联行（当前后端未实现，见 issue-report A4）；
 - 真实接入后：LLM/TTS 凭据由服务端管理，前端设置页仅展示状态。
