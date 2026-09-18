@@ -46,7 +46,7 @@ DB_PATH = BASE_DIR / "telg.db"
 SEED_PATH = BASE_DIR / "seed_materials.json"
 STORAGE_DIR = BASE_DIR / "storage" / "audio"
 
-app = FastAPI(title="TELG API", version="0.1.0")
+app = FastAPI(title="Scenear API", version="0.2.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -853,7 +853,7 @@ SYNTAX_COMPLEXITY_DEFS = {
     5: "L5 学术：长难句频繁，学术式行文，平均每句 20-35 词。",
 }
 
-LLM_SYSTEM_PROMPT = """你是 TELG 沉浸式场景听力素材生成引擎。
+LLM_SYSTEM_PROMPT = """你是 Scenear 沉浸式场景听力素材生成引擎。
 你的任务是为语言学习者生成"像真实发生一样"的双语对话素材，
 让学习者在沉浸式场景中自然习得词汇、句型与表达。
 学习者可能来自不同身份与阶段：职场人、学生、求职者、技术从业者、
@@ -879,6 +879,11 @@ LLM_SYSTEM_PROMPT = """你是 TELG 沉浸式场景听力素材生成引擎。
 【二、JSON Schema（字段级）】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {
+  "title": "主题概括：一句话概括这段对话的场景内容，语言与场景语境一致（中文语境用中文，英文语境用英文），中文不超过 20 字、英文不超过 30 词；不含领域、形态、难度信息；不得透露听力题的问题、答案或考察点",
+  "overview": {
+    "text_en": "英文：对话剧情引子（场景预告），回答"谁、在什么场合、围绕什么焦点、有什么看点"，1-2 句，不超过 40 词；不评价、不剧透结论、不透露听力题问题/答案/考察点",
+    "text_zh": "对应中文翻译，不超过 60 字"
+  },
   "background": {
     "technical_background": "英文：该主题工程背景，2-3 句",
     "technical_principle": "英文：核心技术原理，2-3 句",
@@ -909,6 +914,8 @@ LLM_SYSTEM_PROMPT = """你是 TELG 沉浸式场景听力素材生成引擎。
   ]
 }
 字段级规则：
+- title 是展示名的一部分：概括"什么场景、什么内容"，语言跟随场景语境；不得复述整段语境、不得带引号/书名号。
+- overview 是剧情预告：必须回答"谁、在哪、谈什么、看点"，但不得出现听力题问题、答案或考察点关键词（例如题目问"提到了哪两个关键约束"，引子只能说"围绕稳定性控制策略展开讨论"，不能说"讨论了关键约束"）。
 - speakers[].id 用 speaker_1 / speaker_2 / ... 命名；
   dialogue[].speakerId 必须且只能引用已声明的 id。
 - speakers[].role 用具体真实角色名，禁用 "Engineer A" / "Speaker 1" 占位。
@@ -1099,6 +1106,12 @@ class LLMBackground(_BM):
     engineering_scenario_zh: str = ""
 
 
+class LLMOverview(_BM):
+    """剧情引子（对话概述）：开听前的场景预告，不剧透听力题。"""
+    text_en: str
+    text_zh: str
+
+
 class LLMVocab(_BM):
     en: str
     zh: str
@@ -1126,6 +1139,8 @@ class LLMPattern(_BM):
 
 
 class LLMArtifact(_BM):
+    title: str = ""                    # 主题概括（LLM 命名，语言跟随场景语境）
+    overview: LLMOverview | None = None   # 剧情引子（对话概述）
     background: LLMBackground
     speakers: list[LLMSpeaker] = []
     dialogue: list[LLMDialogue]
@@ -1263,6 +1278,46 @@ def validate_artifact(art: LLMArtifact, p: GenerateIn) -> list[ValidationIssue]:
     if len(art.core_sentence_patterns) < 2:
         issues.append(ValidationIssue(zone="D", path="core_sentence_patterns", code="too_few",
                                       message="core_sentence_patterns 至少 2 条", blocking=True))
+    # --- title / overview (naming + 剧情引子) ---
+    title = (art.title or "").strip()
+    if not title:
+        issues.append(ValidationIssue(zone="global", path="title", code="empty",
+                                      message="title 为空（前端将回退规则命名）", blocking=False))
+    else:
+        ctx = (p.context or "").strip()
+        has_cjk = bool(re.search(r"[\u4e00-\u9fff]", ctx))
+        lim = 20 if has_cjk else 30
+        if len(title) > lim:
+            issues.append(ValidationIssue(zone="global", path="title", code="too_long",
+                                          message="title 超长 %d 字（前端将截断或回退）" % lim, blocking=False))
+        if has_cjk and not re.search(r"[\u4e00-\u9fff]", title):
+            issues.append(ValidationIssue(zone="global", path="title", code="lang_mismatch",
+                                          message="中文语境应生成中文 title", blocking=False))
+    ov = art.overview
+    if ov is None or not (ov.text_en or "").strip() or not (ov.text_zh or "").strip():
+        issues.append(ValidationIssue(zone="global", path="overview", code="missing",
+                                      message="overview 剧情引子缺失", blocking=True))
+    else:
+        if len(ov.text_en.split()) > 40:
+            issues.append(ValidationIssue(zone="global", path="overview.text_en", code="too_long",
+                                          message="引子英文超过 40 词", blocking=False))
+        if len(ov.text_zh) > 60:
+            issues.append(ValidationIssue(zone="global", path="overview.text_zh", code="too_long",
+                                          message="引子中文超过 60 字", blocking=False))
+        if not re.search(r"[\u4e00-\u9fff]", ov.text_zh):
+            issues.append(ValidationIssue(zone="global", path="overview.text_zh", code="no_chinese",
+                                          message="text_zh 应为中文翻译", blocking=True))
+        # 引子不得透露听力题（问题/答案/考察点）——关键词重叠 warning
+        ov_en = ov.text_en.lower()
+        leak = []
+        for qi, q in enumerate(art.listening_questions):
+            for frag in re.findall(r"[a-zA-Z][a-zA-Z \-']{7,}", (q.q or "").lower()):
+                if frag.strip().lower() in ov_en and len(frag.strip()) >= 8:
+                    leak.append("Q%d:%s" % (qi + 1, frag.strip()[:24]))
+                    break
+        if leak:
+            issues.append(ValidationIssue(zone="global", path="overview", code="quiz_leak",
+                                          message="引子疑似透露听力题: %s" % ", ".join(leak[:3]), blocking=False))
     # 5. semantic warnings (non-blocking)
     dialogue_text = " ".join(d.text_en for d in art.dialogue).lower()
     hits = sum(1 for v in art.vocabulary if v.en.lower() in dialogue_text)
@@ -1415,7 +1470,8 @@ def call_llm_with_retry(p: GenerateIn, action: str = "generate") -> dict:
 
     # --- zone-scoped repair: up to 2 rounds, patching failed zones A/B/C/D ---
     for attempt in range(2, 4):
-        for zone in sorted({i.zone for i in blocking if i.zone in ZONE_FIELDS}):
+        zone_blocks = [i for i in blocking if i.zone in ZONE_FIELDS]
+        for zone in sorted({i.zone for i in zone_blocks}):
             try:
                 raw = chat(_patch_user_prompt(p, action, art, zone, blocking))
                 raw_art = LLMArtifact.model_validate(raw)
@@ -1431,6 +1487,12 @@ def call_llm_with_retry(p: GenerateIn, action: str = "generate") -> dict:
                     zone=zone, **{f: getattr(raw_art, f) for f in ZONE_FIELDS[zone]}))
             except Exception:  # noqa: BLE001 — lock violation or missing field → discard patch
                 continue
+        # global zone (title / overview): full re-generation (no zone lock applies)
+        if any(i.zone == "global" for i in blocking):
+            try:
+                art = LLMArtifact.model_validate(chat(build_user_prompt(p, action)))
+            except Exception:  # noqa: BLE001 — a failed re-gen is retried on the next round
+                pass
         issues = validate_artifact(art, p)
         blocking = [i for i in issues if i.blocking]
         _log_warnings([i for i in issues if not i.blocking])
@@ -1508,6 +1570,8 @@ def build_artifact(p: GenerateIn, action: str = "generate") -> dict:
         "depth": (p.advanced.depth if isinstance(p.advanced, Advanced) else (p.advanced or {}).get("depth", 3)),
         "speaker_voice_map": build_speaker_voice_map(speakers, ["en-US-GuyNeural", "en-US-JennyNeural"]),
         "audio_url": "/api/v1/audio/gen-none.mp3", "generated": True, "saved": False, "audioReady": False,
+        "llm_title": (payload.get("title") or "").strip(),      # LLM 主题概括（命名用）
+        "overview": payload.get("overview") or None,            # 剧情引子（对话概述）
     }
     return {
         "id": "gen-" + str(int(time.time() * 1000)),
@@ -1518,6 +1582,7 @@ def build_artifact(p: GenerateIn, action: str = "generate") -> dict:
         "vocabulary": payload["vocabulary"],
         "listening_questions": payload["listening_questions"],
         "core_sentence_patterns": payload["core_sentence_patterns"],
+        "overview": payload.get("overview") or None,
     }
 
 
@@ -2060,7 +2125,7 @@ class LLMProfileOut(_BM):
     focus_tone: str
 
 
-PROFILE_SYSTEM_PROMPT = """你是 TELG 学习档案生成器，根据用户提供的画像信息，生成一份结构化学习档案。
+PROFILE_SYSTEM_PROMPT = """你是 Scenear 学习档案生成器，根据用户提供的画像信息，生成一份结构化学习档案。
 
 ## 输出契约（硬约束）
 - 只输出合法 JSON 对象：
@@ -2451,7 +2516,7 @@ class OnboardGenOut(_BM):
     scenarios: list[str]
 
 
-ONBOARD_SYSTEM_PROMPT = """你是 TELG 听力素材生成器的一次性初始化引擎，根据用户问卷回答，
+ONBOARD_SYSTEM_PROMPT = """你是 Scenear 听力素材生成器的一次性初始化引擎，根据用户问卷回答，
 同时生成「学习档案」与「推荐配置」。
 
 ## 输出契约（硬约束）
@@ -2562,7 +2627,7 @@ class LLMRecsOut(_BM):
     scenarios: list[str]
 
 
-RECOMMEND_SYSTEM_PROMPT = """你是 TELG 听力素材生成器的推荐配置引擎，根据用户的学习档案，
+RECOMMEND_SYSTEM_PROMPT = """你是 Scenear 听力素材生成器的推荐配置引擎，根据用户的学习档案，
 为其推荐「领域 / 角色 / 场景」三组选项，作为新建素材弹窗的默认下拉选项。
 
 ## 输出契约（硬约束）

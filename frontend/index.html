@@ -263,6 +263,12 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .blind-mode.zh-on .trow-zh:hover{filter:none}
 .blind-mode .trow-en{filter:blur(5px);transition:filter .2s var(--ease)}
 .blind-mode .trow-en:hover{filter:none}
+/* 剧情引子（对话概述）卡：常显在 transcript 之前，跟随翻译按键、豁免盲听 */
+.overview-card{margin:0 0 14px;padding:12px 14px;border-radius:12px;background:var(--surface-high);border:1px solid var(--line);border-left:3px solid var(--primary);font-size:14px;line-height:1.65;color:var(--on-surface);box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.overview-card .ov-en{font-weight:600;letter-spacing:.1px}
+.overview-card .ov-zh{margin-top:4px;color:var(--on-variant);font-size:13px}
+.overview-card .ov-en,.overview-card .ov-zh{filter:none!important;opacity:1!important}
+.overview-card.hidden{display:none}
 
 /* ---------- tabs (inspector) ---------- */
 .tabbar{display:flex;align-items:center;gap:2px;padding:8px 8px 0;overflow-x:auto;flex-shrink:0}
@@ -1181,6 +1187,7 @@ html[data-theme="light"] #gen-panel{
             <div class="gen-step" data-step="2"><span class="step-ic" style="width:15px;display:inline-flex"></span><span class="gen-step-label">Validating structure &amp; grounding</span></div>
           </div>
           <div class="t-11 dim" id="gen-topic-label" style="text-align:center"></div>
+          <div class="t-10 faint" id="gen-waiting-note" style="text-align:center"></div>
           <div id="llm-trace" class="llm-trace hidden"></div>
         </div>
         <div id="transcript-body">
@@ -1207,6 +1214,7 @@ html[data-theme="light"] #gen-panel{
               <button class="btn btn-sm btn-primary hidden" id="btn-publish-banner"><svg class="icon icon-sm"><use href="#i-save"/></svg><span data-i18n="gen.publish">Publish</span></button>
             </div>
           </div>
+          <div id="overview-card" class="overview-card hidden"></div>
           <div id="transcript-list"></div>
         </div>
       </section>
@@ -2322,7 +2330,11 @@ const MOCK_MATERIALS = [
       "total_duration_ms": 65000,
       "audioReady": false,
       "tag": "ESC / VDC",
-      "filter": "Automotive"
+      "filter": "Automotive",
+      "overview": {
+        "text_en": "In a 120 km/h highway blowout simulation, a Vehicle Dynamics engineer and a Controls lead review ESC calibration and whether differential braking can hold the car stable before the driver reacts.",
+        "text_zh": "在120公里/小时高速爆胎仿真中，车辆动力学工程师与控制负责人评审ESC标定，并讨论差动制动能否在驾驶员反应前稳住车辆。"
+      }
     },
     "background": {
       "technical_background": "A sudden front-axle tire burst causes instantaneous loss of cornering stiffness (C_α) and generates severe rolling resistance disparity. This unbalances longitudinal drag, producing an unexpected disruptive yaw moment that pulls the chassis abruptly toward the blown tire side.",
@@ -2501,7 +2513,11 @@ const MOCK_MATERIALS = [
       "total_duration_ms": 60000,
       "audioReady": false,
       "tag": "CAN / RTOS",
-      "filter": "Software"
+      "filter": "Software",
+      "overview": {
+        "text_en": "At a morning RCA meeting, an embedded lead and a kernel debugger trace intermittent CAN frame loss that only appears on cold starts, comparing oscilloscope signals against the bit-time tolerance window.",
+        "text_zh": "在早晨的根因分析会上，嵌入式负责人与内核调试工程师排查只在冷启动时出现的CAN帧丢失，对照位时序容差窗口比对示波器信号。"
+      }
     },
     "background": {
       "technical_background": "Intermittent frame loss on a chassis domain CAN bus appears only at low temperatures. A transceiver that powers up before its reference oscillator stabilizes can produce corrupted or dropped frames during the cold-start window.",
@@ -2635,7 +2651,11 @@ const MOCK_MATERIALS = [
       "total_duration_ms": 75000,
       "audioReady": false,
       "tag": "TV / AWD",
-      "filter": "Drivetrain"
+      "filter": "Drivetrain",
+      "overview": {
+        "text_en": "Two control engineers debate torque vectoring during hard turn-in, weighing rear-axle brake torque against e-axle drive torque when the inside wheel starts to unload.",
+        "text_zh": "两位控制工程师在激烈入弯工况下讨论扭矩矢量分配，权衡内侧轮开始卸载时后轴制动力矩与电轴驱动扭矩的取舍。"
+      }
     },
     "background": {
       "technical_background": "During hard turn-in, the inside rear wheel unloads and loses lateral grip before the front axle reaches its slip limit, capping achievable yaw acceleration and delaying the driver's requested rotation.",
@@ -2929,6 +2949,7 @@ async function datasetGenerate(params, replaceId) {
   art.meta.domain = params.domainLabel || base.meta.domain;
   art.meta.role = params.role || base.meta.role;
   art.meta.scenario = params.scenario || base.meta.scenario;
+  art.meta.context = params.context || '';
   art.meta.dialogue_type = (params.scenario || '').toLowerCase().replace(/[^a-z]+/g, '_');
   art.meta.difficulty = 'Level ' + params.difficulty;
   art.meta.length = params.length;
@@ -3028,7 +3049,7 @@ const I18N = {
     'tr.header': 'Synchronized Technical Dialogue', 'tr.zh': 'CN',
     'tr.synth': 'Corpus generated — audio not synthesized yet.',
     'gen.title': 'New Material', 'gen.domain': 'Domain', 'gen.add': 'Add', 'gen.addCustom': 'Add custom…', 'gen.addedRec': 'Added, synced to Settings → Recommended Defaults', 'gen.dupRec': 'This item already exists',
-    'gen.tipFormat': 'The structure and speaker count of the scene: solo talk, two-person dialogue or group discussion. Switching formats adjusts how roles are picked.', 'gen.labelDuration': 'Dialogue Duration', 'gen.labelVocab': 'Vocabulary Level', 'gen.labelSyntax': 'Syntax Complexity', 'gen.vocab1': 'Life-style', 'gen.vocab2': 'Workplace', 'gen.vocab3': 'Technical', 'gen.vocab4': 'Specialized', 'gen.vocab5': 'Academic', 'gen.syntax1': 'Simple', 'gen.syntax2': 'Basic', 'gen.syntax3': 'Common', 'gen.syntax4': 'Complex', 'gen.syntax5': 'Academic', 'gen.tipDuration': 'Rough duration of the generated audio — longer means more content.', 'gen.tipVocab': 'Vocabulary range, from L1 everyday language to L5 academic terminology.', 'gen.tipSyntax': 'Syntactic complexity, from L1 simple sentences to L5 academic passages.', 'gen.tipDomain': 'Domain of the material (technical, workplace, business, academic…) — steers terminology and context. Custom domains can be added or removed.', 'gen.tipRole': 'Pick the people in the conversation: 1 for a solo talk, 2 for a dialogue; for a discussion these act as a candidate pool and AI picks who appears.', 'gen.tipContext': 'Primary basis for the material. Be specific — occasion, participants and topic all matter.', 'gen.contextNote': 'The scene context is the primary basis for generation — the more specific, the better. If it conflicts with the options above, the scene context wins.', 'gen.lenHints': {'120':'~240 words','300':'~725 words','480':'~1160 words','720':'~1740 words','900':'~2175 words'}, 'gen.cancel': 'Cancel', 'gen.contextRequired': 'Please enter a scene context first', 'gen.vocabNames': ['','Everyday','Workplace','Technical','Specialized','Academic'], 'gen.vocabDescs': ['','Casual daily language, close to real life','Basic business communication, common workplace phrases','Core technical terms, common engineering expressions','Domain-specific vocabulary, precise technical wording','Academic-grade vocabulary, close to papers and lectures'], 'gen.syntaxNames': ['','Simple','Basic','Common','Complex','Academic'], 'gen.syntaxDescs': ['','Short sentences, straightforward structure','Simple coordinated structures, basic connectors','Common subordinate clauses, layered expression','Multiple nested clauses, varied sentence patterns','Frequent long complex sentences, academic style'],'gen.sceneSec': 'Scene Simulation', 'gen.outputSec': 'Output', 'gen.roleHint': '3–5 speakers will be picked from the roles below for a group discussion.', 'gen.roleHintSolo': 'One speaker will be picked from the roles below for a solo talk.', 'gen.roleHintDialogue': 'Two speakers will be picked from the roles below for a dialogue.',
+    'gen.tipFormat': 'The structure and speaker count of the scene: solo talk, two-person dialogue or group discussion. Switching formats adjusts how roles are picked.', 'gen.labelDuration': 'Dialogue Duration', 'gen.labelVocab': 'Vocabulary Level', 'gen.labelSyntax': 'Syntax Complexity', 'gen.vocab1': 'Life-style', 'gen.vocab2': 'Workplace', 'gen.vocab3': 'Technical', 'gen.vocab4': 'Specialized', 'gen.vocab5': 'Academic', 'gen.syntax1': 'Simple', 'gen.syntax2': 'Basic', 'gen.syntax3': 'Common', 'gen.syntax4': 'Complex', 'gen.syntax5': 'Academic', 'gen.tipDuration': 'Rough duration of the generated audio — longer means more content.', 'gen.tipVocab': 'Vocabulary range, from L1 everyday language to L5 academic terminology.', 'gen.tipSyntax': 'Syntactic complexity, from L1 simple sentences to L5 academic passages.', 'gen.tipDomain': 'Domain of the material (technical, workplace, business, academic…) — steers terminology and context. Custom domains can be added or removed.', 'gen.tipRole': 'Pick the people in the conversation: 1 for a solo talk, 2 for a dialogue; for a discussion these act as a candidate pool and AI picks who appears.', 'gen.tipContext': 'Primary basis for the material. Be specific — occasion, participants and topic all matter.', 'gen.contextNote': 'The scene context is the primary basis for generation — the more specific, the better. If it conflicts with the options above, the scene context wins.', 'gen.lenHints': {'120':'~240 words','300':'~725 words','480':'~1160 words','720':'~1740 words','900':'~2175 words'}, 'gen.cancel': 'Cancel', 'gen.contextRequired': 'Please enter a scene context first', 'gen.waiting': 'Generating… feel free to browse or play existing materials.', 'gen.switchHint': 'A material is being generated — it will appear in the library when ready.', 'pl.skipUnsynth': 'Skipped a material without audio', 'gen.vocabNames': ['','Everyday','Workplace','Technical','Specialized','Academic'], 'gen.vocabDescs': ['','Casual daily language, close to real life','Basic business communication, common workplace phrases','Core technical terms, common engineering expressions','Domain-specific vocabulary, precise technical wording','Academic-grade vocabulary, close to papers and lectures'], 'gen.syntaxNames': ['','Simple','Basic','Common','Complex','Academic'], 'gen.syntaxDescs': ['','Short sentences, straightforward structure','Simple coordinated structures, basic connectors','Common subordinate clauses, layered expression','Multiple nested clauses, varied sentence patterns','Frequent long complex sentences, academic style'],'gen.sceneSec': 'Scene Simulation', 'gen.outputSec': 'Output', 'gen.roleHint': '3–5 speakers will be picked from the roles below for a group discussion.', 'gen.roleHintSolo': 'One speaker will be picked from the roles below for a solo talk.', 'gen.roleHintDialogue': 'Two speakers will be picked from the roles below for a dialogue.',
     'gen.fmt': 'Conversation Format', 'gen.fmtSolo': 'Solo Talk', 'gen.fmtDialogue': 'Dialogue', 'gen.fmtDiscussion': 'Discussion',
     'gen.custom': 'Custom', 'gen.roles': 'Speakers',
     'gen.removedRec': 'Removed', 'gen.context': 'Scene Context', 'gen.contextPh': 'Describe the occasion and topic — e.g. test drive: the sales consultant presents vehicle performance and answers customer concerns',
@@ -3173,7 +3194,7 @@ const I18N = {
     'refine.apply': 'Refine & Regenerate',
     'save.title': 'Save', 'save.saved': 'Saved', 'save.done': 'Saved to My Materials — ',
     'lib.rename': 'Rename', 'lib.delete': 'Delete', 'lib.draft': 'Draft', 'lib.unsynth': 'No audio', 'lib.clearFilters': 'Clear filters',
-    'lib.renamed': 'Renamed — ', 'lib.deleted': 'Deleted — ', 'lib.empty': 'No materials yet',
+    'lib.renamed': 'Renamed — ', 'lib.deleted': 'Deleted — ', 'lib.empty': 'No materials yet', 'lib.nameExists': 'A material with this name already exists',
     'lib.emptyTitle': 'No materials yet', 'lib.emptySub': 'Generate a scene-based listening material from a real situation you will face.',
     'gen.tone': 'Tone & Mood',
     'tone.neutral': 'Neutral professional', 'tone.urgent': 'Urgent · deadline pressure', 'tone.interview': 'Interview · high-pressure Q&A',
@@ -3183,7 +3204,7 @@ const I18N = {
     'tts.style.serious': 'Serious', 'tts.style.urgent': 'Urgent', 'tts.style.whispering': 'Whispering',
     'pl.addTo': 'Playlist', 'pl.title': 'Add to Playlist', 'pl.new': 'New playlist…', 'pl.done': 'Done',
     'pl.createPh': 'Playlist name…', 'pl.in': 'in', 'pl.empty': 'No materials in this playlist', 'pl.exit': 'Exit playlist view', 'pl.all': 'All Materials',
-    'pl.created': 'Playlist created — ', 'pl.renamed': 'Playlist renamed — ', 'pl.deleted': 'Playlist deleted — ', 'pl.added': 'Added to ', 'pl.removed': 'Removed from ',
+    'pl.created': 'Playlist created — ', 'pl.renamed': 'Playlist renamed — ', 'pl.deleted': 'Playlist deleted — ', 'pl.added': 'Added to ', 'pl.removed': 'Removed from ', 'pl.nameExists': 'A playlist with this name already exists',
     'del.title': 'Delete?', 'del.mTitle': 'Delete material?', 'del.pTitle': 'Delete playlist?',
     'del.cancel': 'Cancel', 'del.delete': 'Delete',
     'del.materialText': 'This permanently deletes the material from All Materials and every playlist. It cannot be undone.',
@@ -3209,7 +3230,7 @@ const I18N = {
     'tr.header': '同步技术对话', 'tr.zh': '中文',
     'tr.synth': '语料已生成 — 音频尚未合成。',
     'gen.title': '新建素材', 'gen.domain': '领域', 'gen.add': '添加', 'gen.addCustom': '添加自定义…', 'gen.addedRec': '已添加，并同步到 设置 → 推荐设置', 'gen.dupRec': '该项已存在',
-    'gen.tipFormat': '决定对话的结构与出场人数：单人讲解、双人对话或多人讨论。切换形态会同步调整角色选择方式。', 'gen.labelDuration': '对话时长', 'gen.labelVocab': '词汇专业度', 'gen.labelSyntax': '句式复杂度', 'gen.vocab1': '生活化', 'gen.vocab2': '职场化', 'gen.vocab3': '技术化', 'gen.vocab4': '专业化', 'gen.vocab5': '学术化', 'gen.syntax1': '简单', 'gen.syntax2': '基础', 'gen.syntax3': '常用', 'gen.syntax4': '复杂', 'gen.syntax5': '学术', 'gen.tipDuration': '生成音频的大致时长，时间越长内容越充分。', 'gen.tipVocab': '词汇难度范围，从 L1 生活化日常用语到 L5 学术级专业词汇。', 'gen.tipSyntax': '句法复杂程度，从 L1 简单短句到 L5 学术长难句。', 'gen.tipDomain': '素材所属领域（技术、职场、商务、学术等），影响术语选择与语境倾向。可添加或删除自定义领域。', 'gen.tipRole': '选择参与对话的人物：单人讲解选 1 位，双人对话选 2 位；多人讨论时作为候选名单，由 AI 依据语境挑选出场。', 'gen.tipContext': '生成素材的主要依据。描述越具体越好，包括场合、参与方、讨论话题等。', 'gen.contextNote': '场景语境是生成素材的主要依据，描述越具体越好。当与上述选项设置冲突时，将优先以场景语境为准。', 'gen.lenHints': {'120':'约 240 词','300':'约 725 词','480':'约 1160 词','720':'约 1740 词','900':'约 2175 词'}, 'gen.cancel': '取消', 'gen.contextRequired': '请先输入场景语境', 'gen.vocabNames': ['','生活化','职场化','技术化','专业化','学术化'], 'gen.vocabDescs': ['','日常聊天用语，贴近生活场景','基础商务沟通，通用职场表达','基础技术术语，常见工程表达','领域专业词汇，准确的技术用语','学术级词汇，接近论文与讲座'], 'gen.syntaxNames': ['','简单','基础','常用','复杂','学术'], 'gen.syntaxDescs': ['','短句为主，结构直白清晰','简单并列复合，连接词基础','含常用从句，表达有层次','多从句嵌套，句式富有变化','长难句频繁，学术式行文'],'gen.sceneSec': '场景模拟', 'gen.outputSec': '输出参数', 'gen.roleHint': '将从对话角色中选取 3–5 个角色，生成多人讨论。', 'gen.roleHintSolo': '将从对话角色中选取 1 个角色，生成单人讲解。', 'gen.roleHintDialogue': '将从对话角色中选取 2 个角色，生成双人对话。',
+    'gen.tipFormat': '决定对话的结构与出场人数：单人讲解、双人对话或多人讨论。切换形态会同步调整角色选择方式。', 'gen.labelDuration': '对话时长', 'gen.labelVocab': '词汇专业度', 'gen.labelSyntax': '句式复杂度', 'gen.vocab1': '生活化', 'gen.vocab2': '职场化', 'gen.vocab3': '技术化', 'gen.vocab4': '专业化', 'gen.vocab5': '学术化', 'gen.syntax1': '简单', 'gen.syntax2': '基础', 'gen.syntax3': '常用', 'gen.syntax4': '复杂', 'gen.syntax5': '学术', 'gen.tipDuration': '生成音频的大致时长，时间越长内容越充分。', 'gen.tipVocab': '词汇难度范围，从 L1 生活化日常用语到 L5 学术级专业词汇。', 'gen.tipSyntax': '句法复杂程度，从 L1 简单短句到 L5 学术长难句。', 'gen.tipDomain': '素材所属领域（技术、职场、商务、学术等），影响术语选择与语境倾向。可添加或删除自定义领域。', 'gen.tipRole': '选择参与对话的人物：单人讲解选 1 位，双人对话选 2 位；多人讨论时作为候选名单，由 AI 依据语境挑选出场。', 'gen.tipContext': '生成素材的主要依据。描述越具体越好，包括场合、参与方、讨论话题等。', 'gen.contextNote': '场景语境是生成素材的主要依据，描述越具体越好。当与上述选项设置冲突时，将优先以场景语境为准。', 'gen.lenHints': {'120':'约 240 词','300':'约 725 词','480':'约 1160 词','720':'约 1740 词','900':'约 2175 词'}, 'gen.cancel': '取消', 'gen.contextRequired': '请先输入场景语境', 'gen.waiting': '生成中，可继续浏览或播放已有素材…', 'gen.switchHint': '素材正在生成中，完成后将出现在素材库', 'pl.skipUnsynth': '已跳过未合成音频的素材', 'gen.vocabNames': ['','生活化','职场化','技术化','专业化','学术化'], 'gen.vocabDescs': ['','日常聊天用语，贴近生活场景','基础商务沟通，通用职场表达','基础技术术语，常见工程表达','领域专业词汇，准确的技术用语','学术级词汇，接近论文与讲座'], 'gen.syntaxNames': ['','简单','基础','常用','复杂','学术'], 'gen.syntaxDescs': ['','短句为主，结构直白清晰','简单并列复合，连接词基础','含常用从句，表达有层次','多从句嵌套，句式富有变化','长难句频繁，学术式行文'],'gen.sceneSec': '场景模拟', 'gen.outputSec': '输出参数', 'gen.roleHint': '将从对话角色中选取 3–5 个角色，生成多人讨论。', 'gen.roleHintSolo': '将从对话角色中选取 1 个角色，生成单人讲解。', 'gen.roleHintDialogue': '将从对话角色中选取 2 个角色，生成双人对话。',
     'gen.fmt': '对话形态', 'gen.fmtSolo': '单人讲解', 'gen.fmtDialogue': '双人对话', 'gen.fmtDiscussion': '多人讨论',
     'gen.custom': '自定义', 'gen.roles': '对话角色',
     'gen.removedRec': '已删除', 'gen.context': '场景语境', 'gen.contextPh': '描述场合与主题，如：试驾环节，销售介绍车辆性能并回应客户顾虑',
@@ -3354,7 +3375,7 @@ const I18N = {
     'refine.apply': '改进并重新生成',
     'save.title': '保存', 'save.saved': '已保存', 'save.done': '已保存到我的素材 — ',
     'lib.rename': '重命名', 'lib.delete': '删除', 'lib.draft': '草稿', 'lib.unsynth': '未合成', 'lib.clearFilters': '清除筛选',
-    'lib.renamed': '已重命名 — ', 'lib.deleted': '已删除 — ', 'lib.empty': '暂无素材',
+    'lib.renamed': '已重命名 — ', 'lib.deleted': '已删除 — ', 'lib.empty': '暂无素材', 'lib.nameExists': '已存在同名素材',
     'lib.emptyTitle': '暂无素材', 'lib.emptySub': '从真实场景生成一份双语听力素材，即刻开始练习。',
     'gen.tone': '语气与情绪',
     'tone.neutral': '中性专业', 'tone.urgent': '紧急 · 时间压力', 'tone.interview': '面试 · 高压问答',
@@ -3364,7 +3385,7 @@ const I18N = {
     'tts.style.serious': '严肃', 'tts.style.urgent': '急促', 'tts.style.whispering': '耳语',
     'pl.addTo': '播放列表', 'pl.title': '加入播放列表', 'pl.new': '新建播放列表…', 'pl.done': '完成',
     'pl.createPh': '播放列表名称…', 'pl.in': '收录于', 'pl.empty': '列表暂无素材', 'pl.exit': '退出播放列表视图', 'pl.all': '全部素材',
-    'pl.created': '已创建播放列表 — ', 'pl.renamed': '已重命名播放列表 — ', 'pl.deleted': '已删除播放列表 — ', 'pl.added': '已加入 ', 'pl.removed': '已移出 ',
+    'pl.created': '已创建播放列表 — ', 'pl.renamed': '已重命名播放列表 — ', 'pl.deleted': '已删除播放列表 — ', 'pl.added': '已加入 ', 'pl.removed': '已移出 ', 'pl.nameExists': '已存在同名播放列表',
     'del.title': '确认删除？', 'del.mTitle': '删除素材？', 'del.pTitle': '删除播放列表？',
     'del.cancel': '取消', 'del.delete': '删除',
     'del.materialText': '该素材将从素材库中永久删除，并从所有播放列表中移除。此操作无法撤销。',
@@ -3427,6 +3448,12 @@ function applyTranscriptLang() {
        toggle controls visibility through display:none as before. */
     el.style.display = blind ? '' : (state.zhVisible ? '' : 'none');
   });
+  /* 剧情引子卡：跟随翻译按键（zh 开→中英两行；关→仅英文），豁免盲听（不模糊不隐藏） */
+  const ov = $('overview-card');
+  if (ov) {
+    const zh = ov.querySelector('.ov-zh');
+    if (zh) zh.style.display = state.zhVisible ? '' : 'none';
+  }
   const pane = $('transcript-pane'); if (pane) pane.classList.toggle('zh-on', state.zhVisible);
   const ins = $('inspector'); if (ins) ins.classList.toggle('zh-off', !state.zhVisible);
   $('btn-zh-toggle').classList.toggle('on', state.zhVisible);
@@ -3495,6 +3522,11 @@ function startRenameHead() {
     if (done) return; done = true;
     const v = input.value.trim();
     if (v && v !== art.meta.title) {
+      if (titleTaken(art.id, v)) {
+        showToast(I18N[state.lang]['lib.nameExists'], 'warn');
+        restore();                         /* 重名：不提交，还原原标题 */
+        return;
+      }
       art.meta.title = v;
       const m = state.library.find(x => x.id === art.id);
       if (m) m.meta.title = v;
@@ -4491,7 +4523,7 @@ function toggleBookmark(idx) {
     if (btn) { btn.classList.remove('active'); const u = btn.querySelector('use'); if (u) u.setAttribute('href', '#i-bookmark'); }
     showToast(I18N[state.lang]['bm.removed']);
   } else {
-    state.bookmarks.unshift({ mid: art.id, title: art.meta.title, idx: idx, speaker: s.speakerId || s.speaker, text: s.text_en, time: s.start_ms, ts: Date.now() });
+    state.bookmarks.unshift({ mid: art.id, title: art.meta.title, idx: idx, speaker: s.speakerId || s.speaker, text: s.text_en, text_zh: s.text_zh || '', time: s.start_ms, ts: Date.now() });
     persistBookmarks();
     if (btn) { btn.classList.add('active'); const u = btn.querySelector('use'); if (u) u.setAttribute('href', '#i-bookmark-fill'); }
     showToast(I18N[state.lang]['bm.added'] + (s.speakerId || s.speaker || ''));
@@ -4527,6 +4559,7 @@ function renderBookmarks() {
           '<span class="mono t-10 faint" style="flex-shrink:0">' + fmt(b.time) + '</span>' +
         '</div>' +
         '<div class="t-11 dim" style="margin-top:3px;line-height:16px">' + escapeHtml(b.text) + '</div>' +
+        (b.text_zh ? '<div class="i-zh t-11" style="margin-top:2px;line-height:16px">' + escapeHtml(b.text_zh) + '</div>' : '') +
       '</div>' +
       '<button class="btn-icon" data-bm-del="' + b.ts + '" title="Remove"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></button>' +
     '</div>';
@@ -4538,6 +4571,7 @@ function openBookmarkModal() {
 }
 function closeBookmarkModal() { $('bookmark-modal').classList.add('hidden'); }
 function jumpToBookmark(mid, idx) {
+  if (state.genNavGuard) state.genNavGuard.navigated = true;   /* bookmark jump is also user-initiated navigation */
   const local = state.library.find(m => m.id === mid);
   const go = (m) => { playArtifact(m); seekSentence(idx, true); };
   if (local) go(local);
@@ -4576,6 +4610,11 @@ function publishCurrent() {
   const art = currentArtifact();
   if (!art) return;
   const name = $('pub-name').value.trim() || art.meta.title;
+  if (name !== art.meta.title && titleTaken(art.id, name)) {
+    showToast(I18N[state.lang]['lib.nameExists'], 'warn');
+    const inp = $('pub-name'); if (inp) { inp.focus(); inp.select(); }
+    return;   /* 重名：保持弹窗打开，不发布 */
+  }
   art.meta.fileName = name;
   art.meta.title = name;
   art.meta.saved = true;
@@ -4591,10 +4630,28 @@ function renameLibItem(id) {
   const inp = document.querySelector('.lib-item.renaming .lib-rename-input');
   if (inp) { inp.focus(); inp.select(); }
 }
+/* 重名检查：素材标题（排除自身）、播放列表名称（排除自身）——大小写不敏感 */
+function titleTaken(id, name) {
+  const low = String(name || '').trim().toLowerCase();
+  if (!low) return false;
+  return state.library.some(m => m.id !== id && String(m.meta && m.meta.title || '').trim().toLowerCase() === low);
+}
+function plNameTaken(id, name) {
+  const low = String(name || '').trim().toLowerCase();
+  if (!low) return false;
+  return state.playlists.some(p => p.id !== id && String(p.name || '').trim().toLowerCase() === low);
+}
 function commitRename(id, val) {
   const m = state.library.find(x => x.id === id);
-  if (m && val.trim()) {
-    m.meta.title = val.trim();
+  const v = (val || '').trim();
+  if (m && v) {
+    if (titleTaken(id, v)) {
+      showToast(I18N[state.lang]['lib.nameExists'], 'warn');
+      const inp = document.querySelector('.lib-item.renaming .lib-rename-input');
+      if (inp) { inp.dataset.done = ''; inp.focus(); inp.select(); }
+      return;   /* 保留输入框与重命名状态，让用户改完再提交 */
+    }
+    m.meta.title = v;
     API.patchMaterial(id, { title: m.meta.title }).catch(() => {});
     showToast(I18N[state.lang]['lib.renamed'] + m.meta.title);
   }
@@ -4643,11 +4700,13 @@ function materialRowHTML(m, inPlaylist) {
     : '<span class="lib-act" data-act="pl-add" title="' + escapeHtml(I18N[state.lang]['pl.addTo']) + '"><svg class="icon" style="width:13px;height:13px"><use href="#i-folder"/></svg></span>' +
       '<span class="lib-act" data-act="rename" title="Rename"><svg class="icon" style="width:13px;height:13px"><use href="#i-edit"/></svg></span>' +
       '<span class="lib-act del" data-act="delete" title="Delete"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></span>';
+  const psLocale = m.meta.locale || localeOf(m.meta.context || m.meta.topic || '');
+  const ps = paramsStr(m.meta, psLocale, window.innerWidth <= 720);
   return '<div class="' + cls + '" data-id="' + m.id + '" title="' + escapeHtml(m.meta.title) + '">' +
     '<div class="lib-ic"><svg class="icon"><use href="#i-waveform"/></svg></div>' +
     '<div class="lib-item-body">' +
       '<div class="lib-item-title">' + nameCell + '<span class="lib-item-dur">' + fmt(m.meta.total_duration_ms) + '</span></div>' +
-      '<div class="lib-item-meta"><span>' + escapeHtml(String(m.meta.domain).split(' ')[0]) + '</span><span>·</span><span>Lvl ' + m.meta.difficulty.replace('Level ', '') + '</span></div>' +
+      '<div class="lib-item-meta"><span class="nowrap">' + escapeHtml(ps) + '</span></div>' +
     '</div>' +
     '<div class="lib-item-actions">' + acts + '</div></div>';
 }
@@ -4674,8 +4733,14 @@ function startPlCreate() {
   if (ci) { ci.focus(); }
 }
 async function commitPlCreate(name) {
-  state.plCreating = false;
   name = (name || '').trim();
+  if (plNameTaken('', name)) {
+    showToast(I18N[state.lang]['pl.nameExists'], 'warn');
+    const ci = $('pl-create-input');
+    if (ci) { ci.focus(); ci.select(); }
+    return;   /* 保留创建输入框，不退出创建状态 */
+  }
+  state.plCreating = false;
   if (name) {
     let p = { id: 'pl-' + Date.now(), name: name, materialIds: [] };
     try {
@@ -4700,8 +4765,15 @@ function renamePl(id) {
 }
 function commitPlRename(id, val) {
   const p = state.playlists.find(x => x.id === id);
-  if (p && val.trim()) {
-    p.name = val.trim();
+  const v = (val || '').trim();
+  if (p && v) {
+    if (plNameTaken(id, v)) {
+      showToast(I18N[state.lang]['pl.nameExists'], 'warn');
+      const inp = document.querySelector('.playlist-row[data-plid="' + id + '"] .pl-rename-input');
+      if (inp) { inp.dataset.done = ''; inp.focus(); inp.select(); }
+      return;   /* 保留输入框与重命名状态 */
+    }
+    p.name = v;
     API.renamePlaylist(id, p.name).catch(() => {});
     showToast(I18N[state.lang]['pl.renamed'] + p.name);
   }
@@ -4786,7 +4858,8 @@ function renderPlaylists() {
   /* "All Materials" accordion — every material, no playlist wrapper */
   const allActive = state.activePlaylist === '__all__';
   const filtered = state.library.filter(m => {
-    const hay = (m.meta.title + ' ' + m.meta.domain + ' ' + (m.meta.tag || '') + ' ' + m.meta.role).toLowerCase();
+    const psLocale = m.meta.locale || localeOf(m.meta.context || m.meta.topic || '');
+    const hay = (m.meta.title + ' ' + m.meta.domain + ' ' + (m.meta.tag || '') + ' ' + m.meta.role + ' ' + paramsStr(m.meta, psLocale, false) + ' ' + paramsStr(m.meta, psLocale, true)).toLowerCase();
     return state.filters.length === 0 || state.filters.some(f => hay.includes(f.toLowerCase()));
   });
   const allExp = filtered.length
@@ -4996,6 +5069,7 @@ function renderMaterial() {
   $('tab-vocab-count').textContent = '(' + art.vocabulary.length + ')';
   $('tab-quiz-count').textContent = '(' + art.listening_questions.length + ')';
   $('transcript-list').innerHTML = transcriptHTML(art);
+  renderOverviewCard(art);
   setSynthBanner();
   $('panel-grounding').innerHTML = groundingHTML(art);
   $('panel-vocab').innerHTML = '<div class="vocab-grid" style="grid-template-columns:1fr">' + vocabHTML(art) + '</div>';
@@ -5011,6 +5085,19 @@ function applyListenMode() {
   $('transcript-pane').classList.toggle('blind-mode', state.listenMode === 'blind');
   document.querySelectorAll('.seg-item[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === state.listenMode));
   applyTranscriptLang();
+}
+/* 剧情引子（对话概述）卡：常显在 transcript 之前；双语、跟随翻译按键、
+   豁免盲听（不模糊不隐藏）；旧素材无 overview 不渲染。 */
+function renderOverviewCard(art) {
+  const el = $('overview-card');
+  if (!el) return;
+  const ov = (art && (art.overview || (art.meta && art.meta.overview))) || null;
+  if (!ov || !ov.text_en) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+  const en = String(ov.text_en || '').trim();
+  const zh = String(ov.text_zh || '').trim();
+  el.innerHTML = '<div class="ov-en">' + escapeHtml(en) + '</div>' +
+    (zh ? '<div class="ov-zh">' + escapeHtml(zh) + '</div>' : '');
+  el.classList.remove('hidden');
 }
 function setListenMode(mode) {
   state.listenMode = mode;
@@ -5173,6 +5260,67 @@ function setGenSteps(mode) {
     : [L['gen.stepC0'], L['gen.stepC1'], L['gen.stepC2']];
   document.querySelectorAll('#gen-progress-box .gen-step-label').forEach((el, i) => { if (labels[i]) el.textContent = labels[i]; });
 }
+/* ================= 素材命名（结构化主名称 + 参数条） =================
+   主名称 = {领域} · {形态} · {主题}；参数条 = 词汇 L{N} · 句式 L{N} · {时长}。
+   名称语言由生成时 locale 决定（中文语境中文名，英文语境英文名），不随界面切换。
+   主题优先取 LLM 生成的 llm_title，不合格回退规则提取；重名追加 (1)/(2)。 */
+function localeOf(ctx) {
+  return /[\u4e00-\u9fff]/.test(String(ctx || '')) ? 'zh' : 'en';
+}
+function formatLabel(fmt, locale) {
+  const f = String(fmt || 'dialogue').toLowerCase();
+  if (locale === 'zh') return f === 'solo' ? '单人讲解' : (f === 'discussion' ? '多人讨论' : '双人对话');
+  return f === 'solo' ? 'Solo' : (f === 'discussion' ? 'Discussion' : 'Dialogue');
+}
+function minutesOf(lengthSec) {
+  const sec = parseFloat(String(lengthSec || '').replace(/[^0-9.]/g, '')) || 0;
+  if (sec <= 0) return 0;
+  return Math.round(sec / 60);
+}
+function paramsStr(m, locale, mobile) {
+  const diff = parseInt(String(m.difficulty || '').replace(/\D/g, ''), 10) || 3;
+  const dep = parseInt(String(m.depth != null ? m.depth : 3), 10) || 3;
+  const min = minutesOf(m.length);
+  if (mobile) return 'L' + diff + ' · ' + min + 'min';
+  if (locale === 'zh') return '词汇 L' + diff + ' · 句式 L' + dep + ' · ' + min + ' 分钟';
+  return 'Vocab L' + diff + ' · Syntax L' + dep + ' · ' + min + ' min';
+}
+/* 规则提取主题（LLM 不可用/不合格时的兜底）：去标点、压空白、取 ≤20 字。 */
+function extractTopicFallback(raw) {
+  let t = String(raw || '').replace(/\s+/g, ' ').trim();
+  t = t.replace(/[\s\-_"'“”‘’,.。，、:：;；!？?!]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (t.length > 20) t = t.slice(0, 20).replace(/[\s\-_"'“”‘’,.。，、:：;；]+$/, '');
+  return t || (localeOf(raw) === 'zh' ? '场景对话' : 'Scene Dialogue');
+}
+/* LLM 主题校验：非空、长度、语言匹配（中文语境须中文标题）。 */
+function validateLlmTitle(t, locale) {
+  const s = String(t || '').trim();
+  if (!s) return null;
+  if (locale === 'zh' && !/[\u4e00-\u9fff]/.test(s)) return null;
+  if (locale === 'zh' && s.length > 20) return null;
+  if (locale === 'en' && s.length > 30) return null;
+  return s;
+}
+/* 拼装主名称：领域 · 形态 · 主题（主题不与领域重复）。 */
+function buildMainTitle(meta, locale) {
+  let domain = String(meta.domainLabel || meta.domain || '').trim();
+  if (!domain) domain = locale === 'zh' ? '通用' : 'General';
+  let topic = validateLlmTitle(meta.llm_title, locale) || extractTopicFallback(meta.context || meta.topic || '');
+  /* 主题开头若与领域重复则去掉重复前缀（避免「汽车电子 · 汽车电子底盘」） */
+  const dl = String(domain).toLowerCase();
+  const tl = String(topic).toLowerCase();
+  if (dl && tl.startsWith(dl)) topic = String(topic).slice(domain.length).replace(/^[\s·\-]+/, '') || topic;
+  return domain + ' · ' + formatLabel(meta.format, locale) + ' · ' + topic;
+}
+/* 重名去重：标题(1)、标题(2)… */
+function dedupeTitle(t) {
+  const low = String(t).toLowerCase();
+  const taken = new Set(state.library.map(m => String(m.meta && m.meta.title || '').toLowerCase()));
+  if (!taken.has(low)) return t;
+  let n = 1;
+  while (taken.has((t + '(' + n + ')').toLowerCase())) n++;
+  return t + '(' + n + ')';
+}
 function runGenerate(params, replaceId) {
   if (state.generating || state.synthesizing) return;
   params = params || collectParams();
@@ -5188,6 +5336,8 @@ function runGenerate(params, replaceId) {
   setGenSteps('corpus');
   const _tp = String(params.topic || params.context || '');
   $('gen-topic-label').textContent = I18N[state.lang]['gen.corpusLabel'] + (_tp.length > 48 ? _tp.slice(0, 48) + '…' : _tp);
+  const wn = $('gen-waiting-note'); if (wn) wn.textContent = I18N[state.lang]['gen.waiting'] || '';
+  state.genNavGuard = { navigated: false };              /* set when the user opens another material mid-generation — completion must not hijack their focus */
   const steps = document.querySelectorAll('#gen-progress-box .gen-step');
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   (async () => {
@@ -5232,12 +5382,36 @@ function runGenerate(params, replaceId) {
       art.meta.audioReady = false;                      /* corpus only — TTS is a separate step */
       art.meta.saved = false;                           /* draft until Confirm & Save */
       if (replaceId) art.id = replaceId;                /* regenerate in place */
+      /* 默认命名（结构化主名称）：领域 · 形态 · 主题。
+         主题优先用 LLM 生成的 llm_title（带校验），不合格回退规则提取；
+         refine 保留原素材名（用户可能已重命名）。 */
+      if (replaceId) {
+        const old = state.library.find(m => m.id === replaceId);
+        if (old && old.meta && old.meta.title) art.meta.title = old.meta.title;
+        if (old && old.meta && old.meta.locale) art.meta.locale = old.meta.locale;
+      } else {
+        const locale = localeOf(art.meta.context || params.context || '');
+        art.meta.locale = locale;
+        if (art.meta.llm_title == null && art.title) art.meta.llm_title = art.title;   /* LLM 链路透传兜底 */
+        const nt = dedupeTitle(buildMainTitle(art.meta, locale));
+        if (nt !== art.meta.title) {
+          art.meta.title = nt;
+          API.patchMaterial(art.id, { title: nt, meta: { locale: locale } }).catch(() => {});
+        }
+      }
       const idx = state.library.findIndex(m => m.id === art.id);
       if (idx >= 0) state.library[idx] = art; else state.library.unshift(art);
       $('gen-progress-box').classList.add('hidden');
       $('transcript-body').classList.remove('hidden');
-      showToast((replaceId ? 'Regenerated — ' : 'Corpus generated — ') + art.meta.title + ' · synthesize audio to listen');
-      playArtifact(art);                                /* select in library + render material (no autoplay) */
+      const switchedAway = !!(state.genNavGuard && state.genNavGuard.navigated && state.current && state.current.id !== art.id);
+      state.genNavGuard = null;
+      if (switchedAway) {
+        renderLibrary();                                 /* refresh list so the new material appears; keep the user's current view */
+        showToast((replaceId ? 'Regenerated — ' : 'Corpus generated — ') + art.meta.title + ' · it is now in the library');
+      } else {
+        showToast((replaceId ? 'Regenerated — ' : 'Corpus generated — ') + art.meta.title + ' · synthesize audio to listen');
+        playArtifact(art);                               /* select in library + render material (no autoplay) */
+      }
     } catch (err) {
       if (llmDbg) {
         /* Real unconnected result: show the actual error the LLM link returned. */
@@ -5566,6 +5740,7 @@ function synthesizeAudio() {
   setPhases(1, 1);
   setGenSteps('audio');
   $('gen-topic-label').textContent = I18N[state.lang]['gen.audioLabel'] + art.meta.title + ' · ' + art.meta.voice;
+  const wn = $('gen-waiting-note'); if (wn) wn.textContent = I18N[state.lang]['gen.waiting'] || '';
   const steps = document.querySelectorAll('#gen-progress-box .gen-step');
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   (async () => {
@@ -5733,6 +5908,16 @@ function loadMaterial(id) {
   /* Local-first: play instantly from the in-memory library, then refresh in
      the background so the list and the detail stay consistent. */
   if (window.innerWidth <= 720) toggleSidebar(false);   /* close the drawer after picking */
+  if (state.genNavGuard) state.genNavGuard.navigated = true;   /* user-initiated navigation */
+  if (state.generating || state.synthesizing) {
+    showToast(I18N[state.lang]['gen.switchHint'] || 'A material is being generated — it will appear in the library when ready.', 'info');
+  }
+  /* Auto-enter the owning playlist so continuous playback (queuePlay) works
+     right after clicking a material — otherwise the queue has no context. */
+  if (!state.activePlaylist && state.playlists.length) {
+    const owner = state.playlists.find(p => p.materialIds.includes(id));
+    if (owner) state.activePlaylist = owner.id;
+  }
   const local = state.library.find(m => m.id === id);
   if (local) playArtifact(local);
   API.getMaterial(id).then(m => {
@@ -5823,17 +6008,20 @@ function setPlayIcon(playing) {
       if (pl && pl.materialIds.length > 1) {
         const i = pl.materialIds.indexOf(art.id);
         /* skip materials that are not synthesized yet — only playable ones */
-        let nextId = null;
+        let nextId = null; let skipped = false;
         for (let step = 1; step <= pl.materialIds.length; step++) {
           const cand = pl.materialIds[(i + step) % pl.materialIds.length];
           const m = state.library.find(x => x.id === cand);
           if (m && isPlayable(m)) { nextId = cand; break; }
+          if (m && !isPlayable(m)) skipped = true;
         }
         if (nextId && nextId !== art.id) {
           const next = state.library.find(m => m.id === nextId);
           const go = (m) => { playArtifact(m); play(); };
           if (next) go(next);
           else API.getMaterial(nextId).then(m => { const k = state.library.findIndex(x => x.id === nextId); if (k >= 0) state.library[k] = m; else state.library.unshift(m); go(m); }).catch(() => {});
+        } else if (skipped) {
+          showToast(I18N[state.lang]['pl.skipUnsynth'] || 'Skipped a material without audio', 'info');
         }
       }
     }

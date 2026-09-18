@@ -224,6 +224,16 @@ python main.py                # 启动后端（默认 http://127.0.0.1:8000）
 
 无 Key / 无网络时，打开「设置 → 开发者模式」的 LLM Mock / TTS Mock 即可用固定数据集走通全流程演示。
 
+运行 e2e 回归（可选，需额外安装 Playwright 与浏览器内核）：
+
+```bash
+pip install playwright
+playwright install chromium
+python tests/e2e/test_flow_e2e.py        # 全链路回归（需先启动后端）
+python tests/e2e/test_tts_roles_e2e.py  # TTS 角色分配
+python tests/e2e/test_edge_e2e.py       # 边缘场景
+```
+
 完整运行指南（Windows / macOS / Linux 适配、验证清单、常见问题）见 [`docs/运维/running-guide-运行指南.md`](docs/运维/running-guide-运行指南.md)。
 
 ---

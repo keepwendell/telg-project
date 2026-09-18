@@ -15,6 +15,20 @@ with sync_playwright() as p:
     for _wl in range(20):
         if pg.evaluate("state.library.length") > 0: break
         pg.wait_for_timeout(400)
+    # 素材准备：清空环境时先 mock 生成 2 条（第 1 条合成音频，供 K1 seek / K3 删除后仍可播放）
+    if pg.evaluate("state.library.length") == 0:
+        pg.keyboard.press('Control+k'); pg.wait_for_timeout(300)
+        pg.evaluate("(()=>{state.genScene.context='Edge Test Scene One'; renderGenScene();})()"); pg.wait_for_timeout(100)
+        pg.evaluate("document.getElementById('btn-generate').click(); true"); pg.wait_for_timeout(2500)
+        pg.evaluate("document.getElementById('btn-synth').click(); true"); pg.wait_for_timeout(400)
+        pg.evaluate("(()=>{const sel=document.querySelector('#adj-voice-roles .voice-role-row select'); if(sel)sel.value='en-US-GuyNeural'; document.getElementById('btn-adjust-apply').click();})()"); pg.wait_for_timeout(300)
+        for _s in range(20):
+            pg.wait_for_timeout(1000)
+            if pg.evaluate("currentArtifact() ? currentArtifact().meta.audioReady : false"): break
+        pg.evaluate("document.getElementById('btn-lib-gen').click(); true"); pg.wait_for_timeout(200)
+        pg.evaluate("(()=>{state.genScene.context='Edge Test Scene Two'; renderGenScene();})()"); pg.wait_for_timeout(100)
+        pg.evaluate("document.getElementById('btn-generate').click(); true"); pg.wait_for_timeout(2500)
+        pg.wait_for_timeout(300)
     # K5 详情 tab
     pg.evaluate("document.querySelector('.tab-btn[data-tab=\\'vocab\\']').click(); true"); pg.wait_for_timeout(200)
     log('K5a 详情 Vocab Tab', not pg.evaluate("document.getElementById('panel-vocab').classList.contains('hidden')"))

@@ -1,14 +1,14 @@
-# TELG 运行指南（Windows 版）
+# Scenear 运行指南（Windows 版）
 
 > 版本：2026-09-18 · 适用工程：telg-project（单文件前端 + FastAPI 后端）
-> 这篇指南带你在 Windows 电脑上把 TELG 跑起来：装环境 → 启动 → 生成素材 → 合成音频 → 播放学习 → 素材管理 → 跑测试。
+> 这篇指南带你在 Windows 电脑上把 Scenear 跑起来：装环境 → 启动 → 生成素材 → 合成音频 → 播放学习 → 素材管理 → 跑测试。
 > Linux / macOS 的差异见 [第 7 节](#7-linux--macos-差异)。
 
 ---
 
 ## 0. 开始之前：先了解你要跑的是什么
 
-TELG 是一个**场景化双语听力素材生成器**：你描述一个真实会遇到的场景（一次技术评审、一场面试、一次客户沟通），它生成一套完整的听力素材——双语对话、场景背景、重点词汇、听力理解题、可迁移句型，并合成可逐句跟读的音频。领域不限于技术（支持技术 / 职场 / 学生 / 商务 / 学术等）。
+Scenear 是一个**场景化双语听力素材生成器**：你描述一个真实会遇到的场景（一次技术评审、一场面试、一次客户沟通），它生成一套完整的听力素材——双语对话、场景背景、重点词汇、听力理解题、可迁移句型，并合成可逐句跟读的音频。领域不限于技术（支持技术 / 职场 / 学生 / 商务 / 学术等）。
 
 它由三部分组成：
 
@@ -47,7 +47,7 @@ python --version   # 应显示 Python 3.10.x 或更高
 
 ### 1.2 安装 ffmpeg（音频合成必需）
 
-TELG 合成音频时要用 ffmpeg 拼接逐句音频、探测时长。二选一：
+Scenear 合成音频时要用 ffmpeg 拼接逐句音频、探测时长。二选一：
 
 ```powershell
 # 方式 1：winget（Windows 10/11 自带）
@@ -165,9 +165,9 @@ Uvicorn running on http://127.0.0.1:8000
 
 ### 第 2 步：浏览器打开
 
-访问 <http://127.0.0.1:8000>，看到 TELG 主界面即成功。
+访问 <http://127.0.0.1:8000>，看到 Scenear 主界面即成功。
 
-> ⚠️ **请务必通过这个地址访问**。TELG 的前端由后端托管，`/api/v1` 接口同源可用。
+> ⚠️ **请务必通过这个地址访问**。Scenear 的前端由后端托管，`/api/v1` 接口同源可用。
 > 不要直接双击 `index.html` 或单独开静态服务器——那样接口会打错地方，连接测试会报「Backend returned HTML instead of JSON」。
 
 ### 第 3 步：配置并验证 LLM（生成语料用）
@@ -247,7 +247,7 @@ Uvicorn running on http://127.0.0.1:8000
 |------|------|----------|
 | 1 | `ffmpeg -version` | 显示版本信息 |
 | 2 | `.venv\Scripts\python.exe main.py` | `Uvicorn running on http://127.0.0.1:8000` |
-| 3 | 浏览器打开 `http://127.0.0.1:8000` | 显示 TELG 主界面（或首启引导） |
+| 3 | 浏览器打开 `http://127.0.0.1:8000` | 显示 Scenear 主界面（或首启引导） |
 | 4 | 设置 → LLM → Test Connection | 显示模型名 + 延迟，非红色报错 |
 | 5 | 新建素材 → Generate | 主区出现完整 Preview（背景/对话/词汇/题目/句型） |
 | 6 | 音频设置 → 合成 | 进度走完，自动播放真实音频；Transcript 逐句高亮 |
@@ -325,7 +325,7 @@ python tests\e2e\test_edge_e2e.py      # 边缘场景
 - 方式 1：安装 Git for Windows（自带 Git Bash）→ 右键工程根目录 → "Git Bash Here" → `./scripts/package.sh`；
 - 方式 2：手动复制工程目录（排除 `.git/`、`backend/.venv/`、`backend/models/`、`backend/storage/audio/*.mp3`、`backend/telg.db`、`frontend/_shots/`、`__pycache__/`）。
 
-> TELG 默认交付 `frontend/index.html` 单文件；只有明确要求打包 zip 或推送 GitHub 时才执行。
+> Scenear 默认交付 `frontend/index.html` 单文件；只有明确要求打包 zip 或推送 GitHub 时才执行。
 
 **Git 推送**（如需同步远程）：
 ```powershell
