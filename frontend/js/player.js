@@ -818,6 +818,20 @@ function synthesizeAudio() {
       
       /* 清除计时器 */
       if (state.genTimer) { clearInterval(state.genTimer); state.genTimer = null; }
+      if (r.audio_url) art.meta.audio_url = r.audio_url;
+      if (r.total_duration_ms) art.meta.total_duration_ms = r.total_duration_ms;
+      /* Pull the authoritative timeline the backend wrote to the DB (real TTS
+         durations + 300ms gaps). Generation-time timestamps are only word-count
+         estimates; keeping them here is what made highlight/seek drift. */
+      const fresh = await API.getMaterial(art.id).catch(() => null);
+      if (fresh && Array.isArray(fresh.dialogue) && fresh.dialogue.length) {
+        art.dialogue = fresh.dialogue;
+        if (fresh.meta && fresh.meta.audio_url) art.meta.audio_url = fresh.meta.audio_url;
+        if (fresh.meta && fresh.meta.total_duration_ms) art.meta.total_duration_ms = fresh.meta.total_duration_ms;
+        if (fresh.meta && fresh.meta.narration) art.meta.narration = fresh.meta.narration;
+        else if (fresh.meta && !fresh.meta.narration) delete art.meta.narration;
+      }
+      hideSynthError();
       art.meta.generated = true;           /* synthesis implies a generation pipeline */
       art.meta.audioReady = true;
       art.meta.saved = false;              /* re-synthesis → republish */

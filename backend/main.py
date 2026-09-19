@@ -1649,7 +1649,7 @@ def generate(p: GenerateIn):
 async def generate_stream(p: GenerateIn):
     """SSE 流式生成语料，实时推送进度"""
     # 每步最少停留时间（秒），确保用户能看到每一步的进度
-    min_step_times = [0.5, 0.8, 2.0, 1.0, 0.8, 0.6, 0.4, 0.4]
+    min_step_times = [1.0, 1.6, 4.0, 2.0, 1.6, 1.2, 0.8, 0.8]
     
     async def event_generator():
         try:
