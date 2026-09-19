@@ -316,6 +316,53 @@ def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
         meta["speakers"] = art["speakers"]
         if meta.get("speakerCount") is None:
             meta["speakerCount"] = len(art["speakers"])
+    # 自动补全 speakers 的 name 字段（如果 LLM 没返回，就从 explain 里提取人名）
+    speakers = meta.get("speakers", []) or art.get("speakers", [])
+    # 先从 explain 里提取人名和职位的映射
+    import re
+    explain_names = {}
+    for q in art.get("listening_questions", []):
+        explain = q.get("explain", "")
+        # 匹配 "Priya (Apple Specialist): ..." 或 "Priya（Apple Specialist）: ..."
+        m = re.match(r'^([A-Za-z]+)\s*[（(]([^）)]+)[）)]', explain)
+        if m:
+            name = m.group(1)
+            role = m.group(2)
+            explain_names[role] = name
+    
+    for s in speakers:
+        if not s.get("name") or s.get("name") == s.get("id"):
+            # 先尝试从 explain 里匹配
+            role = s.get("role", "")
+            if role in explain_names:
+                s["name"] = explain_names[role]
+            else:
+                s["name"] = s.get("id", "speaker")  # 兜底
+    meta["speakers"] = speakers
+    # 自动补全 explain 里的职位信息（格式: "speaker_2（Apple Specialist）: '...'"）
+    speaker_map = {s["id"]: s.get("role", "") for s in speakers if s.get("id")}
+    # 也建立 role -> speaker_id 的映射
+    role_to_id = {s.get("role", ""): s["id"] for s in speakers if s.get("role") and s.get("id")}
+    for q in art.get("listening_questions", []):
+        explain = q.get("explain", "")
+        if not explain:
+            continue
+        # 检查 explain 里是否已经有括号职位
+        if "（" in explain or "(" in explain:
+            continue
+        # 先尝试匹配 speaker_id
+        for sid, role in speaker_map.items():
+            if sid in explain and role:
+                explain = explain.replace(sid, f"{sid}（{role}）", 1)
+                q["explain"] = explain
+                break
+        else:
+            # 再尝试匹配 role（如 "Apple Specialist: ..."）
+            for role, sid in role_to_id.items():
+                if role in explain and ":" in explain:
+                    explain = explain.replace(role, f"{sid}（{role}）", 1)
+                    q["explain"] = explain
+                    break
     mid = art["id"]
     now = int(time.time())
     conn.execute(
@@ -2016,8 +2063,13 @@ async def synthesize(mid: str, body: SynthIn | None = None):
         narr_text = (narr.get("text_en") or "").strip()
         default_narr = "en-US-JennyNeural" if engine.name == "edge-tts" else (vs[0] if vs else "af_bella")
         narr_voice_raw = (body.narrator or "").strip() or (meta.get("narration") or {}).get("voice") or default_narr
-        # 旁白音色也要经过 normalize_voice，避免未知音色直接传给 edge-tts 报错
-        narr_voice = normalize_voice(narr_voice_raw) if engine.name == "edge-tts" else narr_voice_raw
+        # 旁白音色也要经过 normalize，避免未知音色直接传给引擎报错
+        if engine.name == "edge-tts":
+            narr_voice = normalize_voice(narr_voice_raw)
+        else:
+            # kokoro 等离线引擎：检查音色是否在可用列表里，不在就用默认音色
+            available = [v["id"] for v in engine.available_voices()] if hasattr(engine, 'available_voices') else []
+            narr_voice = narr_voice_raw if narr_voice_raw in available else default_narr
         start = 0
         n_files = len(segs)
         if narr_text:

@@ -1584,7 +1584,12 @@ function speakerDisplay(art, sid) {
   if (!sid) return '';
   if (art && art.meta && Array.isArray(art.meta.speakers) && art.meta.speakers.length) {
     const m = art.meta.speakers.find(s => s && s.id === sid);
-    if (m && m.role) return m.role;
+    if (m) {
+      /* 格式: 人名（职位），如 "Alex（销售工程师）" */
+      const name = m.name || sid;
+      if (m.role) return name + '（' + m.role + '）';
+      return name;
+    }
   }
   return sid;
 }

@@ -203,6 +203,14 @@ function minutesOf(lengthSec) {
   if (sec <= 0) return 0;
   return Math.round(sec / 60);
 }
+function parseSec(lengthStr) {
+  /* "5min" → 300, "300s" → 300, "300" → 300 */
+  const s = String(lengthStr || '').trim().toLowerCase();
+  const num = parseFloat(s.replace(/[^0-9.]/g, ''));
+  if (!num) return 0;
+  if (s.includes('min')) return Math.round(num * 60);
+  return Math.round(num);
+}
 function paramsStr(m, locale, mobile) {
   const diff = parseInt(String(m.difficulty || '').replace(/\D/g, ''), 10) || 3;
   const dep = parseInt(String(m.depth != null ? m.depth : 3), 10) || 3;
