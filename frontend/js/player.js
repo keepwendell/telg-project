@@ -167,41 +167,42 @@ function setSynthBanner() {
     if (el && !el.classList.contains('hidden')) el.disabled = busy;
   });
 }
+const ICONS = {
+  check:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',
+  spin:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>',
+  circle: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>'
+};
+
 function genPaint(steps, i) {
   const now = Date.now();
   steps.forEach((s, j) => {
-    s.classList.toggle('active', j === i);
+    s.classList.toggle('running', j === i);
     s.classList.toggle('done', j < i);
     const icon = s.querySelector('.gen-step-icon');
     if (j < i) {
-      icon.innerHTML = '<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+      icon.innerHTML = ICONS.check;
+      // 显示耗时（如果有的话）
+      if (state.genStepTimes && state.genStepTimes[j]) {
+        s.querySelector('.gen-step-time').textContent = state.genStepTimes[j] + 's';
+      }
     } else if (j === i) {
-      icon.innerHTML = '<span class="spinner"></span>';
+      icon.innerHTML = ICONS.spin;
     } else {
-      icon.innerHTML = '<span class="circle"></span>';
+      icon.innerHTML = ICONS.circle;
     }
   });
-  /* 更新进度条 */
-  const pct = Math.round((i / steps.length) * 100);
-  const fill = document.getElementById('gen-progress-bar-fill');
-  if (fill) fill.style.width = pct + '%';
   /* 更新状态文字 */
   const statusDetail = document.getElementById('gen-progress-status-detail');
   if (statusDetail && steps[i]) {
     const label = steps[i].querySelector('.gen-step-label');
-    if (label) statusDetail.textContent = label.textContent;
+    if (label) statusDetail.textContent = label.textContent + '...';
   }
-  /* 更新计时 */
-  if (!state.genStartTime) state.genStartTime = now;
-  const elapsed = ((now - state.genStartTime) / 1000).toFixed(1);
-  const timeEl = document.getElementById('gen-progress-time');
-  if (timeEl) timeEl.textContent = elapsed + 's';
-  /* 推进反馈：当前步骤淡入 */
-  const cur = steps[i];
-  if (cur && window.Ui && Ui.fadeIn) Ui.fadeIn(cur, { duration: Ui.getDur('fast') });
+  /* 记录步骤开始时间 */
+  if (!state.genStepTimes) state.genStepTimes = [];
+  if (!state.genStepStartTimes) state.genStepStartTimes = [];
+  state.genStepStartTimes[i] = now;
 }
 function setGenSteps(mode, totalSteps) {
-  const L = I18N[state.lang];
   const stepsContainer = document.getElementById('gen-progress-steps');
   if (!stepsContainer) return;
   
@@ -215,19 +216,23 @@ function setGenSteps(mode, totalSteps) {
   /* 动态生成步骤 */
   stepsContainer.innerHTML = labels.map((label, i) => `
     <div class="gen-progress-step" data-step="${i}">
-      <span class="gen-step-icon"></span>
-      <span class="gen-step-label">${label}</span>
-      <span class="gen-step-time"></span>
+      <div class="gen-step-icon">${ICONS.circle}</div>
+      <div class="gen-step-main">
+        <div class="gen-step-row">
+          <span class="gen-step-label">${label}</span>
+          <span class="gen-step-time"></span>
+        </div>
+      </div>
     </div>
   `).join('');
   
   /* 更新标题 */
-  const title = document.getElementById('gen-progress-title');
-  if (title) title.textContent = mode === 'audio' ? '语音合成' : '素材生成';
-  
-  /* 更新状态 */
   const statusText = document.getElementById('gen-progress-status-text');
-  if (statusText) statusText.textContent = 'Running';
+  if (statusText) statusText.textContent = mode === 'audio' ? 'Synthesizing audio...' : 'Generating material...';
+  
+  /* 重置计时器 */
+  state.genStepTimes = [];
+  state.genStepStartTimes = [];
 }
 /* ================= 素材命名（结构化主名称 + 参数条） =================
    主名称 = {领域} · {形态} · {主题}；参数条 = 词汇 L{N} · 句式 L{N} · {时长}。
@@ -321,7 +326,7 @@ function runGenerate(params, replaceId) {
   state.genStartTime = Date.now();
   state.genTimer = setInterval(() => {
     const elapsed = ((Date.now() - state.genStartTime) / 1000).toFixed(1);
-    const timeEl = document.getElementById('gen-progress-time');
+    const timeEl = document.getElementById('gen-progress-elapsed');
     if (timeEl) timeEl.textContent = elapsed + 's';
   }, 100);
   (async () => {

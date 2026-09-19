@@ -194,18 +194,18 @@
         <div id="gen-progress-box" class="gen-center hidden">
           <div class="gen-progress-card">
             <div class="gen-progress-header">
-              <span class="gen-progress-title" id="gen-progress-title">素材生成</span>
-              <span class="gen-progress-status"><span class="status-dot"></span><span id="gen-progress-status-text">Running</span></span>
-            </div>
-            <div class="gen-progress-bar">
-              <div class="gen-progress-bar-fill" id="gen-progress-bar-fill"></div>
+              <div class="gen-progress-title">
+                <span class="status-dot" id="gen-progress-dot"></span>
+                <span id="gen-progress-status-text">Running</span>
+              </div>
+              <span class="gen-progress-elapsed" id="gen-progress-elapsed">0.0s</span>
             </div>
             <div class="gen-progress-steps" id="gen-progress-steps">
               <!-- 动态生成步骤 -->
             </div>
             <div class="gen-progress-footer">
-              <span id="gen-progress-time">0.0s</span>
-              <span id="gen-progress-status-detail">正在处理...</span>
+              <span></span>
+              <span class="gen-progress-status-detail" id="gen-progress-status-detail">正在处理...</span>
             </div>
           </div>
           <div class="t-11 dim" id="gen-topic-label" style="text-align:center"></div>
