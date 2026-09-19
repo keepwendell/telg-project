@@ -371,8 +371,23 @@ function runGenerate(params, replaceId) {
         genPaint(steps, 1);
       } else {
         genPaint(steps, 0);            /* corpus step stays active while the LLM generates */
+        await sleep(300);
+        genPaint(steps, 1);
       }
       const art = await (replaceId && !mockMode() ? API.regenerateMaterial(replaceId, params) : API.generate(params, replaceId));
+      /* LLM 返回后推进剩余步骤 */
+      await sleep(200);
+      genPaint(steps, 2);
+      await sleep(200);
+      genPaint(steps, 3);
+      await sleep(200);
+      genPaint(steps, 4);
+      await sleep(200);
+      genPaint(steps, 5);
+      await sleep(200);
+      genPaint(steps, 6);
+      await sleep(200);
+      genPaint(steps, 7);
       if (llmDbg) {
         appendLlmTrace('LLM responded — ' + art.dialogue.length + ' segments · ' + art.vocabulary.length + ' vocab items · ' + art.listening_questions.length + ' questions', 'tr-ok');
         appendLlmTrace('Structure validated — dialogue / vocabulary / questions / patterns', 'tr-ok');
@@ -380,7 +395,7 @@ function runGenerate(params, replaceId) {
       } else if (ttsTake) {
         appendLlmTrace('Dataset corpus imported → ' + art.id + ' · synthesize audio to listen', 'tr-ok');
       }
-      steps.forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
+      steps.forEach(s => { s.classList.remove('running'); s.classList.add('done'); });
       art.meta.generated = true;
       setPhases(1);
       await sleep(260);
