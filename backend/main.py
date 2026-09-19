@@ -316,53 +316,9 @@ def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
         meta["speakers"] = art["speakers"]
         if meta.get("speakerCount") is None:
             meta["speakerCount"] = len(art["speakers"])
-    # 自动补全 speakers 的 name 字段（如果 LLM 没返回，就从 explain 里提取人名）
-    speakers = meta.get("speakers", []) or art.get("speakers", [])
-    # 先从 explain 里提取人名和职位的映射
-    import re
-    explain_names = {}
-    for q in art.get("listening_questions", []):
-        explain = q.get("explain", "")
-        # 匹配 "Priya (Apple Specialist): ..." 或 "Priya（Apple Specialist）: ..."
-        m = re.match(r'^([A-Za-z]+)\s*[（(]([^）)]+)[）)]', explain)
-        if m:
-            name = m.group(1)
-            role = m.group(2)
-            explain_names[role] = name
-    
-    for s in speakers:
-        if not s.get("name") or s.get("name") == s.get("id"):
-            # 先尝试从 explain 里匹配
-            role = s.get("role", "")
-            if role in explain_names:
-                s["name"] = explain_names[role]
-            else:
-                s["name"] = s.get("id", "speaker")  # 兜底
-    meta["speakers"] = speakers
-    # 自动补全 explain 里的职位信息（格式: "speaker_2（Apple Specialist）: '...'"）
-    speaker_map = {s["id"]: s.get("role", "") for s in speakers if s.get("id")}
-    # 也建立 role -> speaker_id 的映射
-    role_to_id = {s.get("role", ""): s["id"] for s in speakers if s.get("role") and s.get("id")}
-    for q in art.get("listening_questions", []):
-        explain = q.get("explain", "")
-        if not explain:
-            continue
-        # 检查 explain 里是否已经有括号职位
-        if "（" in explain or "(" in explain:
-            continue
-        # 先尝试匹配 speaker_id
-        for sid, role in speaker_map.items():
-            if sid in explain and role:
-                explain = explain.replace(sid, f"{sid}（{role}）", 1)
-                q["explain"] = explain
-                break
-        else:
-            # 再尝试匹配 role（如 "Apple Specialist: ..."）
-            for role, sid in role_to_id.items():
-                if role in explain and ":" in explain:
-                    explain = explain.replace(role, f"{sid}（{role}）", 1)
-                    q["explain"] = explain
-                    break
+    # 同步 speakers 到 meta
+    if not meta.get("speakers") and art.get("speakers"):
+        meta["speakers"] = art["speakers"]
     mid = art["id"]
     now = int(time.time())
     conn.execute(
@@ -413,14 +369,21 @@ def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
         # "not synthesized yet" from a real 0ms start.
         st = s.get("start_ms")
         en = s.get("end_ms")
+        # 兜底：如果 dialogue 里没有 role，就从 speakers 里查找
+        speaker_id = s.get("speakerId") or s.get("speaker")
+        role = s.get("role")
+        if not role and speakers:
+            sp = next((sp for sp in speakers if sp.get("id") == speaker_id), None)
+            if sp:
+                role = sp.get("role")
         conn.execute(
             """INSERT INTO dialogue_segments
                (material_id,seq,speaker,role,voice,text_en,text_zh,start_ms,end_ms)
                VALUES (?,?,?,?,?,?,?,?,?)""",
             (
                 mid, i,
-                s.get("speakerId") or s.get("speaker"),  # v2: stable speakerId; legacy: name
-                s.get("role"), s.get("voice"),
+                speaker_id,
+                role, s.get("voice"),
                 s.get("text_en"), s.get("text_zh"),
                 int(st) if st is not None else None,
                 int(en) if en is not None else None,
@@ -943,10 +906,10 @@ LLM_SYSTEM_PROMPT = """你是 Scenear 沉浸式场景听力素材生成引擎。
     "engineering_scenario_zh": "对应中文翻译"
   },
   "speakers": [
-    {"id": "speaker_1", "role": "具体角色名", "voiceTag": "lead | respond | neutral"}
+    {"id": "speaker_1", "role": "具体职位名（如 销售工程师）", "voiceTag": "lead | respond | neutral"}
   ],
   "dialogue": [
-    {"speakerId": "speaker_1", "text_en": "英文台词", "text_zh": "对应中文翻译"}
+    {"speakerId": "speaker_1", "role": "对应职位名", "text_en": "英文台词", "text_zh": "对应中文翻译"}
   ],
   "vocabulary": [
     {"en": "英文术语", "zh": "标准译法", "symbol": "符号，无则空串", "def": "英文释义", "def_zh": "释义的中文翻译"}
@@ -968,12 +931,13 @@ LLM_SYSTEM_PROMPT = """你是 Scenear 沉浸式场景听力素材生成引擎。
 - overview 是剧情预告：必须回答"谁、在哪、谈什么、看点"，但不得出现听力题问题、答案或考察点关键词（例如题目问"提到了哪两个关键约束"，引子只能说"围绕稳定性控制策略展开讨论"，不能说"讨论了关键约束"）。
 - speakers[].id 用 speaker_1 / speaker_2 / ... 命名；
   dialogue[].speakerId 必须且只能引用已声明的 id。
-- speakers[].role 用具体真实角色名，禁用 "Engineer A" / "Speaker 1" 占位。
+- speakers[].role 用具体真实职位名（如 销售工程师、系统架构师），不得用 "Engineer A" / "Speaker 1" 占位。
+- dialogue[].role 必须填写与 speakers[].role 一致的职位名，不得留空。
 - dialogue 每句 1–4 句英文，单句不超过 60 词。
 - vocabulary.en 必须是对话中出现或强相关的术语；同一术语不重复出现。
 - listening_questions.answer 是 options 中的完整原文，必须唯一正确。
 - listening_questions.options 至少 2 个、建议 4 个；干扰项看似合理但明确错误。
-- listening_questions.explain 必须引用答案对应的台词原文，格式为 "说话人: '原文片段'"，方便后端定位到具体句子。
+- listening_questions.explain 必须引用答案对应的台词原文，格式为 "职位: '原文片段'"（如 "销售工程师: 'The system estimates range...'"），职位必须与 speakers 里的 role 一致。
 - core_sentence_patterns.pattern 是可迁移句型模板，example 取自或改写自对话。
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【三、词汇专业度字典（只约束词汇）】
