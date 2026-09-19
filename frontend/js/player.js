@@ -208,23 +208,15 @@ function setGenSteps(mode, totalSteps) {
   
   let labels = [];
   if (mode === 'audio') {
-    /* 根据真实句子数动态生成步骤 */
-    const art = currentArtifact();
-    const total = (art && art.dialogue) ? art.dialogue.length : 8;
+    /* TTS 合成步骤（笼统一点，不显示第几句） */
     labels = [
       '准备 TTS 引擎 & 加载音色配置',
-      '合成旁白（剧情引子）音频'
+      '合成旁白（剧情引子）音频',
+      '合成对话语音',
+      '优化音频 & 调整语速',
+      '合并音频 & 生成时间轴',
+      '保存到素材库'
     ];
-    /* 逐句合成对话音频（最多显示 5 句，太多了显示不下） */
-    const showCount = Math.min(total, 5);
-    for (let i = 1; i <= showCount; i++) {
-      labels.push(`逐句合成对话音频（第 ${i}/${total} 句）`);
-    }
-    if (total > showCount) {
-      labels.push(`... 还有 ${total - showCount} 句`);
-    }
-    labels.push('合并音频 & 生成时间轴');
-    labels.push('保存到素材库');
   } else {
     labels = [
       '解析参数 & 校验请求结构',
@@ -360,52 +352,49 @@ function runGenerate(params, replaceId) {
     const llmDbg = llmMockOn() && !ttsMockOn();
     const ttsTake = ttsMockOn();
     try {
-      if (llmDbg) {
-        /* LLM link debugging: show the intermediate steps, then call the real
-           LLM below. No key → the backend reports the real failure. */
-        showLlmTrace(true);
-        genPaint(steps, 0);
-        const dbg = { topic: params.topic || params.context, domain: params.domainLabel || params.domain, format: params.format, roles: params.roles || (params.roleSelection || {}).candidates || [], context: params.context, difficulty: 'Level ' + params.difficulty, length: params.length, depth: (params.advanced || {}).depth || 3 };
-        appendLlmTrace('Assembling request parameters — ' + JSON.stringify(dbg), 'tr-ok');
-        const lc = params.llm_config || {};
-        appendLlmTrace('Request body — { topic, domain, format, roles, context, difficulty, length, llm_config: { provider:' + (lc.provider || '?') + ', model:' + (lc.model || '?') + ', base_url:' + (lc.base_url || '?') + ', api_key:' + (lc.api_key ? '•••' : 'not set') + ', temperature:' + (lc.temperature ?? 0.7) + ' } }');
-        appendLlmTrace('Sending request to LLM…');
-        await sleep(260);
-        genPaint(steps, 1);
-      } else if (ttsTake) {
-        genPaint(steps, 0);
-        showLlmTrace(true);
-        appendLlmTrace('Corpus taken over by TTS Mock — dataset: ' + (testDataKey() || 'topic-matched'), 'tr-ok');
-        appendLlmTrace('Importing dataset corpus to the material library…');
-        await sleep(260);
-        genPaint(steps, 1);
+      let art = null;
+      /* 使用 SSE 流式接收进度 */
+      if (!ttsTake && !llmDbg && !replaceId) {
+        /* 用 SSE 流式接收真实进度 */
+        await API.generateStream(
+          params,
+          /* onProgress */
+          (data) => {
+            if (typeof data.step === 'number') {
+              genPaint(steps, data.step);
+              const statusText = document.getElementById('gen-progress-status-text');
+              if (statusText && data.message) statusText.textContent = data.message;
+            }
+          },
+          /* onComplete */
+          (result) => {
+            art = result;
+            steps.forEach(s => { s.classList.remove('running'); s.classList.add('done'); });
+          },
+          /* onError */
+          (err) => {
+            throw new Error(err);
+          }
+        );
       } else {
-        genPaint(steps, 0);            /* corpus step stays active while the LLM generates */
-        await sleep(300);
-        genPaint(steps, 1);
+        /* 假进度（兼容旧模式） */
+        const stepDurations = [800, 1200, 3000, 1800, 1200, 800, 600, 600];
+        const minStepTime = 600;
+        let apiPromise = null;
+        for (let i = 0; i < steps.length; i++) {
+          genPaint(steps, i);
+          if (i === 1 && !apiPromise) {
+            apiPromise = (replaceId && !mockMode() ? API.regenerateMaterial(replaceId, params) : API.generate(params, replaceId));
+          }
+          await sleep(Math.max(stepDurations[i] || minStepTime, minStepTime));
+        }
+        const statusText = document.getElementById('gen-progress-status-text');
+        if (statusText) statusText.textContent = 'Waiting for LLM response...';
+        art = await (apiPromise || (replaceId && !mockMode() ? API.regenerateMaterial(replaceId, params) : API.generate(params, replaceId)));
+        steps.forEach(s => { s.classList.remove('running'); s.classList.add('done'); });
       }
-      const art = await (replaceId && !mockMode() ? API.regenerateMaterial(replaceId, params) : API.generate(params, replaceId));
-      /* LLM 返回后推进剩余步骤 */
-      await sleep(200);
-      genPaint(steps, 2);
-      await sleep(200);
-      genPaint(steps, 3);
-      await sleep(200);
-      genPaint(steps, 4);
-      await sleep(200);
-      genPaint(steps, 5);
-      await sleep(200);
-      genPaint(steps, 6);
-      await sleep(200);
-      genPaint(steps, 7);
-      if (llmDbg) {
-        appendLlmTrace('LLM responded — ' + art.dialogue.length + ' segments · ' + art.vocabulary.length + ' vocab items · ' + art.listening_questions.length + ' questions', 'tr-ok');
-        appendLlmTrace('Structure validated — dialogue / vocabulary / questions / patterns', 'tr-ok');
-        appendLlmTrace('Material saved → ' + art.id, 'tr-ok');
-      } else if (ttsTake) {
-        appendLlmTrace('Dataset corpus imported → ' + art.id + ' · synthesize audio to listen', 'tr-ok');
-      }
-      steps.forEach(s => { s.classList.remove('running'); s.classList.add('done'); });
+      /* 清除计时器 */
+      if (state.genTimer) { clearInterval(state.genTimer); state.genTimer = null; }
       art.meta.generated = true;
       setPhases(1);
       await sleep(260);
@@ -793,46 +782,40 @@ function synthesizeAudio() {
   }, 100);
   (async () => {
     try {
-      genPaint(steps, 0);            /* TTS step stays active while the backend synthesizes */
-      await sleep(300);
-      genPaint(steps, 1);
       let ttsCfg = {};
       try {
         const t = JSON.parse(localStorage.getItem('telg-settings') || '{}');
-        /* 优先使用当前素材的音色（Adjust 面板设置），fallback 到全局设置 */
         let storedVoices = art.meta.voice || (t.tts && t.tts.voice) || (t.tts && t.tts.voices) || '';
         if (Array.isArray(storedVoices)) storedVoices = storedVoices.map(x => (x && x.voice) || x).filter(Boolean).join(' + ');
         ttsCfg = { voices: storedVoices, rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1,
                    provider: normalizeTTSProvider(art.meta.tts_provider || (t.tts && t.tts.provider) || 'edge-tts'),
                    narrator: state.narrVoice || (t.narrVoice) || 'en-US-JennyNeural' };
       } catch (e) {}
-      const r = await API.synthesize(art.id, ttsCfg);
-      /* TTS 合成完成后推进剩余步骤 */
-      await sleep(200);
-      genPaint(steps, 2);
-      await sleep(200);
-      genPaint(steps, 3);
-      await sleep(200);
-      genPaint(steps, 4);
-      await sleep(200);
-      genPaint(steps, 5);
-      await sleep(200);
-      genPaint(steps, 6);
-      if (r.audio_url) art.meta.audio_url = r.audio_url;
-      if (r.total_duration_ms) art.meta.total_duration_ms = r.total_duration_ms;
-      /* Pull the authoritative timeline the backend wrote to the DB (real TTS
-         durations + 300ms gaps). Generation-time timestamps are only word-count
-         estimates; keeping them here is what made highlight/seek drift. */
-      const fresh = await API.getMaterial(art.id).catch(() => null);
-      if (fresh && Array.isArray(fresh.dialogue) && fresh.dialogue.length) {
-        art.dialogue = fresh.dialogue;
-        if (fresh.meta && fresh.meta.audio_url) art.meta.audio_url = fresh.meta.audio_url;
-        if (fresh.meta && fresh.meta.total_duration_ms) art.meta.total_duration_ms = fresh.meta.total_duration_ms;
-        if (fresh.meta && fresh.meta.narration) art.meta.narration = fresh.meta.narration;
-        else if (fresh.meta && !fresh.meta.narration) delete art.meta.narration;
-      }
-      hideSynthError();
-      steps.forEach(s => { s.classList.remove('running'); s.classList.add('done'); });
+      
+      /* 使用 SSE 流式接收进度 */
+      let r = null;
+      await API.synthesizeStream(
+        art.id,
+        ttsCfg,
+        /* onProgress */
+        (data) => {
+          if (typeof data.step === 'number') {
+            genPaint(steps, data.step);
+            const statusText = document.getElementById('gen-progress-status-text');
+            if (statusText && data.message) statusText.textContent = data.message;
+          }
+        },
+        /* onComplete */
+        (result) => {
+          r = result;
+          steps.forEach(s => { s.classList.remove('running'); s.classList.add('done'); });
+        },
+        /* onError */
+        (err) => {
+          throw new Error(err);
+        }
+      );
+      
       /* 清除计时器 */
       if (state.genTimer) { clearInterval(state.genTimer); state.genTimer = null; }
       art.meta.generated = true;           /* synthesis implies a generation pipeline */

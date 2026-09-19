@@ -36,6 +36,7 @@ from openai import OpenAI
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 from typing import Literal, Optional
@@ -1644,6 +1645,147 @@ def generate(p: GenerateIn):
     return artifact_of(db(), art["id"])
 
 
+@app.post("/api/v1/generate/stream")
+async def generate_stream(p: GenerateIn):
+    """SSE 流式生成语料，实时推送进度"""
+    # 每步最少停留时间（秒），确保用户能看到每一步的进度
+    min_step_times = [0.5, 0.8, 2.0, 1.0, 0.8, 0.6, 0.4, 0.4]
+    
+    async def event_generator():
+        try:
+            # 步骤 1：解析参数 & 校验请求结构
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 0, 'status': 'running', 'message': '解析参数 & 校验请求结构'})}\n\n"
+            pre_errs = validate_request(p)
+            if pre_errs:
+                yield f"data: {json.dumps({'step': 0, 'status': 'error', 'message': '; '.join(pre_errs)})}\n\n"
+                return
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[0]:
+                await asyncio.sleep(min_step_times[0] - elapsed)
+            yield f"data: {json.dumps({'step': 0, 'status': 'done'})}\n\n"
+            
+            # 步骤 2：构建 Prompt & 调用 LLM
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 1, 'status': 'running', 'message': '构建 Prompt & 调用 LLM'})}\n\n"
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[1]:
+                await asyncio.sleep(min_step_times[1] - elapsed)
+            yield f"data: {json.dumps({'step': 1, 'status': 'done'})}\n\n"
+            
+            # 步骤 3：等待 LLM 生成对话语料
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 2, 'status': 'running', 'message': '等待 LLM 生成对话语料'})}\n\n"
+            
+            # 调用 LLM
+            if p.test_mode or os.environ.get("TELG_MOCK_LLM") == "1":
+                payload = mock_generate(p)
+            else:
+                try:
+                    payload = call_llm_with_retry(p, "generate")
+                except LLMGenerationError as e:
+                    yield f"data: {json.dumps({'step': 2, 'status': 'error', 'message': str(e)})}\n\n"
+                    return
+            
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[2]:
+                await asyncio.sleep(min_step_times[2] - elapsed)
+            yield f"data: {json.dumps({'step': 2, 'status': 'done'})}\n\n"
+            
+            # 步骤 4：解析 JSON & 验证字段完整性
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 3, 'status': 'running', 'message': '解析 JSON & 验证字段完整性'})}\n\n"
+            sec = parse_sec(p.length) or 120
+            total_ms = sec * 1000
+            fmt = (p.format or "discussion").strip().lower()
+            speakers = payload.get("speakers") or []
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[3]:
+                await asyncio.sleep(min_step_times[3] - elapsed)
+            yield f"data: {json.dumps({'step': 3, 'status': 'done'})}\n\n"
+            
+            # 步骤 5：提取 speakers 角色 & voice 配置
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 4, 'status': 'running', 'message': '提取 speakers 角色 & voice 配置'})}\n\n"
+            meta = {
+                "title": p.topic or p.context or "Untitled", "topic": p.topic or p.context or "Untitled",
+                "domain": p.domainLabel or p.domain or "Engineering",
+                "format": fmt,
+                "speakerCount": len(speakers), "speakers": speakers,
+                "context": p.context or "",
+                "scenario": (p.context or "")[:120],
+                "dialogue_type": fmt,
+                "difficulty": "Level " + str(p.difficulty), "length": p.length,
+                "llm_provider": "DeepSeek" if not (p.llm_config or {}).get("provider") else (p.llm_config or {}).get("provider"),
+                "tts_provider": "edge-tts", "voice": "en-US-GuyNeural + en-US-JennyNeural",
+                "total_duration_ms": total_ms, "tag": p.domainLabel or p.domain or "Engineering",
+                "filter": p.domainLabel or p.domain or "Engineering",
+                "depth": (p.advanced.depth if isinstance(p.advanced, Advanced) else (p.advanced or {}).get("depth", 3)),
+                "speaker_voice_map": build_speaker_voice_map(speakers, ["en-US-GuyNeural", "en-US-JennyNeural"]),
+                "audio_url": "/api/v1/audio/gen-none.mp3", "generated": True, "saved": False, "audioReady": False,
+                "llm_title": (payload.get("title") or "").strip(),
+                "overview": payload.get("overview") or None,
+            }
+            art = {
+                "id": "gen-" + str(int(time.time() * 1000)),
+                "meta": meta,
+                "background": payload["background"],
+                "speakers": speakers,
+                "dialogue": payload["dialogue"],
+                "vocabulary": payload["vocabulary"],
+                "listening_questions": payload["listening_questions"],
+                "core_sentence_patterns": payload["core_sentence_patterns"],
+                "overview": payload.get("overview") or None,
+            }
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[4]:
+                await asyncio.sleep(min_step_times[4] - elapsed)
+            yield f"data: {json.dumps({'step': 4, 'status': 'done'})}\n\n"
+            
+            # 步骤 6：生成词汇表 & 听力题
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 5, 'status': 'running', 'message': '生成词汇表 & 听力题'})}\n\n"
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[5]:
+                await asyncio.sleep(min_step_times[5] - elapsed)
+            yield f"data: {json.dumps({'step': 5, 'status': 'done'})}\n\n"
+            
+            # 步骤 7：生成核心句型 & 剧情概述
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 6, 'status': 'running', 'message': '生成核心句型 & 剧情概述'})}\n\n"
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[6]:
+                await asyncio.sleep(min_step_times[6] - elapsed)
+            yield f"data: {json.dumps({'step': 6, 'status': 'done'})}\n\n"
+            
+            # 步骤 8：保存素材到数据库
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 7, 'status': 'running', 'message': '保存素材到数据库'})}\n\n"
+            conn = db()
+            insert_artifact(conn, art, status="draft")
+            conn.close()
+            result = artifact_of(db(), art["id"])
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[7]:
+                await asyncio.sleep(min_step_times[7] - elapsed)
+            yield f"data: {json.dumps({'step': 7, 'status': 'done'})}\n\n"
+            
+            # 完成
+            yield f"data: {json.dumps({'step': 'complete', 'status': 'done', 'result': result})}\n\n"
+            
+        except Exception as e:
+            yield f"data: {json.dumps({'step': 'error', 'status': 'error', 'message': str(e)})}\n\n"
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
+
+
 @app.get("/api/v1/materials")
 def list_materials():
     conn = db()
@@ -2139,6 +2281,245 @@ async def synthesize(mid: str, body: SynthIn | None = None):
         "audio_url": meta["audio_url"],
         "total_duration_ms": meta["total_duration_ms"],
     }
+
+
+@app.post("/api/v1/materials/{mid}/synthesize/stream")
+async def synthesize_stream(mid: str, body: SynthIn | None = None):
+    """SSE 流式合成语音，实时推送进度"""
+    # 每步最少停留时间（秒）
+    min_step_times = [0.5, 1.5, 2.0, 1.0, 0.5, 0.5]
+    
+    async def event_generator():
+        try:
+            body = body or SynthIn()
+            conn = db()
+            row = conn.execute(
+                "SELECT meta_json, status FROM materials WHERE id = ?", (mid,)
+            ).fetchone()
+            if not row:
+                yield f"data: {json.dumps({'step': 0, 'status': 'error', 'message': 'material not found'})}\n\n"
+                return
+            meta = json.loads(row["meta_json"])
+            segs = conn.execute(
+                "SELECT seq, speaker, text_en FROM dialogue_segments "
+                "WHERE material_id = ? ORDER BY seq",
+                (mid,),
+            ).fetchall()
+            if not segs:
+                yield f"data: {json.dumps({'step': 0, 'status': 'error', 'message': 'no dialogue segments to synthesize'})}\n\n"
+                return
+            conn.close()
+            
+            # 步骤 1：准备 TTS 引擎 & 加载音色配置
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 0, 'status': 'running', 'message': '准备 TTS 引擎 & 加载音色配置'})}\n\n"
+            raw_voices = body.voices
+            if isinstance(raw_voices, list):
+                raw_voices = " + ".join(str(x.get("voice") if isinstance(x, dict) else x) for x in raw_voices)
+            vs = [v.strip() for v in re.split(r"[+]", raw_voices or "") if v.strip()] or voices_of(meta)
+            engine = get_engine(body.provider or meta.get("tts_provider") or "edge-tts")
+            if engine.name == "edge-tts":
+                vs = [normalize_voice(v) for v in vs] or ["en-US-GuyNeural"]
+            else:
+                vs = [v for v in vs] or ["af_bella"]
+            rate = body.rate if (body.rate is not None and 0.5 <= body.rate <= 2.0) else 1.0
+            gap_ms = 400
+            STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+            try:
+                engine.ensure_loaded()
+            except TTSModelMissing as e:
+                yield f"data: {json.dumps({'step': 0, 'status': 'error', 'message': 'TTS synthesis failed [model_missing]: %s' % e})}\n\n"
+                return
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[0]:
+                await asyncio.sleep(min_step_times[0] - elapsed)
+            yield f"data: {json.dumps({'step': 0, 'status': 'done'})}\n\n"
+            
+            # 步骤 2：合成旁白（剧情引子）音频
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 1, 'status': 'running', 'message': '合成旁白（剧情引子）音频'})}\n\n"
+            spk_voices: dict = {}
+            speakers = meta.get("speakers") or []
+            user_voices_supplied = bool(raw_voices and str(raw_voices).strip())
+            voice_map = meta.get("speaker_voice_map") or {}
+            if speakers and not user_voices_supplied and isinstance(voice_map, dict) and voice_map:
+                for sp in speakers:
+                    sid = str(sp.get("id") or "")
+                    if sid and voice_map.get(sid):
+                        spk_voices[sid] = str(voice_map[sid])
+            if speakers and not spk_voices:
+                for idx, sp in enumerate(speakers):
+                    sid = str(sp.get("id") or "")
+                    if not sid:
+                        continue
+                    vt = sp.get("voiceTag") or "neutral"
+                    vi = 1 if (vt == "respond" and len(vs) > 1) else (0 if vt == "lead" else idx)
+                    spk_voices[sid] = vs[vi % len(vs)]
+            else:
+                order: list = []
+                for s in segs:
+                    if s["speaker"] and s["speaker"] not in order:
+                        order.append(s["speaker"])
+                for i, name in enumerate(order):
+                    spk_voices[name] = vs[i % len(vs)]
+            times = []
+            narr = (meta.get("overview") or {})
+            narr_text = (narr.get("text_en") or "").strip()
+            default_narr = "en-US-JennyNeural" if engine.name == "edge-tts" else (vs[0] if vs else "af_bella")
+            narr_voice_raw = (body.narrator or "").strip() or (meta.get("narration") or {}).get("voice") or default_narr
+            if engine.name == "edge-tts":
+                narr_voice = normalize_voice(narr_voice_raw)
+            else:
+                available = [v["id"] for v in engine.available_voices()] if hasattr(engine, 'available_voices') else []
+                narr_voice = narr_voice_raw if narr_voice_raw in available else default_narr
+            start = 0
+            n_files = len(segs)
+            if narr_text:
+                narr_wav = STORAGE_DIR / ("%s-seg-0.wav" % mid)
+                await engine.synthesize_seg(narr_text, narr_voice, rate, narr_wav, mid, 0)
+                dur = probe_ms(narr_wav)
+                meta["narration"] = {
+                    "text_en": narr_text,
+                    "text_zh": (narr.get("text_zh") or "").strip(),
+                    "voice": narr_voice,
+                    "start_ms": 0,
+                    "end_ms": dur,
+                }
+                start = dur + gap_ms
+                n_files += 1
+            else:
+                meta.pop("narration", None)
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[1]:
+                await asyncio.sleep(min_step_times[1] - elapsed)
+            yield f"data: {json.dumps({'step': 1, 'status': 'done'})}\n\n"
+            
+            # 步骤 3：合成对话语音
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 2, 'status': 'running', 'message': '合成对话语音'})}\n\n"
+            for i, seg in enumerate(segs):
+                text = (seg["text_en"] or "").strip() or "…"
+                spk = seg["speaker"] or ""
+                voice = spk_voices.get(spk) or vs[i % len(vs)]
+                wav = STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i + 1))
+                await engine.synthesize_seg(text, voice, rate, wav, mid, i + 1)
+                dur = probe_ms(wav)
+                times.append((start, start + dur, dur))
+                start += dur + gap_ms
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[2]:
+                await asyncio.sleep(min_step_times[2] - elapsed)
+            yield f"data: {json.dumps({'step': 2, 'status': 'done'})}\n\n"
+            
+            # 步骤 4：优化音频 & 调整语速
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 3, 'status': 'running', 'message': '优化音频 & 调整语速'})}\n\n"
+            raw_paths = sorted(STORAGE_DIR.glob("%s-seg-*.wav" % mid))
+            concat_list = STORAGE_DIR / ("%s-concat.txt" % mid)
+            with open(concat_list, "w", encoding="utf-8") as f:
+                for p in raw_paths:
+                    f.write("file '%s'\n" % p.name)
+            out_path = STORAGE_DIR / ("%s.mp3" % mid)
+            subprocess.run(
+                ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_list),
+                 "-c:a", "libmp3lame", "-q:a", "4", str(out_path)],
+                capture_output=True, text=True, timeout=120, check=True,
+            )
+            concat_list.unlink(missing_ok=True)
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[3]:
+                await asyncio.sleep(min_step_times[3] - elapsed)
+            yield f"data: {json.dumps({'step': 3, 'status': 'done'})}\n\n"
+            
+            # 步骤 5：合并音频 & 生成时间轴
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 4, 'status': 'running', 'message': '合并音频 & 生成时间轴'})}\n\n"
+            conn = db()
+            for i, (s, e, d) in enumerate(times):
+                conn.execute(
+                    "UPDATE dialogue_segments SET start_ms=?, end_ms=? WHERE material_id=? AND seq=?",
+                    (s, e, mid, i),
+                )
+            questions = conn.execute(
+                "SELECT id, explain FROM listening_questions WHERE material_id=? AND explain IS NOT NULL",
+                (mid,),
+            ).fetchall()
+            segs_with_ts = conn.execute(
+                "SELECT text_en, start_ms, end_ms FROM dialogue_segments WHERE material_id=? ORDER BY seq",
+                (mid,),
+            ).fetchall()
+            for q in questions:
+                explain = q["explain"] or ""
+                if not explain:
+                    continue
+                if "Segment " in explain and re.search(r"\d{1,2}:\d{2}", explain):
+                    continue
+                clean = re.sub(r"^.*?[:：]\s*['""]", "", explain)
+                clean = re.sub(r"['""]$", "", clean).strip()
+                clean_words = set(re.findall(r"\b\w{4,}\b", clean.lower()))
+                best_score = 0
+                best_idx = 0
+                for i, seg in enumerate(segs_with_ts):
+                    seg_text = (seg["text_en"] or "").lower()
+                    score = sum(1 for w in clean_words if w in seg_text)
+                    if score > best_score:
+                        best_score = score
+                        best_idx = i
+                if best_score > 0:
+                    seg = segs_with_ts[best_idx]
+                    mid_ms = (seg["start_ms"] + seg["end_ms"]) // 2
+                    mm = mid_ms // 60000
+                    ss = (mid_ms % 60000) // 1000
+                    ts = "%02d:%02d" % (mm, ss)
+                    new_explain = "Segment %s — %s" % (ts, explain)
+                    conn.execute(
+                        "UPDATE listening_questions SET explain = ? WHERE id = ?",
+                        (new_explain, q["id"]),
+                    )
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[4]:
+                await asyncio.sleep(min_step_times[4] - elapsed)
+            yield f"data: {json.dumps({'step': 4, 'status': 'done'})}\n\n"
+            
+            # 步骤 6：保存到素材库
+            step_start = time.time()
+            yield f"data: {json.dumps({'step': 5, 'status': 'running', 'message': '保存到素材库'})}\n\n"
+            meta["audio_url"] = "/api/v1/audio/" + mid + ".mp3"
+            meta["total_duration_ms"] = times[-1][2]
+            meta["audioReady"] = True
+            meta["saved"] = False
+            status = "published" if row["status"] == "published" else "audio_ready"
+            conn.execute(
+                "UPDATE materials SET meta_json=?, status=?, audio_url=?, "
+                "total_duration_ms=?, updated_at=? WHERE id=?",
+                (json.dumps(meta, ensure_ascii=False), status, meta["audio_url"],
+                 meta["total_duration_ms"], int(time.time()), mid),
+            )
+            conn.commit()
+            conn.close()
+            result = {
+                "audio_url": meta["audio_url"],
+                "total_duration_ms": meta["total_duration_ms"],
+            }
+            elapsed = time.time() - step_start
+            if elapsed < min_step_times[5]:
+                await asyncio.sleep(min_step_times[5] - elapsed)
+            yield f"data: {json.dumps({'step': 5, 'status': 'done'})}\n\n"
+            
+            # 完成
+            yield f"data: {json.dumps({'step': 'complete', 'status': 'done', 'result': result})}\n\n"
+            
+        except Exception as e:
+            yield f"data: {json.dumps({'step': 'error', 'status': 'error', 'message': str(e)})}\n\n"
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
 
 
 # --- Playlists (backend ready; frontend wiring later) ---

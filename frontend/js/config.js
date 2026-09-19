@@ -722,6 +722,60 @@ const API = {
     if (replaceId) return apiFetch('/materials/' + replaceId + '/regenerate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) });
     return apiFetch('/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) });
   },
+  /* SSE 流式生成语料 */
+  generateStream(params, onProgress, onComplete, onError) {
+    return new Promise((resolve, reject) => {
+      fetch(API_ORIGIN + '/api/v1/generate/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      }).then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              resolve();
+              return;
+            }
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.step === 'complete' && data.status === 'done') {
+                    onComplete && onComplete(data.result);
+                    resolve(data.result);
+                  } else if (data.status === 'error') {
+                    onError && onError(data.message);
+                    reject(new Error(data.message));
+                  } else {
+                    onProgress && onProgress(data);
+                  }
+                } catch (e) {
+                  console.error('SSE parse error:', e);
+                }
+              }
+            }
+            read();
+          }).catch(err => {
+            onError && onError(err.message);
+            reject(err);
+          });
+        }
+        read();
+      }).catch(err => {
+        onError && onError(err.message);
+        reject(err);
+      });
+    });
+  },
   async importMaterial(art) {
     return apiFetch('/materials/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ artifact: art }) });
   },
@@ -736,6 +790,60 @@ const API = {
   },
   async synthesize(id, cfg) {
     return apiFetch('/materials/' + id + '/synthesize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg || {}) }, 300000);
+  },
+  /* SSE 流式合成语音 */
+  synthesizeStream(id, cfg, onProgress, onComplete, onError) {
+    return new Promise((resolve, reject) => {
+      fetch(API_ORIGIN + '/api/v1/materials/' + id + '/synthesize/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cfg || {})
+      }).then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              resolve();
+              return;
+            }
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.step === 'complete' && data.status === 'done') {
+                    onComplete && onComplete(data.result);
+                    resolve(data.result);
+                  } else if (data.status === 'error') {
+                    onError && onError(data.message);
+                    reject(new Error(data.message));
+                  } else {
+                    onProgress && onProgress(data);
+                  }
+                } catch (e) {
+                  console.error('SSE parse error:', e);
+                }
+              }
+            }
+            read();
+          }).catch(err => {
+            onError && onError(err.message);
+            reject(err);
+          });
+        }
+        read();
+      }).catch(err => {
+        onError && onError(err.message);
+        reject(err);
+      });
+    });
   },
   async voices(provider) {
     return apiFetchSoft('/tts/voices?provider=' + encodeURIComponent(provider || 'edge-tts'));
