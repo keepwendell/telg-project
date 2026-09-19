@@ -174,11 +174,11 @@ function genPaint(steps, i) {
     s.classList.toggle('done', j < i);
     const icon = s.querySelector('.gen-step-icon');
     if (j < i) {
-      icon.innerHTML = '<svg class="check" style="width:16px;height:16px;color:var(--primary)"><use href="#i-check"/></svg>';
+      icon.innerHTML = '<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
     } else if (j === i) {
-      icon.innerHTML = '<span class="spinner" style="width:16px;height:16px;border:2px solid var(--primary-dim);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;display:block"></span>';
+      icon.innerHTML = '<span class="spinner"></span>';
     } else {
-      icon.innerHTML = '<span class="circle" style="width:16px;height:16px;border-radius:50%;border:2px solid var(--outline);display:block"></span>';
+      icon.innerHTML = '<span class="circle"></span>';
     }
   });
   /* 更新进度条 */

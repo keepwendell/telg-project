@@ -342,29 +342,150 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .range-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--outline)}
 /* generation progress */
 /* generation progress */
-/* 进度条卡片 */
-.gen-progress-card{background:var(--surface-low);border:1px solid var(--line);border-radius:12px;padding:20px;width:100%;max-width:420px;box-sizing:border-box}
-.gen-progress-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.gen-progress-title{font-size:14px;font-weight:600;color:var(--on-surface)}
-.gen-progress-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--primary)}
-.status-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.gen-progress-bar{height:4px;background:var(--surface-highest);border-radius:2px;overflow:hidden;margin-bottom:16px}
-.gen-progress-bar-fill{height:100%;background:var(--primary);border-radius:2px;transition:width .3s ease;width:0%}
-.gen-progress-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
-.gen-progress-step{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;transition:all .2s ease}
-.gen-progress-step .gen-step-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.gen-progress-step .gen-step-icon .circle{width:16px;height:16px;border-radius:50%;border:2px solid var(--outline);display:block}
-.gen-progress-step .gen-step-icon .check{width:16px;height:16px;color:var(--primary);display:block}
-.gen-progress-step .gen-step-icon .spinner{width:16px;height:16px;border:2px solid var(--primary-dim);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;display:block}
-@keyframes spin{to{transform:rotate(360deg)}}
-.gen-progress-step .gen-step-label{flex:1;font-size:13px;color:var(--outline)}
-.gen-progress-step.active .gen-step-label{color:var(--on-surface)}
-.gen-progress-step.done .gen-step-label{color:var(--on-surface)}
-.gen-step-time{font-size:11px;color:var(--outline);font-family:var(--mono)}
-.gen-progress-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--line)}
-.gen-progress-time{font-size:12px;color:var(--outline);font-family:var(--mono)}
-.gen-progress-status-detail{font-size:12px;color:var(--primary)}
+/* 进度条卡片 - AI Agent Steps 风格 */
+.gen-progress-card{
+  background:var(--surface-low);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:24px;
+  width:100%;
+  max-width:480px;
+  box-sizing:border-box;
+  box-shadow:0 4px 24px rgba(0,0,0,0.1);
+}
+.gen-progress-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
+}
+.gen-progress-title{
+  font-size:15px;
+  font-weight:600;
+  color:var(--on-surface);
+}
+.gen-progress-status{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  color:#10b981;
+  font-weight:500;
+}
+.status-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#10b981;
+  animation:pulse 2s infinite;
+  box-shadow:0 0 0 0 rgba(16,185,129,0.7);
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(16,185,129,0.7)}
+  70%{box-shadow:0 0 0 10px rgba(16,185,129,0)}
+  100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}
+}
+.gen-progress-bar{
+  height:3px;
+  background:var(--surface-highest);
+  border-radius:3px;
+  overflow:hidden;
+  margin-bottom:20px;
+}
+.gen-progress-bar-fill{
+  height:100%;
+  background:#10b981;
+  border-radius:3px;
+  transition:width .4s cubic-bezier(0.4,0,0.2,1);
+  width:0%;
+}
+.gen-progress-steps{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin-bottom:20px;
+}
+.gen-progress-step{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:10px 14px;
+  border-radius:10px;
+  transition:all .3s ease;
+}
+.gen-progress-step.active{
+  background:rgba(16,185,129,0.08);
+}
+.gen-step-icon{
+  width:22px;
+  height:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+.gen-step-icon .circle{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:2px solid var(--outline);
+  display:block;
+}
+.gen-step-icon .check{
+  width:20px;
+  height:20px;
+  color:#10b981;
+  display:block;
+}
+.gen-step-icon .spinner{
+  width:18px;
+  height:18px;
+  border:2px solid rgba(16,185,129,0.2);
+  border-top-color:#10b981;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  display:block;
+}
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+.gen-step-label{
+  flex:1;
+  font-size:14px;
+  color:var(--outline);
+  font-weight:400;
+}
+.gen-progress-step.active .gen-step-label{
+  color:var(--on-surface);
+  font-weight:500;
+}
+.gen-progress-step.done .gen-step-label{
+  color:var(--on-surface);
+}
+.gen-step-time{
+  font-size:12px;
+  color:var(--outline);
+  font-family:var(--mono);
+  font-weight:500;
+}
+.gen-progress-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding-top:16px;
+  border-top:1px solid var(--line);
+}
+.gen-progress-time{
+  font-size:13px;
+  color:var(--outline);
+  font-family:var(--mono);
+  font-weight:500;
+}
+.gen-progress-status-detail{
+  font-size:13px;
+  color:#10b981;
+  font-weight:500;
+}
 .gen-step{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--outline)}
 .gen-step.done{color:var(--on-variant)}
 .gen-step.active{color:var(--on-surface)}
