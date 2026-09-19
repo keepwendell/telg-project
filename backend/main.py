@@ -245,6 +245,7 @@ def migrate_bilingual_columns(conn: sqlite3.Connection) -> None:
         ],
         "listening_questions": ["q_zh", "options_zh", "explain_zh"],
         "core_sentence_patterns": ["title_zh", "pattern_zh", "example_zh"],
+        "vocabulary": ["def_zh"],
     }
     for table, cols in migrations.items():
         existing = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
@@ -465,7 +466,7 @@ def artifact_of(conn: sqlite3.Connection, mid: str) -> dict | None:
             }
             for s in segs
         ],
-        "vocabulary": [{"en": v["en"], "zh": v["zh"], "symbol": v["symbol"], "def": v["def"], "def_zh": v["def_zh"]} for v in vocab],
+        "vocabulary": [{"en": v["en"], "zh": v["zh"], "symbol": v["symbol"], "def": v["def"], "def_zh": v["def_zh"] if "def_zh" in v.keys() else ""} for v in vocab],
         "listening_questions": [
             {"q": q["q"], "options": json.loads(q["options"] or "[]"), "answer": q["answer"], "explain": q["explain"],
              "q_zh": q["q_zh"], "options_zh": json.loads(q["options_zh"] or "[]"), "explain_zh": q["explain_zh"]}
