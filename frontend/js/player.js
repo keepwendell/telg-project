@@ -776,15 +776,26 @@ function synthesizeAudio() {
   state.synthesizing = true;
   $('gen-progress-box').classList.remove('hidden');
   $('transcript-body').classList.add('hidden');
+  /* 生成时收缩右侧详情面板 */
+  if (typeof toggleSidebar === 'function') toggleSidebar(false);
   setPhases(1, 1);
   setGenSteps('audio');
   $('gen-topic-label').textContent = I18N[state.lang]['gen.audioLabel'] + art.meta.title + ' · ' + art.meta.voice;
   const wn = $('gen-waiting-note'); if (wn) wn.textContent = I18N[state.lang]['gen.waiting'] || '';
   const steps = document.querySelectorAll('#gen-progress-steps .gen-progress-step');
   const sleep = ms => new Promise(r => setTimeout(r, ms));
+  /* 实时计时 */
+  state.genStartTime = Date.now();
+  state.genTimer = setInterval(() => {
+    const elapsed = ((Date.now() - state.genStartTime) / 1000).toFixed(1);
+    const timeEl = document.getElementById('gen-progress-elapsed');
+    if (timeEl) timeEl.textContent = elapsed + 's';
+  }, 100);
   (async () => {
     try {
       genPaint(steps, 0);            /* TTS step stays active while the backend synthesizes */
+      await sleep(300);
+      genPaint(steps, 1);
       let ttsCfg = {};
       try {
         const t = JSON.parse(localStorage.getItem('telg-settings') || '{}');
@@ -796,6 +807,17 @@ function synthesizeAudio() {
                    narrator: state.narrVoice || (t.narrVoice) || 'en-US-JennyNeural' };
       } catch (e) {}
       const r = await API.synthesize(art.id, ttsCfg);
+      /* TTS 合成完成后推进剩余步骤 */
+      await sleep(200);
+      genPaint(steps, 2);
+      await sleep(200);
+      genPaint(steps, 3);
+      await sleep(200);
+      genPaint(steps, 4);
+      await sleep(200);
+      genPaint(steps, 5);
+      await sleep(200);
+      genPaint(steps, 6);
       if (r.audio_url) art.meta.audio_url = r.audio_url;
       if (r.total_duration_ms) art.meta.total_duration_ms = r.total_duration_ms;
       /* Pull the authoritative timeline the backend wrote to the DB (real TTS
@@ -810,7 +832,9 @@ function synthesizeAudio() {
         else if (fresh.meta && !fresh.meta.narration) delete art.meta.narration;
       }
       hideSynthError();
-      steps.forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
+      steps.forEach(s => { s.classList.remove('running'); s.classList.add('done'); });
+      /* 清除计时器 */
+      if (state.genTimer) { clearInterval(state.genTimer); state.genTimer = null; }
       art.meta.generated = true;           /* synthesis implies a generation pipeline */
       art.meta.audioReady = true;
       art.meta.saved = false;              /* re-synthesis → republish */
