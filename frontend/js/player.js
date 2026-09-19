@@ -208,15 +208,23 @@ function setGenSteps(mode, totalSteps) {
   
   let labels = [];
   if (mode === 'audio') {
+    /* 根据真实句子数动态生成步骤 */
+    const art = currentArtifact();
+    const total = (art && art.dialogue) ? art.dialogue.length : 8;
     labels = [
       '准备 TTS 引擎 & 加载音色配置',
-      '合成旁白（剧情引子）音频',
-      '逐句合成对话音频（第 1/N 句）',
-      '逐句合成对话音频（第 2/N 句）',
-      '逐句合成对话音频（第 3/N 句）',
-      '合并音频 & 生成时间轴',
-      '保存到素材库'
+      '合成旁白（剧情引子）音频'
     ];
+    /* 逐句合成对话音频（最多显示 5 句，太多了显示不下） */
+    const showCount = Math.min(total, 5);
+    for (let i = 1; i <= showCount; i++) {
+      labels.push(`逐句合成对话音频（第 ${i}/${total} 句）`);
+    }
+    if (total > showCount) {
+      labels.push(`... 还有 ${total - showCount} 句`);
+    }
+    labels.push('合并音频 & 生成时间轴');
+    labels.push('保存到素材库');
   } else {
     labels = [
       '解析参数 & 校验请求结构',
@@ -331,6 +339,8 @@ function runGenerate(params, replaceId) {
   setSynthBanner();   /* disable every banner action while the pipeline runs */
   $('gen-progress-box').classList.remove('hidden');
   $('transcript-body').classList.add('hidden');
+  /* 生成时收缩右侧详情面板 */
+  if (typeof toggleSidebar === 'function') toggleSidebar(false);
   setPhases(0, 0);
   setGenSteps('corpus');
   const _tp = String(params.topic || params.context || '');
