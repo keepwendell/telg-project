@@ -28,6 +28,7 @@ function loadSettings() {
     const gm = parseInt(s.goalMin, 10);
     if ([15, 30, 45, 60, 90].includes(gm)) state.goalMin = gm;
     state.zhVisible = s.zhDefault !== 'off';
+    state.narrVoice = s.narrVoice || 'en-US-JennyNeural';
   } catch (e) {}
 }
 function updateSeekStep() {
@@ -52,6 +53,10 @@ function applyTranscriptLang() {
     const zh = ov.querySelector('.ov-zh');
     if (zh) zh.style.display = state.zhVisible ? '' : 'none';
   }
+  /* 词汇卡片：跟随翻译按键（zh 开→显示中文术语和中文释义；关→只显示英文术语和英文释义） */
+  document.querySelectorAll('.vocab-card .vocab-zh, .vocab-card .vocab-def-zh').forEach(el => {
+    el.style.display = state.zhVisible ? '' : 'none';
+  });
   const pane = $('transcript-pane'); if (pane) pane.classList.toggle('zh-on', state.zhVisible);
   const ins = $('inspector'); if (ins) ins.classList.toggle('zh-off', !state.zhVisible);
   $('btn-zh-toggle').classList.toggle('on', state.zhVisible);
@@ -1614,8 +1619,9 @@ function vocabHTML(art) {
   return art.vocabulary.map(v =>
     '<div class="vocab-card">' +
       '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="t-13 bold">' + escapeHtml(v.en) + '</span><span class="mono t-10 accent">' + v.symbol + '</span></div>' +
-      '<div class="t-11 accent">' + v.zh + '</div>' +
-      '<div class="t-11 dim">' + v.def + '</div>' +
+      (v.zh ? '<div class="t-11 accent vocab-zh">' + escapeHtml(v.zh) + '</div>' : '') +
+      '<div class="t-11 dim vocab-def">' + escapeHtml(v.def) + '</div>' +
+      (v.def_zh ? '<div class="t-11 dim vocab-def-zh">' + escapeHtml(v.def_zh) + '</div>' : '') +
     '</div>').join('');
 }
 function questionsHTML(art) {
@@ -1645,16 +1651,42 @@ function seekToExplain(qidx) {
   if (!art || !art.dialogue || !art.dialogue.length) return;
   const qt = (art.listening_questions || [])[qidx];
   const txt = (qt && (qt.explain || '')) || '';
+  /* 先尝试从时间戳跳转 */
   const m = String(txt).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  if (!m) { showToast('No timestamp in the explanation', 'warn'); return; }
-  const ms = (parseInt(m[1]) * 60 + parseInt(m[2]) + (m[3] ? parseInt(m[3]) : 0)) * 1000;
-  let best = 0, bestD = Infinity;
+  if (m) {
+    const ms = (parseInt(m[1]) * 60 + parseInt(m[2]) + (m[3] ? parseInt(m[3]) : 0)) * 1000;
+    let best = 0, bestD = Infinity;
+    art.dialogue.forEach((s, i) => {
+      const mid = (Number(s.start_ms) + Number(s.end_ms)) / 2;
+      const d = Math.abs(mid - ms);
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    seekSentence(best, true);
+    return;
+  }
+  /* 没有时间戳，通过文本匹配找对应的句子 */
+  /* 从 explain 里提取关键文本（去掉前缀和引号） */
+  const cleanTxt = String(txt)
+    .replace(/^.*?says?\s*/i, '')  // 去掉 "The sales consultant says "
+    .replace(/^.*?asks?\s*/i, '')   // 去掉 "The buyer asks "
+    .replace(/^.*?hypothesizes?\s*/i, '')
+    .replace(/^["'""']|["'""']$/g, '') // 去掉首尾引号
+    .trim();
+  if (!cleanTxt) { showToast('Cannot locate sentence in explanation', 'warn'); return; }
+  /* 在 dialogue 里找最匹配的句子 */
+  const cleanWords = cleanTxt.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  let best = 0, bestScore = 0;
   art.dialogue.forEach((s, i) => {
-    const mid = (Number(s.start_ms) + Number(s.end_ms)) / 2;
-    const d = Math.abs(mid - ms);
-    if (d < bestD) { bestD = d; best = i; }
+    const sTxt = String(s.text_en || '').toLowerCase();
+    let score = 0;
+    cleanWords.forEach(w => { if (sTxt.includes(w)) score++; });
+    if (score > bestScore) { bestScore = score; best = i; }
   });
-  seekSentence(best, true);
+  if (bestScore > 0) {
+    seekSentence(best, true);
+  } else {
+    showToast('Cannot locate sentence in explanation', 'warn');
+  }
 }
 function patternsHTML(art) {
   return art.core_sentence_patterns.map(p =>
@@ -1822,6 +1854,15 @@ document.addEventListener('DOMContentLoaded', () => {
     $('rename-close').onclick = closeRenameModal;
     $('rename-ok').onclick = () => {
       const v = $('rename-input').value.trim();
+      if (!v) {
+        /* 空白不接受：震动输入框 + 提示，不关闭弹窗 */
+        const inp = $('rename-input');
+        inp.style.animation = 'shake 0.3s';
+        inp.style.borderColor = 'var(--error)';
+        showToast(I18N[state.lang]['rename.empty'] || '名称不能为空', 'warn');
+        setTimeout(() => { inp.style.animation = ''; inp.style.borderColor = ''; }, 300);
+        return;
+      }
       if (renameCallback) renameCallback(v);
       closeRenameModal();
     };

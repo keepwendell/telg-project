@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS dialogue_segments (
 CREATE TABLE IF NOT EXISTS vocabulary (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   material_id TEXT NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
-  en TEXT, zh TEXT, symbol TEXT, def TEXT
+  en TEXT, zh TEXT, symbol TEXT, def TEXT, def_zh TEXT
 );
 CREATE TABLE IF NOT EXISTS listening_questions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -380,8 +380,8 @@ def insert_artifact(conn: sqlite3.Connection, art: dict, status: str):
         )
     for v in art.get("vocabulary", []):
         conn.execute(
-            "INSERT INTO vocabulary (material_id,en,zh,symbol,def) VALUES (?,?,?,?,?)",
-            (mid, v.get("en"), v.get("zh"), v.get("symbol"), v.get("def")),
+            "INSERT INTO vocabulary (material_id,en,zh,symbol,def,def_zh) VALUES (?,?,?,?,?,?)",
+            (mid, v.get("en"), v.get("zh"), v.get("symbol"), v.get("def"), v.get("def_zh")),
         )
     for q in art.get("listening_questions", []):
         conn.execute(
@@ -465,7 +465,7 @@ def artifact_of(conn: sqlite3.Connection, mid: str) -> dict | None:
             }
             for s in segs
         ],
-        "vocabulary": [{"en": v["en"], "zh": v["zh"], "symbol": v["symbol"], "def": v["def"]} for v in vocab],
+        "vocabulary": [{"en": v["en"], "zh": v["zh"], "symbol": v["symbol"], "def": v["def"], "def_zh": v["def_zh"]} for v in vocab],
         "listening_questions": [
             {"q": q["q"], "options": json.loads(q["options"] or "[]"), "answer": q["answer"], "explain": q["explain"],
              "q_zh": q["q_zh"], "options_zh": json.loads(q["options_zh"] or "[]"), "explain_zh": q["explain_zh"]}
@@ -901,11 +901,11 @@ LLM_SYSTEM_PROMPT = """你是 Scenear 沉浸式场景听力素材生成引擎。
     {"speakerId": "speaker_1", "text_en": "英文台词", "text_zh": "对应中文翻译"}
   ],
   "vocabulary": [
-    {"en": "英文术语", "zh": "标准译法", "symbol": "符号，无则空串", "def": "英文释义"}
+    {"en": "英文术语", "zh": "标准译法", "symbol": "符号，无则空串", "def": "英文释义", "def_zh": "释义的中文翻译"}
   ],
   "listening_questions": [
     {"q": "问题", "options": ["选项1", "选项2", "选项3"],
-     "answer": "正确选项的完整原文", "explain": "答案出自哪句台词",
+     "answer": "正确选项的完整原文", "explain": "答案出自哪句台词（引用说话人+原文）",
      "q_zh": "问题的中文翻译", "options_zh": ["各选项中文翻译"],
      "explain_zh": "答案出处的中文翻译"}
   ],
@@ -925,6 +925,7 @@ LLM_SYSTEM_PROMPT = """你是 Scenear 沉浸式场景听力素材生成引擎。
 - vocabulary.en 必须是对话中出现或强相关的术语；同一术语不重复出现。
 - listening_questions.answer 是 options 中的完整原文，必须唯一正确。
 - listening_questions.options 至少 2 个、建议 4 个；干扰项看似合理但明确错误。
+- listening_questions.explain 必须引用答案对应的台词原文，格式为 "说话人: '原文片段'"，方便后端定位到具体句子。
 - core_sentence_patterns.pattern 是可迁移句型模板，example 取自或改写自对话。
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【三、词汇专业度字典（只约束词汇）】
@@ -2062,6 +2063,48 @@ async def synthesize(mid: str, body: SynthIn | None = None):
             "WHERE material_id = ? AND seq = ?",
             (st, en, mid, seq),
         )
+    # 合成完成后，根据 explain 里引用的句子内容，自动匹配时间戳加到 explain 开头
+    # 先获取所有对话句子和时间戳
+    segs_with_ts = conn.execute(
+        "SELECT seq, speaker, text_en, start_ms, end_ms FROM dialogue_segments "
+        "WHERE material_id = ? ORDER BY seq", (mid,)
+    ).fetchall()
+    # 获取所有 questions
+    questions = conn.execute(
+        "SELECT id, explain FROM listening_questions WHERE material_id = ?", (mid,)
+    ).fetchall()
+    for q in questions:
+        explain = q["explain"] or ""
+        if not explain:
+            continue
+        # 如果已经有时间戳了，就跳过
+        if "Segment " in explain and re.search(r"\d{1,2}:\d{2}", explain):
+            continue
+        # 从 explain 里提取关键文本（去掉说话人前缀和引号）
+        clean = re.sub(r"^.*?[:：]\s*['""]", "", explain)
+        clean = re.sub(r"['""]$", "", clean).strip()
+        # 在对话里找最匹配的句子
+        best_idx = 0
+        best_score = 0
+        clean_words = set(re.findall(r"\b\w{4,}\b", clean.lower()))
+        for i, seg in enumerate(segs_with_ts):
+            seg_text = (seg["text_en"] or "").lower()
+            score = sum(1 for w in clean_words if w in seg_text)
+            if score > best_score:
+                best_score = score
+                best_idx = i
+        if best_score > 0:
+            seg = segs_with_ts[best_idx]
+            mid_ms = (seg["start_ms"] + seg["end_ms"]) // 2
+            mm = mid_ms // 60000
+            ss = (mid_ms % 60000) // 1000
+            ts = "%02d:%02d" % (mm, ss)
+            # 把时间戳加到 explain 开头
+            new_explain = "Segment %s — %s" % (ts, explain)
+            conn.execute(
+                "UPDATE listening_questions SET explain = ? WHERE id = ?",
+                (new_explain, q["id"]),
+            )
     meta["audio_url"] = "/api/v1/audio/" + mid + ".mp3"
     meta["total_duration_ms"] = times[-1][2]
     meta["audioReady"] = True

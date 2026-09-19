@@ -28,8 +28,11 @@ function setListenMode(mode) {
 function applyFontSize(fs) {
   state.fontIdx = Math.max(0, CONFIG.fontSizes.indexOf(fs));
   $('font-label').textContent = fs;
+  /* 整体影响整个页面的字体大小：通过 CSS 变量控制 */
+  document.documentElement.style.setProperty('--transcript-font-size', fs);
   const ins = $('inspector');
   if (ins) ins.dataset.fs = state.fontIdx;
+  /* transcript 里的句子直接应用字号 */
   document.querySelectorAll('#transcript-list .trow-en, #transcript-list .trow-zh').forEach(el => {
     el.style.fontSize = fs; el.style.lineHeight = (parseInt(fs) + 9) + 'px';
   });

@@ -9,6 +9,8 @@
   --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --font-body:var(--font-sans);   /* 别名：修复组件中 var(--font-body) 引用 */
   --mono:var(--font-mono);        /* 别名：修复组件中 var(--mono) 引用 */
+  /* 全局字体大小（由字体调节按钮控制，默认 13px） */
+  --transcript-font-size: 13px;
 
   /* ---------- 圆角 ---------- */
   --r-sm:6px; --r-md:10px; --r-lg:14px;
