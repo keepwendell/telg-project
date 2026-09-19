@@ -168,16 +168,17 @@ function setSynthBanner() {
   });
 }
 function genPaint(steps, i) {
+  const now = Date.now();
   steps.forEach((s, j) => {
     s.classList.toggle('active', j === i);
     s.classList.toggle('done', j < i);
     const icon = s.querySelector('.gen-step-icon');
     if (j < i) {
-      icon.innerHTML = '<svg class="check"><use href="#i-check"/></svg>';
+      icon.innerHTML = '<svg class="check" style="width:16px;height:16px;color:var(--primary)"><use href="#i-check"/></svg>';
     } else if (j === i) {
-      icon.innerHTML = '<span class="spinner"></span>';
+      icon.innerHTML = '<span class="spinner" style="width:16px;height:16px;border:2px solid var(--primary-dim);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;display:block"></span>';
     } else {
-      icon.innerHTML = '<span class="circle"></span>';
+      icon.innerHTML = '<span class="circle" style="width:16px;height:16px;border-radius:50%;border:2px solid var(--outline);display:block"></span>';
     }
   });
   /* 更新进度条 */
@@ -190,6 +191,11 @@ function genPaint(steps, i) {
     const label = steps[i].querySelector('.gen-step-label');
     if (label) statusDetail.textContent = label.textContent;
   }
+  /* 更新计时 */
+  if (!state.genStartTime) state.genStartTime = now;
+  const elapsed = ((now - state.genStartTime) / 1000).toFixed(1);
+  const timeEl = document.getElementById('gen-progress-time');
+  if (timeEl) timeEl.textContent = elapsed + 's';
   /* 推进反馈：当前步骤淡入 */
   const cur = steps[i];
   if (cur && window.Ui && Ui.fadeIn) Ui.fadeIn(cur, { duration: Ui.getDur('fast') });
