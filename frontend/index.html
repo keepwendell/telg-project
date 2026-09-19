@@ -192,10 +192,21 @@
           <span class="gen-phases-pct" id="gen-phases-pct">1/3</span>
         </div>
         <div id="gen-progress-box" class="gen-center hidden">
-          <div class="gen-progress">
-            <div class="gen-step" data-step="0"><span class="step-ic" style="width:15px;display:inline-flex"></span><span class="gen-step-label">Parsing parameters &amp; building prompt</span></div>
-            <div class="gen-step" data-step="1"><span class="step-ic" style="width:15px;display:inline-flex"></span><span class="gen-step-label">LLM generating technical corpus</span></div>
-            <div class="gen-step" data-step="2"><span class="step-ic" style="width:15px;display:inline-flex"></span><span class="gen-step-label">Validating structure &amp; grounding</span></div>
+          <div class="gen-progress-card">
+            <div class="gen-progress-header">
+              <span class="gen-progress-title" id="gen-progress-title">素材生成</span>
+              <span class="gen-progress-status"><span class="status-dot"></span><span id="gen-progress-status-text">Running</span></span>
+            </div>
+            <div class="gen-progress-bar">
+              <div class="gen-progress-bar-fill" id="gen-progress-bar-fill"></div>
+            </div>
+            <div class="gen-progress-steps" id="gen-progress-steps">
+              <!-- 动态生成步骤 -->
+            </div>
+            <div class="gen-progress-footer">
+              <span id="gen-progress-time">0.0s</span>
+              <span id="gen-progress-status-detail">正在处理...</span>
+            </div>
           </div>
           <div class="t-11 dim" id="gen-topic-label" style="text-align:center"></div>
           <div class="t-10 faint" id="gen-waiting-note" style="text-align:center"></div>

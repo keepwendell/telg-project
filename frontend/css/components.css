@@ -342,12 +342,29 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .range-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--outline)}
 /* generation progress */
 /* generation progress */
-.gen-progress{display:flex;flex-direction:column;gap:10px;padding:28px 20px;align-items:center;text-align:center}
-.llm-trace{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding:8px 10px;background:var(--surface-low);border:1px solid var(--line);border-radius:7px;text-align:left;font-family:var(--mono);font-size:10.5px;line-height:1.55;color:var(--outline);max-height:150px;overflow-y:auto;width:100%;box-sizing:border-box}
-.llm-trace .tr-line{display:flex;gap:6px;min-width:0}
-.llm-trace .tr-t{color:var(--outline);white-space:nowrap;opacity:.7}
-.llm-trace .tr-ok{color:var(--primary)}
-.llm-trace .tr-err{color:var(--error)}
+/* 进度条卡片 */
+.gen-progress-card{background:var(--surface-low);border:1px solid var(--line);border-radius:12px;padding:20px;width:100%;max-width:420px;box-sizing:border-box}
+.gen-progress-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.gen-progress-title{font-size:14px;font-weight:600;color:var(--on-surface)}
+.gen-progress-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--primary)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.gen-progress-bar{height:4px;background:var(--surface-highest);border-radius:2px;overflow:hidden;margin-bottom:16px}
+.gen-progress-bar-fill{height:100%;background:var(--primary);border-radius:2px;transition:width .3s ease;width:0%}
+.gen-progress-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.gen-progress-step{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;transition:all .2s ease}
+.gen-step-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gen-step-icon .circle{width:16px;height:16px;border-radius:50%;border:2px solid var(--outline)}
+.gen-step-icon .check{width:16px;height:16px;color:var(--primary)}
+.gen-step-icon .spinner{width:16px;height:16px;border:2px solid var(--primary-dim);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-step-label{flex:1;font-size:13px;color:var(--outline)}
+.gen-step.active .gen-step-label{color:var(--on-surface)}
+.gen-step.done .gen-step-label{color:var(--on-surface)}
+.gen-step-time{font-size:11px;color:var(--outline);font-family:var(--mono)}
+.gen-progress-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--line)}
+.gen-progress-time{font-size:12px;color:var(--outline);font-family:var(--mono)}
+.gen-progress-status-detail{font-size:12px;color:var(--primary)}
 .gen-step{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--outline)}
 .gen-step.done{color:var(--on-variant)}
 .gen-step.active{color:var(--on-surface)}

@@ -171,20 +171,57 @@ function genPaint(steps, i) {
   steps.forEach((s, j) => {
     s.classList.toggle('active', j === i);
     s.classList.toggle('done', j < i);
-    s.querySelector('.step-ic').innerHTML = j < i
-      ? '<svg class="icon ok"><use href="#i-check"/></svg>'
-      : (j === i ? '<span class="dot pulse"></span>' : '<svg class="icon faint"><use href="#i-chevron-right"/></svg>');
+    const icon = s.querySelector('.gen-step-icon');
+    if (j < i) {
+      icon.innerHTML = '<svg class="check"><use href="#i-check"/></svg>';
+    } else if (j === i) {
+      icon.innerHTML = '<span class="spinner"></span>';
+    } else {
+      icon.innerHTML = '<span class="circle"></span>';
+    }
   });
+  /* 更新进度条 */
+  const pct = Math.round((i / steps.length) * 100);
+  const fill = document.getElementById('gen-progress-bar-fill');
+  if (fill) fill.style.width = pct + '%';
+  /* 更新状态文字 */
+  const statusDetail = document.getElementById('gen-progress-status-detail');
+  if (statusDetail && steps[i]) {
+    const label = steps[i].querySelector('.gen-step-label');
+    if (label) statusDetail.textContent = label.textContent;
+  }
   /* 推进反馈：当前步骤淡入 */
   const cur = steps[i];
   if (cur && window.Ui && Ui.fadeIn) Ui.fadeIn(cur, { duration: Ui.getDur('fast') });
 }
-function setGenSteps(mode) {
+function setGenSteps(mode, totalSteps) {
   const L = I18N[state.lang];
-  const labels = mode === 'audio'
-    ? [L['gen.stepA0'], L['gen.stepA1'], L['gen.stepA2']]
-    : [L['gen.stepC0'], L['gen.stepC1'], L['gen.stepC2']];
-  document.querySelectorAll('#gen-progress-box .gen-step-label').forEach((el, i) => { if (labels[i]) el.textContent = labels[i]; });
+  const stepsContainer = document.getElementById('gen-progress-steps');
+  if (!stepsContainer) return;
+  
+  let labels = [];
+  if (mode === 'audio') {
+    labels = ['准备 TTS 引擎 & 加载音色', '合成旁白（剧情引子）', '合成对话句子', '合并音频 & 生成时间轴'];
+  } else {
+    labels = ['解析参数 & 构建 Prompt', '调用 LLM 生成对话语料', '验证结构 & 检查内容', '生成词汇表 & 听力题', '保存素材到数据库'];
+  }
+  
+  /* 动态生成步骤 */
+  stepsContainer.innerHTML = labels.map((label, i) => `
+    <div class="gen-progress-step" data-step="${i}">
+      <span class="gen-step-icon"></span>
+      <span class="gen-step-label">${label}</span>
+      <span class="gen-step-time"></span>
+    </div>
+  `).join('');
+  
+  /* 更新标题 */
+  const title = document.getElementById('gen-progress-title');
+  if (title) title.textContent = mode === 'audio' ? '语音合成' : '素材生成';
+  
+  /* 更新状态 */
+  const statusText = document.getElementById('gen-progress-status-text');
+  if (statusText) statusText.textContent = 'Running';
 }
 /* ================= 素材命名（结构化主名称 + 参数条） =================
    主名称 = {领域} · {形态} · {主题}；参数条 = 词汇 L{N} · 句式 L{N} · {时长}。
@@ -272,7 +309,7 @@ function runGenerate(params, replaceId) {
   $('gen-topic-label').textContent = I18N[state.lang]['gen.corpusLabel'] + (_tp.length > 48 ? _tp.slice(0, 48) + '…' : _tp);
   const wn = $('gen-waiting-note'); if (wn) wn.textContent = I18N[state.lang]['gen.waiting'] || '';
   state.genNavGuard = { navigated: false };              /* set when the user opens another material mid-generation — completion must not hijack their focus */
-  const steps = document.querySelectorAll('#gen-progress-box .gen-step');
+  const steps = document.querySelectorAll('#gen-progress-steps .gen-progress-step');
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   (async () => {
     const llmDbg = llmMockOn() && !ttsMockOn();
@@ -681,7 +718,7 @@ function synthesizeAudio() {
   setGenSteps('audio');
   $('gen-topic-label').textContent = I18N[state.lang]['gen.audioLabel'] + art.meta.title + ' · ' + art.meta.voice;
   const wn = $('gen-waiting-note'); if (wn) wn.textContent = I18N[state.lang]['gen.waiting'] || '';
-  const steps = document.querySelectorAll('#gen-progress-box .gen-step');
+  const steps = document.querySelectorAll('#gen-progress-steps .gen-progress-step');
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   (async () => {
     try {
