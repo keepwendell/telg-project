@@ -1,5 +1,8 @@
 /* ============================================================
    Scenear — 场景听
+   ⚠️ 已废弃（2026-09-19）：此文件为早期合并产物，全仓库无引用。
+   当前生效样式：css/tokens.css + css/base.css + css/components.css + css/onboarding.css
+   如需历史对照可保留；勿在页面中引用，勿再编辑同步。
    Design tokens · Components · Views
    Deep theme (default) + Light theme via html[data-theme]
    ============================================================ */

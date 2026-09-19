@@ -58,6 +58,7 @@ function appendLlmTrace(msg, cls) {
   line.lastChild.textContent = msg;
   el.appendChild(line);
   el.scrollTop = el.scrollHeight;
+  if (window.Ui && Ui.fadeIn) Ui.fadeIn(line, { duration: Ui.getDur('fast') });
 }
 function readSavedSettings() {
   try { return JSON.parse(localStorage.getItem('telg-settings') || 'null') || {}; } catch (e) { return {}; }

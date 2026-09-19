@@ -262,7 +262,7 @@
     <div class="pb-controls">
       <button id="btn-pb-prev" title="Previous sentence [J]"><svg class="icon"><use href="#i-skip-back"/></svg></button>
       <button id="btn-pb-back10" class="pb-seek" title="Rewind 10s"><svg class="icon"><use href="#i-back10"/></svg><span class="pb-seek-num" id="pb-back-num">10</span></button>
-      <button class="pb-play" id="btn-pb-play" title="Play/Pause [Space]"><svg class="icon" id="pb-play-ic"><use href="#i-play"/></svg><svg class="icon" id="pb-pause-ic" style="display:none"><use href="#i-pause"/></svg></button>
+      <button class="pb-play" id="btn-pb-play" title="Play/Pause [Space]"><svg class="icon" id="pb-play-ic"><use href="#i-play"/></svg><svg class="icon" id="pb-pause-ic"><use href="#i-pause"/></svg></button>
       <button id="btn-pb-fwd10" class="pb-seek" title="Forward 10s"><svg class="icon"><use href="#i-fwd10"/></svg><span class="pb-seek-num" id="pb-fwd-num">10</span></button>
       <button id="btn-pb-next" title="Next sentence [K]"><svg class="icon"><use href="#i-skip-forward"/></svg></button>
       <button id="btn-pb-bookmark" title="Bookmark phrase"><svg class="icon"><use href="#i-bookmark"/></svg></button>
@@ -1165,4 +1165,9 @@
 <script src="js/state.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/player.js"></script>
+<!-- UI 动效增强层（本地 vendor，离线可用；库缺失时静默降级） -->
+<script src="vendor/motion.min.js"></script>
+<script src="vendor/floating-ui.core.umd.min.js"></script>
+<script src="vendor/floating-ui.dom.umd.min.js"></script>
+<script src="js/ui.js"></script>
 </body></html>

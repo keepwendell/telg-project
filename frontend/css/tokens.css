@@ -1,32 +1,181 @@
+/* ============================================================
+   Scenear Design Tokens —— 全站唯一权威色板/质感/动效源
+   （收敛自 2026-09-19 阶段0：主界面 M3 色板 + 生成面板 V2 色板 统一为单源）
+   规则：组件与页面禁止散落硬编码色值；一律引用本文件 token。
+   ============================================================ */
 :root{
-  /* surfaces */
-  --bg:#121315; --bg-lowest:#0d0e10;
-  --surface-low:#1b1c1e; --surface:#1f2022; --surface-high:#292a2c; --surface-highest:#343537;
-  --on-surface:#e3e2e5; --on-variant:#c2c6d6;
-  --outline:#8c909f; --outline-variant:#424754;
-  --line:rgba(66,71,84,.35); --line-strong:rgba(66,71,84,.6);
-  /* accent */
-  --primary:#adc6ff; --on-primary:#002e6a; --primary-dim:#4d8eff;
-  --secondary:#b9c8de; --tertiary:#ffb786; --on-tertiary:#502400;
-  --error:#ffb4ab; --ok:#7dd8a0;
-  /* type */
+  /* ---------- 字体 ---------- */
   --font-sans:"Geist",ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  /* radius — 苹果风更圆润 */
+  --font-body:var(--font-sans);   /* 别名：修复组件中 var(--font-body) 引用 */
+  --mono:var(--font-mono);        /* 别名：修复组件中 var(--mono) 引用 */
+
+  /* ---------- 圆角 ---------- */
   --r-sm:6px; --r-md:10px; --r-lg:14px;
-  /* shadow — 苹果风柔和阴影 */
+
+  /* ---------- 阴影（深色默认，浅色在 light 块覆盖） ---------- */
   --shadow-sm:0 1px 3px rgba(0,0,0,.1);
   --shadow-md:0 4px 20px rgba(0,0,0,.15);
   --shadow-lg:0 16px 48px rgba(0,0,0,.25);
-  --ease:cubic-bezier(.2,.7,.2,1);
+  --shadow-toast:0 8px 28px rgba(0,0,0,.16),0 2px 8px rgba(0,0,0,.10);
+  --shadow-sidebar:0 8px 40px rgba(0,0,0,.4);
+  --shadow-modal:0 16px 44px rgba(0,0,0,.28);
+  --shadow-card-lg:0 24px 64px rgba(0,0,0,.45);
+  --shadow-card-lg-light:0 24px 64px rgba(20,24,32,.25);
+  --shadow-tooltip:0 12px 30px rgba(0,0,0,.55);
+  --shadow-pop:0 12px 36px rgba(0,0,0,.32);
+  --shadow-tip:0 8px 20px rgba(0,0,0,.28);      /* eng-tip 浮层 */
+  --shadow-hairline:0 1px 0 rgba(0,0,0,.03);    /* overview-card 底部发丝线 */
+  --shadow-gen:0 20px 60px rgba(0,0,0,.4);
+  --shadow-shell:0 30px 80px rgba(0,0,0,.38),0 4px 18px rgba(0,0,0,.18); /* onboarding 容器 */
+  --shadow-shell-light:0 30px 80px rgba(20,24,32,.16),0 4px 18px rgba(20,24,32,.08);
+  --shadow-settings:0 30px 90px rgba(0,0,0,.6);
+  --shadow-settings-light:0 30px 70px rgba(20,30,50,.18);
+  --primary-glow:0 5px 16px -5px rgba(63,124,240,.7);   /* 生成按钮光晕 */
+  --primary-glow-light:0 5px 16px -5px rgba(63,124,240,.65);
+
+  /* ---------- 遮罩（scrim） ---------- */
+  --overlay:rgba(0,0,0,.55);           /* 普通 modal 遮罩 */
+  --overlay-soft:rgba(0,0,0,.45);      /* 侧栏 backdrop / gen backdrop */
+  --overlay-panel:rgba(5,6,8,.55);     /* 生成面板遮罩（深色） */
+  --overlay-panel-light:rgba(28,30,34,.35); /* 生成面板遮罩（浅色） */
+  --overlay-welcome:rgba(6,10,18,.82); /* 欢迎弹窗遮罩 */
+
+  /* ---------- 动效 Token ---------- */
+  --dur-fast:120ms;   /* hover / 按压 / 图标态 */
+  --dur-base:200ms;   /* 状态切换 / 入场 / toast */
+  --dur-slow:320ms;   /* 面板展开 / 弹窗 / 主题切换 */
+  --ease:cubic-bezier(.2,.7,.2,1);            /* 全站标准缓动（保留） */
+  --ease-emphasized:cubic-bezier(.22,.61,.36,1); /* 大弹窗入场 */
+  --ease-decelerate:cubic-bezier(0,0,.2,1);   /* 进入方向 */
+  --ease-accelerate:cubic-bezier(.4,0,1,1);   /* 退出方向 */
+
+  /* ================= 深色主题 ================= */
+  /* surfaces */
+  --bg:#121315; --bg-lowest:#0d0e10;
+  --surface-low:#1b1c1e; --surface:#1f2022; --surface-high:#292a2c; --surface-highest:#343537;
+  --surface-lowest:var(--bg-lowest);          /* settings-nav / debug-pre */
+  --surface-container:var(--surface-high);    /* lib-new-btn hover */
+  --on-surface:#e3e2e5; --on-variant:#c2c6d6;
+  --dim:var(--on-variant);                     /* 修复 var(--dim) 引用（gen-phase / confirm-text） */
+  --outline:#8c909f; --outline-variant:#424754;
+  --line:rgba(66,71,84,.35); --line-strong:rgba(66,71,84,.6);
+
+  /* accent —— 全站统一「冷静蓝」家族（V2 收敛） */
+  --primary:#5b9cff; --on-primary:#002e6a; --primary-dim:#4d8eff;
+  --primary-muted:rgba(91,156,255,.12);
+  --accent:var(--primary);                    /* 修复 var(--accent) 引用 */
+  --accent-soft:rgba(91,156,255,.13);
+  --accent-faint:rgba(91,156,255,.1);
+  --accent-border:rgba(91,156,255,.5);
+  --primary-grad-from:#5a94ff; --primary-grad-to:#3f7cf0;  /* 生成按钮渐变 */
+
+  /* 状态色 */
+  --secondary:#b9c8de; --tertiary:#ffb786; --on-tertiary:#502400;
+  --error:#ffb4ab; --on-error:#690005; --error-container:#93000a; --on-error-container:#ffdad6;
+  --err:var(--error);                        /* 修复 var(--err) 引用 */
+  --ok:#7dd8a0; --ok-solid:#3fb950; --ok-border:rgba(63,185,80,.35);
+  --err-solid:#f85149; --err-border:rgba(248,81,73,.35);
+  --warning:#e8b339;                         /* 修复 var(--warning) 引用（原缺失） */
+  --warning-border:rgba(232,179,57,.4);      /* warning 透明边框 */
+  --pause:#9f870e;                           /* 播放暂停态黄 */
+  --on-accent-solid:#ffffff;                 /* 实心 accent 上的图标/点（toggle 滑块等） */
+  --on-danger:#ffffff;                       /* 危险红底上的文字 */
+
+  /* 文本层级（V2 灰调家族，供 gen-panel / adjust-modal 等引用） */
+  --text-strong:#cdd5e0;   /* 区块标题 */
+  --text-variant:#9aa7b8;  /* 字段标签/次级 */
+  --text-mute:#6b7889;     /* 弱化说明 */
+  --text-weak:#6e7a8c;     /* 控件文字 */
+  --text-chip:#8f9bab;     /* chip 文字 */
+  --text-accent:#a8c5ff;   /* accent 底上的文字 */
+  --text-hover:#c6cfdb;    /* hover 文字 */
+  --icon-mute:#4d5867; --micro:#454f5d; --hint:#4e5969; --mute:#5f6b7c;
+  --hint-ico:#66748a; --em:#9dbdff;
+  --hover-overlay:rgba(255,255,255,.025);   /* chip/seg hover 叠加 */
+  --tooltip-bg:#242c39; --tooltip-fg:#c8d2e0;
+  --scrollbar:#232b37; --scrollbar-hover:#2f3846;
+  --chipx-bg:#232b36; --chipx-fg:#8a95a5;
+  --danger:#ff5c6c;
+
+  /* V2 面板深灰阶梯（gen-panel / refine 容器） */
+  --surface-0:#0c0e12;   /* 最深面板底 */
+  --surface-1:#12151a;   /* 容器 / seg / chip 底 */
+  --surface-2:#161a20;   /* chip hover */
+  --surface-3:#20242b;   /* 最高层级 */
+  --line-1:#1e2229;      /* 面板软边框 */
+  --line-1-strong:#262b33; /* 面板强边框 */
+  --line-1-soft:#181c22;   /* 面板内边框 */
+  --input-1:#080a0d;     /* 输入框底 */
+  --input-1-focus:#0d1015; /* 输入框聚焦底 */
 }
+
 html[data-theme="light"]{
+  /* ================= 浅色主题 ================= */
+  /* surfaces */
   --bg:#f4f4f6; --bg-lowest:#ffffff;
   --surface-low:#f0f0f3; --surface:#e8e8ec; --surface-high:#dedee3; --surface-highest:#d3d3d9;
+  --surface-lowest:var(--bg-lowest);
+  --surface-container:var(--surface-high);
   --on-surface:#1b1b1e; --on-variant:#4d4d57;
+  --dim:var(--on-variant);
   --outline:#7c7c88; --outline-variant:#cfcfd6;
   --line:rgba(207,207,214,.9); --line-strong:rgba(150,150,160,.55);
+
+  /* accent —— 同一蓝家族明档 */
   --primary:#2e63c8; --on-primary:#ffffff; --primary-dim:#4d8eff;
+  --primary-muted:rgba(46,99,200,.10);
+  --accent:var(--primary);
+  --accent-soft:rgba(46,99,200,.10);
+  --accent-faint:rgba(46,99,200,.06);
+  --accent-border:rgba(46,99,200,.55);
+  --primary-grad-from:#3f7cf0; --primary-grad-to:#2e63c8;
+
+  /* 状态色 */
   --secondary:#55617a; --tertiary:#b5450f; --on-tertiary:#ffffff;
-  --error:#b3261e; --ok:#1f7a4d;
+  --error:#b3261e; --on-error:#ffffff; --error-container:#f9dedc; --on-error-container:#410e0b;
+  --err:var(--error);
+  --ok:#1f7a4d; --ok-solid:#1f7a4d; --ok-border:rgba(31,122,77,.35);
+  --err-solid:#d9303f; --err-border:rgba(217,48,63,.35);
+  --warning:#a06600;
+  --warning-border:rgba(160,102,0,.4);
+  --pause:#9f870e;
+  --on-accent-solid:#ffffff;
+  --on-danger:#ffffff;
+
+  /* 浅色光晕 */
+  --primary-glow:var(--primary-glow-light);
+
+  /* 文本层级 */
+  --text-strong:#16161a;
+  --text-variant:var(--on-variant);
+  --text-mute:var(--outline);
+  --text-weak:var(--outline);
+  --text-chip:#3c3c46;
+  --text-accent:var(--primary);
+  --text-hover:#22222a;
+  --icon-mute:var(--outline); --micro:var(--outline-variant); --hint:var(--outline);
+  --mute:var(--outline); --hint-ico:var(--outline); --em:var(--primary);
+  --hover-overlay:rgba(0,0,0,.04);         /* chip/seg hover 叠加（浅色） */
+  --tooltip-bg:var(--surface-high); --tooltip-fg:var(--on-surface);
+  --scrollbar:var(--surface-highest); --scrollbar-hover:#b9b9c2;
+  --chipx-bg:var(--surface-highest); --chipx-fg:var(--outline);
+  --danger:#d9303f;
+
+  /* V2 面板阶梯映射到浅色表面 */
+  --surface-0:var(--surface-low);
+  --surface-1:var(--surface);
+  --surface-2:var(--surface-high);
+  --surface-3:var(--surface-highest);
+  --line-1:var(--line);
+  --line-1-strong:var(--line-strong);
+  --line-1-soft:var(--line);
+  --input-1:var(--surface-low);
+  --input-1-focus:var(--surface);
+
+  /* 阴影 / 遮罩浅色变体 */
+  --shadow-card-lg:var(--shadow-card-lg-light);
+  --shadow-settings:var(--shadow-settings-light);
+  --shadow-shell:var(--shadow-shell-light);
+  --overlay-panel:var(--overlay-panel-light);
 }

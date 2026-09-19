@@ -18,3 +18,13 @@ _shots/
 
 # 打包产物
 *.zip
+
+# npm/vite 残留（本项目无构建链，前端为原生 JS 单页）
+node_modules/
+.vite/
+frontend/.vite/
+frontend/src/
+frontend/package-lock.json
+frontend/tsconfig.json
+frontend/vite.config.ts
+frontend/package.json

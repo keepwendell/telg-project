@@ -41,7 +41,7 @@ function setFontMenu() {
 function toggleFontMenu() {
   const m = $('font-menu');
   const hidden = m.classList.toggle('hidden');
-  if (!hidden) setFontMenu();
+  if (!hidden) { setFontMenu(); if (window.Ui && Ui.slideIn) Ui.slideIn(m, { duration: Ui.getDur('fast') }); }
 }
 function closeFontMenu() { $('font-menu').classList.add('hidden'); }
 function syncLoopUI() {
@@ -172,6 +172,9 @@ function genPaint(steps, i) {
       ? '<svg class="icon ok"><use href="#i-check"/></svg>'
       : (j === i ? '<span class="dot pulse"></span>' : '<svg class="icon faint"><use href="#i-chevron-right"/></svg>');
   });
+  /* 推进反馈：当前步骤淡入 */
+  const cur = steps[i];
+  if (cur && window.Ui && Ui.fadeIn) Ui.fadeIn(cur, { duration: Ui.getDur('fast') });
 }
 function setGenSteps(mode) {
   const L = I18N[state.lang];
@@ -893,8 +896,8 @@ function tick() {
 function startTimer() { if (!timer) timer = setInterval(tick, 100); }
 function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
 function setPlayIcon(playing) {
-  $('pb-play-ic').style.display = playing ? 'none' : '';
-  $('pb-pause-ic').style.display = playing ? '' : 'none';
+  $('pb-play-ic').style.opacity = playing ? 0 : 1;
+  $('pb-pause-ic').style.opacity = playing ? 1 : 0;
 }
 (function initPbAudio() {
   const audio = document.getElementById('pb-audio');
@@ -1116,7 +1119,7 @@ function setSpeedMenu() {
 function toggleSpeedMenu() {
   const m = $('speed-menu');
   const hidden = m.classList.toggle('hidden');
-  if (!hidden) setSpeedMenu();
+  if (!hidden) { setSpeedMenu(); if (window.Ui && Ui.slideIn) Ui.slideIn(m, { duration: Ui.getDur('fast') }); }
 }
 function closeSpeedMenu() { $('speed-menu').classList.add('hidden'); }
 (function initVolDrag() {
@@ -1253,6 +1256,7 @@ function openGenPanel() {
   updateGenerateBtn();
   const input = $('gen-context');
   if (input) { input.focus(); }
+  if (window.Ui && Ui.layoutSegThumbs) requestAnimationFrame(() => Ui.layoutSegThumbs());
 }
 function updateGenerateBtn() {
   const b = $('btn-generate');

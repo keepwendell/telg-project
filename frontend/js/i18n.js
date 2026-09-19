@@ -1754,6 +1754,7 @@ function renderMaterial() {
   $('tab-vocab-count').textContent = '(' + art.vocabulary.length + ')';
   $('tab-quiz-count').textContent = '(' + art.listening_questions.length + ')';
   $('transcript-list').innerHTML = transcriptHTML(art);
+  if (window.Ui && Ui.staggerIn) Ui.staggerIn($('transcript-list').querySelectorAll('.trow'), { stagger: 15, duration: Ui.getDur('fast') });
   renderOverviewCard(art);
   setSynthBanner();
   $('panel-grounding').innerHTML = groundingHTML(art);

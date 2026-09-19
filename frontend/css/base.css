@@ -14,17 +14,46 @@ body{
 button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;transition:opacity .15s var(--ease),background .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease)}
 input,select,textarea{font-family:inherit;color:inherit}
 
-/* ---- 全局动效基础 ---- */
-.modal,.gen-modal{transition:opacity .2s var(--ease),transform .2s var(--ease)}
-.trow{transition:background .15s var(--ease)}
-.seg-item{transition:background .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease)}
-.lib-row{transition:background .15s var(--ease)}
-.pill{transition:background .15s var(--ease),color .15s var(--ease)}
+/* ---- 全局动效基础（时长统一走动效 Token，2026-09-19 阶段1） ---- */
+.modal,.gen-modal{transition:opacity var(--dur-base) var(--ease),transform var(--dur-base) var(--ease)}
+.trow{transition:background var(--dur-fast) var(--ease)}
+.seg-item{transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease)}
+.lib-row{transition:background var(--dur-fast) var(--ease)}
+.pill{transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease)}
+/* 标准交互过渡（按钮/开关/chip/图标钮/列表行） */
+.btn,.icon-btn,.chip,.toggle,.lib-item,.pl-row{transition:color var(--dur-fast) var(--ease),background var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease),opacity var(--dur-fast) var(--ease),transform var(--dur-fast) var(--ease)}
+
+/* ---- 弹窗遮罩淡入（每次显示随 .hidden 移除重播） ---- */
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+.modal-overlay{animation:overlayIn var(--dur-base) var(--ease)}
 
 /* ---- 全局主题切换过渡 ---- */
 html {
-  transition: background-color .3s var(--ease);
+  transition: background-color var(--dur-slow) var(--ease);
 }
 body, .modal, .panel, .lib-row, .trow, .seg-item, .pill, .btn, .input {
-  transition: background-color .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease), box-shadow .3s var(--ease);
+  transition: background-color var(--dur-slow) var(--ease), color var(--dur-slow) var(--ease), border-color var(--dur-slow) var(--ease), box-shadow var(--dur-slow) var(--ease);
+}
+
+/* ---- 统一滚动条（从废弃 all.css 迁移） ---- */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--surface-highest);border-radius:5px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb:hover{background:var(--surface-container)}
+
+/* ---- Motion spring 接管时，禁用 CSS 兜底动画（避免双重播放） ---- */
+.ui-motion-on .modal-overlay,
+.ui-motion-on .gen-card,
+.ui-motion-on .onboard-card,
+.ui-motion-on .confirm-box { animation: none; }
+
+/* ---- 减弱动效偏好：全局降级为瞬时/纯透明度 ---- */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+  .modal-overlay,.gen-backdrop{animation:none!important}
 }
