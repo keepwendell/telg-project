@@ -78,7 +78,7 @@
       
       
     </a>
-    <span class="version-pill nowrap">v0.1.0</span>
+    <span class="version-pill nowrap">v0.2.0</span>
   </div>
   <div class="header-right">
     <button class="btn-icon" id="btn-sidebar" title="Materials"><svg class="icon"><use href="#i-menu"/></svg></button>
@@ -182,15 +182,44 @@
 
     <div class="player-split">
       <section class="transcript-pane" id="transcript-pane">
-        <div class="gen-phases hidden" id="gen-phases">
-          <div class="gen-phase" data-phase="0" title="Re-run corpus step"><span class="gen-phase-n">1</span><span class="gen-phase-label" data-i18n="ph.corpus">Corpus</span></div>
-          <span class="gen-phase-arrow"><svg class="icon" style="width:11px;height:11px"><use href="#i-chevron-right"/></svg></span>
-          <div class="gen-phase" data-phase="1" title="Re-run TTS step"><span class="gen-phase-n">2</span><span class="gen-phase-label" data-i18n="ph.tts">TTS</span></div>
-          <span class="gen-phase-arrow"><svg class="icon" style="width:11px;height:11px"><use href="#i-chevron-right"/></svg></span>
-          <div class="gen-phase" data-phase="2" title="Re-run publish step"><span class="gen-phase-n">3</span><span class="gen-phase-label" data-i18n="ph.publish">Publish</span></div>
-          <div class="gen-phases-track"><div class="gen-phases-fill" id="gen-phases-fill"></div></div>
-          <span class="gen-phases-pct" id="gen-phases-pct">1/3</span>
+        <div class="transcript-head" id="transcript-head">
+          <div class="gen-phases hidden" id="gen-phases">
+            <div class="gen-phase" data-phase="0" title="Re-run corpus step"><span class="gen-phase-n">1</span><span class="gen-phase-label" data-i18n="ph.corpus">Corpus</span></div>
+            <span class="gen-phase-arrow"><svg class="icon" style="width:11px;height:11px"><use href="#i-chevron-right"/></svg></span>
+            <div class="gen-phase" data-phase="1" title="Re-run TTS step"><span class="gen-phase-n">2</span><span class="gen-phase-label" data-i18n="ph.tts">TTS</span></div>
+            <span class="gen-phase-arrow"><svg class="icon" style="width:11px;height:11px"><use href="#i-chevron-right"/></svg></span>
+            <div class="gen-phase" data-phase="2" title="Re-run publish step"><span class="gen-phase-n">3</span><span class="gen-phase-label" data-i18n="ph.publish">Publish</span></div>
+            <div class="gen-phases-track"><div class="gen-phases-fill" id="gen-phases-fill"></div></div>
+            <span class="gen-phases-pct" id="gen-phases-pct">1/3</span>
+          </div>
+          <div class="transcript-head-tools" id="transcript-head-tools">
+            <div class="synth-error hidden" id="synth-error">
+              <div class="synth-error-head">
+                <svg class="icon icon-sm" style="color:var(--error)"><use href="#i-close"/></svg>
+                <span class="t-11 bold" id="synth-error-title" style="color:var(--error)"></span>
+                <span class="t-10 dim nowrap" id="synth-error-class"></span>
+              </div>
+              <div class="t-10 dim synth-error-detail" id="synth-error-detail"></div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-sm" id="btn-retry-synth"><svg class="icon icon-sm"><use href="#i-refresh"/></svg><span class="nowrap" data-i18n="err.retry">Retry</span></button>
+              </div>
+            </div>
+            <div class="synth-banner hidden" id="synth-banner">
+              <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                <svg class="icon icon-sm accent"><use href="#i-waves"/></svg>
+                <span class="t-10 dim nowrap" id="synth-banner-label" data-i18n="tr.synth">Corpus generated — audio not synthesized yet.</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                <button class="btn btn-sm" id="btn-refine" title="Adjust parameters, then regenerate the corpus"><svg class="icon icon-sm"><use href="#i-tune"/></svg><span class="nowrap" data-i18n="tr.refine">Edit Corpus…</span></button>
+                <button class="btn btn-sm btn-primary" id="btn-synth" data-i18n="tts.setVoice">Set Voice &amp; Synthesize</button>
+                <button class="btn btn-sm hidden" id="btn-edit-audio" title="Re-configure TTS settings and re-synthesize"><svg class="icon icon-sm"><use href="#i-tune"/></svg><span class="nowrap" data-i18n="tr.editAudio">Edit Audio Settings</span></button>
+                <button class="btn btn-sm btn-primary hidden" id="btn-publish-banner"><svg class="icon icon-sm"><use href="#i-save"/></svg><span data-i18n="gen.publish">Publish</span></button>
+              </div>
+            </div>
+            <div id="overview-card" class="overview-card hidden"></div>
+          </div>
         </div>
+        <div class="transcript-scroll" id="transcript-scroll">
         <div id="gen-progress-box" class="gen-center hidden">
           <div class="gen-progress-card">
             <div class="gen-progress-header">
@@ -213,31 +242,8 @@
           <div id="llm-trace" class="llm-trace hidden"></div>
         </div>
         <div id="transcript-body">
-          <div class="synth-error hidden" id="synth-error">
-            <div class="synth-error-head">
-              <svg class="icon icon-sm" style="color:var(--error)"><use href="#i-close"/></svg>
-              <span class="t-11 bold" id="synth-error-title" style="color:var(--error)"></span>
-              <span class="t-10 dim nowrap" id="synth-error-class"></span>
-            </div>
-            <div class="t-10 dim synth-error-detail" id="synth-error-detail"></div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm" id="btn-retry-synth"><svg class="icon icon-sm"><use href="#i-refresh"/></svg><span class="nowrap" data-i18n="err.retry">Retry</span></button>
-            </div>
-          </div>
-          <div class="synth-banner hidden" id="synth-banner">
-            <div style="display:flex;align-items:center;gap:8px;min-width:0">
-              <svg class="icon icon-sm accent"><use href="#i-waves"/></svg>
-              <span class="t-10 dim nowrap" id="synth-banner-label" data-i18n="tr.synth">Corpus generated — audio not synthesized yet.</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-              <button class="btn btn-sm" id="btn-refine" title="Adjust parameters, then regenerate the corpus"><svg class="icon icon-sm"><use href="#i-tune"/></svg><span class="nowrap" data-i18n="tr.refine">Edit Corpus…</span></button>
-              <button class="btn btn-sm btn-primary" id="btn-synth" data-i18n="tts.setVoice">Set Voice &amp; Synthesize</button>
-              <button class="btn btn-sm hidden" id="btn-edit-audio" title="Re-configure TTS settings and re-synthesize"><svg class="icon icon-sm"><use href="#i-tune"/></svg><span class="nowrap" data-i18n="tr.editAudio">Edit Audio Settings</span></button>
-              <button class="btn btn-sm btn-primary hidden" id="btn-publish-banner"><svg class="icon icon-sm"><use href="#i-save"/></svg><span data-i18n="gen.publish">Publish</span></button>
-            </div>
-          </div>
-          <div id="overview-card" class="overview-card hidden"></div>
           <div id="transcript-list"></div>
+        </div>
         </div>
       </section>
 
@@ -1129,7 +1135,7 @@
         <div class="s-row">
           <div class="s-info">
             <div class="s-name" data-i18n="settings.about.version">Version</div>
-            <div class="s-desc" data-i18n="settings.about.versionDesc">v0.1.0 — single-file frontend, FastAPI backend.</div>
+            <div class="s-desc" data-i18n="settings.about.versionDesc">v0.2.0 — single-file frontend, FastAPI backend.</div>
           </div>
           <div class="s-ctrl"><span class="t-11 mono dim">v1.0.0</span></div>
         </div>

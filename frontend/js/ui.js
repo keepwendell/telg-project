@@ -18,16 +18,21 @@
   var FD = window.FloatingUIDOM || null;
   var REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-  function getDur(name, fallback) {
+  /* CSS duration tokens carry milliseconds (e.g. 120ms); Motion's `duration`
+     and `delay` are expressed in SECONDS, so tokens are converted once here.
+     (Passing ms straight through made every animation run ~1000x too slow, so
+     containers that faded in from opacity 0 — e.g. the font menu — stayed
+     effectively invisible.) */
+  function tokenSec(name, fallbackMs) {
     try {
       var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-      return v ? parseFloat(v) : fallback;
-    } catch (e) { return fallback; }
+      return (v ? parseFloat(v) : fallbackMs) / 1000;
+    } catch (e) { return fallbackMs / 1000; }
   }
   var DUR = {
-    fast: getDur('--dur-fast', 120),
-    base: getDur('--dur-base', 200),
-    slow: getDur('--dur-slow', 320)
+    fast: tokenSec('--dur-fast', 120),
+    base: tokenSec('--dur-base', 200),
+    slow: tokenSec('--dur-slow', 320)
   };
 
   function noop() {}
@@ -79,14 +84,14 @@
       opts = opts || {};
       if (!M || REDUCED || opts.instant) { return; }
       M.animate(els, { opacity: [0, 1], transform: ['translateY(6px)', 'translateY(0)'] },
-        { duration: opts.duration || DUR.base, delay: M.stagger(opts.stagger || 40), easing: 'ease-out' });
+        { duration: opts.duration || DUR.base, delay: M.stagger((opts.stagger || 40) / 1000), easing: 'ease-out' });
     },
 
     /* toast 图标回弹（完成态反馈） */
     popIcon: function (el) {
       if (!el || !M || REDUCED) return;
       M.animate(el, { transform: ['scale(.4)', 'scale(1.15)', 'scale(1)'] },
-        { duration: 320, easing: [0.22, 0.61, 0.36, 1] });
+        { duration: 0.32, easing: [0.22, 0.61, 0.36, 1] });
     },
 
     /* ---------- tooltip：接入 Floating UI 定位 ---------- */

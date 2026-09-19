@@ -47,7 +47,7 @@ DB_PATH = BASE_DIR / "telg.db"
 SEED_PATH = BASE_DIR / "seed_materials.json"
 STORAGE_DIR = BASE_DIR / "storage" / "audio"
 
-app = FastAPI(title="Scenear API", version="0.1.0")
+app = FastAPI(title="Scenear API", version="0.2.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -2095,6 +2095,22 @@ def get_engine(provider: str | None) -> TTSEngine:
     return ENGINES.get((provider or "").strip().lower(), ENGINES["edge-tts"])
 
 
+async def synthesize_seg_with_retry(engine: TTSEngine, text: str, voice: str, rate: float,
+                                    wav_path: Path, mid: str, i: int, attempts: int = 3) -> None:
+    """Synthesize one sentence with silent retries (edge-tts/online engines can
+    intermittently fail under rapid multi-segment bursts). Backs off 1s/2s/..."""
+    last: Exception | None = None
+    for a in range(max(1, attempts)):
+        try:
+            await engine.synthesize_seg(text, voice, rate, wav_path, mid, i)
+            return
+        except Exception as e:  # noqa: BLE001 — transient engine failures get retried
+            last = e
+            if a < attempts - 1:
+                await asyncio.sleep(2 ** a)
+    raise last  # type: ignore[misc]
+
+
 @app.post("/api/v1/materials/{mid}/synthesize")
 async def synthesize(mid: str, body: SynthIn | None = None):
     body = body or SynthIn()
@@ -2180,7 +2196,7 @@ async def synthesize(mid: str, body: SynthIn | None = None):
         n_files = len(segs)
         if narr_text:
             narr_wav = STORAGE_DIR / ("%s-seg-0.wav" % mid)
-            await engine.synthesize_seg(narr_text, narr_voice, rate, narr_wav, mid, 0)
+            await synthesize_seg_with_retry(engine, narr_text, narr_voice, rate, narr_wav, mid, 0)
             dur = probe_ms(narr_wav)
             meta["narration"] = {
                 "text_en": narr_text,
@@ -2200,7 +2216,7 @@ async def synthesize(mid: str, body: SynthIn | None = None):
             # sample-exact and the merge pass sees one consistent format.
             # seg-0 is reserved for the narration prefix; dialogue segs shift +1.
             wav_path = STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i + 1))
-            await engine.synthesize_seg(text, voice, rate, wav_path, mid, i + 1)
+            await synthesize_seg_with_retry(engine, text, voice, rate, wav_path, mid, i + 1)
             # The TTS output is kept untouched (no silence trimming). The gap
             # below absorbs the ~30-130ms lead/trail padding TTS models add, so
             # start_ms/end_ms land on segment boundaries and the voice follows
@@ -2287,11 +2303,11 @@ async def synthesize(mid: str, body: SynthIn | None = None):
 async def synthesize_stream(mid: str, body: SynthIn | None = None):
     """SSE 流式合成语音，实时推送进度"""
     # 每步最少停留时间（秒）
-    min_step_times = [0.5, 1.5, 2.0, 1.0, 0.5, 0.5]
-    
+    min_step_times = [2.0, 6.0, 8.0, 4.0, 2.0, 2.0]
+    body = body or SynthIn()
+
     async def event_generator():
         try:
-            body = body or SynthIn()
             conn = db()
             row = conn.execute(
                 "SELECT meta_json, status FROM materials WHERE id = ?", (mid,)
@@ -2376,7 +2392,7 @@ async def synthesize_stream(mid: str, body: SynthIn | None = None):
             n_files = len(segs)
             if narr_text:
                 narr_wav = STORAGE_DIR / ("%s-seg-0.wav" % mid)
-                await engine.synthesize_seg(narr_text, narr_voice, rate, narr_wav, mid, 0)
+                await synthesize_seg_with_retry(engine, narr_text, narr_voice, rate, narr_wav, mid, 0)
                 dur = probe_ms(narr_wav)
                 meta["narration"] = {
                     "text_en": narr_text,
@@ -2402,9 +2418,9 @@ async def synthesize_stream(mid: str, body: SynthIn | None = None):
                 spk = seg["speaker"] or ""
                 voice = spk_voices.get(spk) or vs[i % len(vs)]
                 wav = STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i + 1))
-                await engine.synthesize_seg(text, voice, rate, wav, mid, i + 1)
+                await synthesize_seg_with_retry(engine, text, voice, rate, wav, mid, i + 1)
                 dur = probe_ms(wav)
-                times.append((start, start + dur, dur))
+                times.append((seg["seq"], start, start + dur))
                 start += dur + gap_ms
             elapsed = time.time() - step_start
             if elapsed < min_step_times[2]:
@@ -2414,18 +2430,11 @@ async def synthesize_stream(mid: str, body: SynthIn | None = None):
             # 步骤 4：优化音频 & 调整语速
             step_start = time.time()
             yield f"data: {json.dumps({'step': 3, 'status': 'running', 'message': '优化音频 & 调整语速'})}\n\n"
-            raw_paths = sorted(STORAGE_DIR.glob("%s-seg-*.wav" % mid))
-            concat_list = STORAGE_DIR / ("%s-concat.txt" % mid)
-            with open(concat_list, "w", encoding="utf-8") as f:
-                for p in raw_paths:
-                    f.write("file '%s'\n" % p.name)
+            gap = ensure_gap(STORAGE_DIR, gap_ms)
             out_path = STORAGE_DIR / ("%s.mp3" % mid)
-            subprocess.run(
-                ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_list),
-                 "-c:a", "libmp3lame", "-q:a", "4", str(out_path)],
-                capture_output=True, text=True, timeout=120, check=True,
-            )
-            concat_list.unlink(missing_ok=True)
+            merge_mp3(STORAGE_DIR, mid, n_files, out_path, gap)
+            for i in range(n_files):
+                (STORAGE_DIR / ("%s-seg-%d.wav" % (mid, i))).unlink(missing_ok=True)
             elapsed = time.time() - step_start
             if elapsed < min_step_times[3]:
                 await asyncio.sleep(min_step_times[3] - elapsed)
@@ -2435,10 +2444,10 @@ async def synthesize_stream(mid: str, body: SynthIn | None = None):
             step_start = time.time()
             yield f"data: {json.dumps({'step': 4, 'status': 'running', 'message': '合并音频 & 生成时间轴'})}\n\n"
             conn = db()
-            for i, (s, e, d) in enumerate(times):
+            for seq, s, e in times:
                 conn.execute(
                     "UPDATE dialogue_segments SET start_ms=?, end_ms=? WHERE material_id=? AND seq=?",
-                    (s, e, mid, i),
+                    (s, e, mid, seq),
                 )
             questions = conn.execute(
                 "SELECT id, explain FROM listening_questions WHERE material_id=? AND explain IS NOT NULL",
@@ -2509,8 +2518,8 @@ async def synthesize_stream(mid: str, body: SynthIn | None = None):
             # 完成
             yield f"data: {json.dumps({'step': 'complete', 'status': 'done', 'result': result})}\n\n"
             
-        except Exception as e:
-            yield f"data: {json.dumps({'step': 'error', 'status': 'error', 'message': str(e)})}\n\n"
+        except Exception as e:  # noqa: BLE001
+            yield f"data: {json.dumps({'step': 'error', 'status': 'error', 'message': 'TTS synthesis failed [%s]: %s' % (tts_error_class(e), e)})}\n\n"
     
     return StreamingResponse(
         event_generator(),

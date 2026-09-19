@@ -803,45 +803,48 @@ const API = {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
-        
+        let settled = false;
+
+        function fail(err) {
+          if (settled) return;
+          settled = true;
+          reject(err);
+          try { onError && onError(err && err.message ? err.message : String(err)); } catch (e) {}
+        }
+
         function read() {
           reader.read().then(({ done, value }) => {
             if (done) {
-              resolve();
+              if (!settled) fail(new Error('Synthesis stream ended unexpectedly'));
               return;
             }
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
             buffer = lines.pop();
-            
+
             for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                try {
-                  const data = JSON.parse(line.slice(6));
-                  if (data.step === 'complete' && data.status === 'done') {
-                    onComplete && onComplete(data.result);
-                    resolve(data.result);
-                  } else if (data.status === 'error') {
-                    onError && onError(data.message);
-                    reject(new Error(data.message));
-                  } else {
-                    onProgress && onProgress(data);
-                  }
-                } catch (e) {
-                  console.error('SSE parse error:', e);
-                }
+              if (!line.startsWith('data: ')) continue;
+              let data;
+              try { data = JSON.parse(line.slice(6)); }
+              catch (e) { console.error('SSE parse error:', e); continue; }
+              if (data.step === 'complete' && data.status === 'done') {
+                if (settled) continue;
+                settled = true;
+                resolve(data.result);
+                try { onComplete && onComplete(data.result); } catch (e) {}
+              } else if (data.status === 'error') {
+                fail(new Error(data.message));
+              } else {
+                try { onProgress && onProgress(data); } catch (e) {}
               }
             }
             read();
-          }).catch(err => {
-            onError && onError(err.message);
-            reject(err);
-          });
+          }).catch(fail);
         }
         read();
       }).catch(err => {
-        onError && onError(err.message);
         reject(err);
+        try { onError && onError(err && err.message ? err.message : String(err)); } catch (e) {}
       });
     });
   },

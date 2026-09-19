@@ -67,11 +67,23 @@ function syncDetailBtn() {
   const ins = document.querySelector('.inspector'), btn = $('btn-pb-subs');
   if (!ins || !btn) return;
   const has = !!state.current;      /* show the Details control only when there is content */
+  const busy = !!(state.generating || state.synthesizing);  /* details go stale while a corpus/TTS task runs */
   const on = has && !ins.classList.contains('hidden');
   btn.classList.toggle('on', on);
   btn.style.display = has ? '' : 'none';
+  btn.disabled = busy;
+  btn.classList.toggle('disabled', busy);
+}
+/* Collapse the right details panel while a generation/synthesis pipeline runs:
+   its content may change with the newly produced corpus, so it must not stay
+   open (and the Details control stays disabled until the task settles). */
+function collapseInspectorForPipeline() {
+  const ins = document.querySelector('.inspector');
+  if (ins) ins.classList.add('hidden');
+  syncDetailBtn();
 }
 function toggleInspector() {
+  if (state.generating || state.synthesizing) return;   /* disabled while the pipeline runs */
   const ins = document.querySelector('.inspector');
   ins.classList.toggle('hidden');
   syncDetailBtn();
@@ -166,6 +178,12 @@ function setSynthBanner() {
     const el = document.getElementById(id);
     if (el && !el.classList.contains('hidden')) el.disabled = busy;
   });
+}
+/* Toggle the editable transcript content (banner + overview + dialogue list)
+   together, without touching the sticky head's phase overview. */
+function showTranscriptContent(show) {
+  const tools = $('transcript-head-tools'); if (tools) tools.classList.toggle('hidden', !show);
+  const body = $('transcript-body'); if (body) body.classList.toggle('hidden', !show);
 }
 const ICONS = {
   check:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',
@@ -330,9 +348,11 @@ function runGenerate(params, replaceId) {
   state.generating = true;
   setSynthBanner();   /* disable every banner action while the pipeline runs */
   $('gen-progress-box').classList.remove('hidden');
-  $('transcript-body').classList.add('hidden');
-  /* 生成时收缩右侧详情面板 */
+  showTranscriptContent(false);
+  /* 生成时收缩左侧库栏 */
   if (typeof toggleSidebar === 'function') toggleSidebar(false);
+  /* 语料重新生成会改动详情内容：收起右侧详情面板并禁用「详情」按钮 */
+  collapseInspectorForPipeline();
   setPhases(0, 0);
   setGenSteps('corpus');
   const _tp = String(params.topic || params.context || '');
@@ -422,7 +442,7 @@ function runGenerate(params, replaceId) {
       const idx = state.library.findIndex(m => m.id === art.id);
       if (idx >= 0) state.library[idx] = art; else state.library.unshift(art);
       $('gen-progress-box').classList.add('hidden');
-      $('transcript-body').classList.remove('hidden');
+      showTranscriptContent(true);
       /* 清除计时器 */
       if (state.genTimer) { clearInterval(state.genTimer); state.genTimer = null; }
       const switchedAway = !!(state.genNavGuard && state.genNavGuard.navigated && state.current && state.current.id !== art.id);
@@ -445,7 +465,7 @@ function runGenerate(params, replaceId) {
         appendLlmTrace('No material saved (backend /api/v1/materials/import unavailable)', 'tr-err');
       }
       $('gen-progress-box').classList.add('hidden');
-      $('transcript-body').classList.remove('hidden');
+      showTranscriptContent(true);
       const offline = !mockMode() && /Failed to fetch|NetworkError|Load failed|ERR_/i.test(String(err && err.message || err));
       showToast(offline
         ? 'Cannot reach backend at ' + CONFIG.apiBase + ' — start FastAPI (uvicorn backend.main:app --reload) or enable Test Data in Developer settings'
@@ -456,6 +476,7 @@ function runGenerate(params, replaceId) {
          this the buttons stay disabled from the task-phase setSynthBanner()
          (the last render happened while generating was still true). */
       setSynthBanner();
+      syncDetailBtn();   /* re-enable the Details control once the pipeline is idle */
     }
   })();
 }
@@ -523,8 +544,8 @@ function openAdjustModal(tab) {
   if (!art) { showToast('No material selected', 'warn'); return; }
   if (state.playing) pause();          /* opening an edit modal suspends playback */
   adjustPanel = tab === 'voice' ? 'voice' : 'text';
-  const lock = state.current;
-  if (lock && lock.meta.saved === true) setPhases(3);   /* unlock — show edit progress */
+  /* Opening a refine/TTS modal must NOT change the 3-step overview; only the
+     publish action updates it. */
   $('adjust-modal').classList.remove('hidden');
   $('ap-text').classList.toggle('hidden', adjustPanel !== 'text');
   $('ap-voice').classList.toggle('hidden', adjustPanel !== 'voice');
@@ -540,8 +561,8 @@ function openAdjustModal(tab) {
 function closeAdjustModal() {
   stopAuditions();
   $('adjust-modal').classList.add('hidden');
-  const lock = state.current;
-  if (lock && lock.meta.saved === true) $('gen-phases').classList.add('hidden');
+  /* Closing a refine/TTS modal must NOT change the 3-step overview either;
+     only the publish action updates it. */
 }
 function closeRefineModal() { closeAdjustModal(); }
 function closeTTSModal() { closeAdjustModal(); }
@@ -764,9 +785,11 @@ function synthesizeAudio() {
   if (!art || art.meta.audioReady !== false || state.synthesizing) return;
   state.synthesizing = true;
   $('gen-progress-box').classList.remove('hidden');
-  $('transcript-body').classList.add('hidden');
-  /* 生成时收缩右侧详情面板 */
+  showTranscriptContent(false);
+  /* 合成时收缩左侧库栏 */
   if (typeof toggleSidebar === 'function') toggleSidebar(false);
+  /* 合成会更新时间轴等详情内容：收起右侧详情面板并禁用「详情」按钮 */
+  collapseInspectorForPipeline();
   setPhases(1, 1);
   setGenSteps('audio');
   $('gen-topic-label').textContent = I18N[state.lang]['gen.audioLabel'] + art.meta.title + ' · ' + art.meta.voice;
@@ -837,8 +860,9 @@ function synthesizeAudio() {
       setPhases(2);
       await sleep(220);
       $('gen-progress-box').classList.add('hidden');
-      $('transcript-body').classList.remove('hidden');
+      showTranscriptContent(true);
       state.synthesizing = false;
+      syncDetailBtn();   /* re-enable the Details control once synthesis is idle */
       const isCurrent = state.current && state.current.id === art.id;
       if (isCurrent) {
         renderMaterial();
@@ -860,7 +884,8 @@ function synthesizeAudio() {
     } catch (err) {
       state.synthesizing = false;
       $('gen-progress-box').classList.add('hidden');
-      $('transcript-body').classList.remove('hidden');
+      showTranscriptContent(true);
+      syncDetailBtn();   /* re-enable the Details control once synthesis is idle */
       const isCurrent = state.current && state.current.id === art.id;
       if (isCurrent) {
         renderMaterial();
@@ -874,32 +899,78 @@ function synthesizeAudio() {
 }
 function exportMD(art) {
   if (!art) return;
+  const m = art.meta || {};
+  const bg = art.background || {};
+  const ov = art.overview || m.overview || null;
+  const speakers = (m.speakers && m.speakers.length) ? m.speakers : [];
   const L = [];
-  L.push('# ' + art.meta.title, '',
-    '> ' + art.meta.domain + ' · ' + art.meta.role + ' · ' + art.meta.scenario,
-    '> ' + art.meta.difficulty + ' · ' + fmt(art.meta.total_duration_ms) + ' · ' + art.meta.voice, '',
-    '## Technical Background', art.background.technical_background, '',
-    '## Technical Principle', art.background.technical_principle, '',
-    '## Engineering Scenario', art.background.engineering_scenario, '',
-    '## Transcript');
-  art.dialogue.forEach(s => L.push('**' + (s.speakerId || s.speaker) + '** (' + (s.start_ms != null && !Number.isNaN(Number(s.start_ms)) ? fmt(s.start_ms) + '–' + fmt(s.end_ms) : 'no timeline yet') + '): ' + s.text_en));
-  L.push('', '## Vocabulary');
-  art.vocabulary.forEach(v => L.push('- **' + v.en + '** (' + v.symbol + ') ' + v.zh + ' — ' + v.def));
-  L.push('', '## Listening Questions');
+  L.push('# ' + (m.title || 'Untitled'), '');
+  L.push('> ' + [m.domain, m.role, m.scenario].filter(Boolean).join(' · '));
+  L.push('> ' + [m.difficulty, m.total_duration_ms ? fmt(m.total_duration_ms) : '', m.voice].filter(Boolean).join(' · '), '');
+
+  if (ov && (ov.text_en || ov.text_zh)) {
+    L.push('## Scene Overview · 剧情概述', '');
+    if (ov.text_en) L.push(ov.text_en, '');
+    if (ov.text_zh) L.push(ov.text_zh, '');
+  }
+
+  if (speakers.length) {
+    L.push('## Speakers · 角色', '');
+    speakers.forEach(sp => {
+      L.push('- **' + (sp.role || sp.id || '') + '**' + (sp.voiceTag ? '（' + sp.voiceTag + '）' : ''));
+    });
+    L.push('');
+  }
+
+  L.push('## Technical Background · 背景', '');
+  if (bg.technical_background) { L.push(bg.technical_background, ''); if (bg.technical_background_zh) L.push(bg.technical_background_zh, ''); }
+  if (bg.technical_principle) { L.push(bg.technical_principle, ''); if (bg.technical_principle_zh) L.push(bg.technical_principle_zh, ''); }
+  if (bg.engineering_scenario) { L.push(bg.engineering_scenario, ''); if (bg.engineering_scenario_zh) L.push(bg.engineering_scenario_zh, ''); }
+
+  L.push('## Transcript · 对话', '');
+  art.dialogue.forEach(s => {
+    const name = speakerDisplay(art, s.speakerId || s.speaker) || s.role || s.speakerId || s.speaker || '';
+    const role = s.role ? '（' + s.role + '）' : '';
+    const hasTs = s.start_ms != null && !Number.isNaN(Number(s.start_ms));
+    const ts = hasTs ? ' · ' + fmt(s.start_ms) + '–' + fmt(s.end_ms) : '';
+    L.push('**' + name + '**' + role + ts + ': ' + s.text_en);
+    if (s.text_zh) L.push('> ' + s.text_zh);
+    L.push('');
+  });
+
+  L.push('## Vocabulary · 词汇', '');
+  art.vocabulary.forEach(v => L.push('- **' + v.en + '**' + (v.symbol ? '（' + v.symbol + '）' : '') + ' ' + (v.zh || '') + ' — ' + (v.def || '') + (v.def_zh ? ' / ' + v.def_zh : '')));
+  L.push('');
+
+  L.push('## Listening Questions · 听力题', '');
   art.listening_questions.forEach((qt, i) => {
     L.push((i + 1) + '. ' + qt.q);
-    qt.options.forEach((o, oi) => L.push('   ' + String.fromCharCode(65 + oi) + '. ' + o + (oi === quizAnswerIndex(qt) ? ' ✓' : '')));
+    if (qt.q_zh) L.push('   ' + qt.q_zh);
+    qt.options.forEach((o, oi) => L.push('   ' + String.fromCharCode(65 + oi) + '. ' + o + ((qt.options_zh && qt.options_zh[oi]) ? '（' + qt.options_zh[oi] + '）' : '') + (oi === quizAnswerIndex(qt) ? ' ✓' : '')));
     const _ai = quizAnswerIndex(qt);
-    L.push('   Answer: ' + (_ai >= 0 ? String.fromCharCode(65 + _ai) : '?') + ' — ' + qt.explain);
+    L.push('   Answer: ' + (_ai >= 0 ? String.fromCharCode(65 + _ai) : '?') + ' — ' + (qt.explain || ''));
+    if (qt.explain_zh) L.push('   ' + qt.explain_zh);
+    L.push('');
   });
-  L.push('', '## Sentence Patterns');
-  art.core_sentence_patterns.forEach(p => L.push('- **' + p.title + '**: ' + p.pattern));
+
+  L.push('## Sentence Patterns · 句型', '');
+  art.core_sentence_patterns.forEach(p => {
+    L.push('- **' + (p.title || '') + '**' + (p.title_zh ? '（' + p.title_zh + '）' : '') + ': ' + (p.pattern || ''));
+    if (p.pattern_zh) L.push('  ' + p.pattern_zh);
+    if (p.example) L.push('  e.g. ' + p.example);
+    if (p.example_zh) L.push('  ' + p.example_zh);
+  });
+
   const blob = new Blob([L.join('\n')], { type: 'text/markdown' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'Scenear-' + art.meta.title.replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').toLowerCase() + '.md';
+  a.download = mdFilename(m.title);
   document.body.appendChild(a); a.click(); a.remove();
   showToast('Markdown handout exported');
+}
+function mdFilename(t) {
+  const s = String(t || '').replace(/[\\/:*?"<>|]/g, '').trim().replace(/\s+/g, '-');
+  return s || 'Scenear';
 }
 function resetDefaults() {
   state.genScene.context = 'Tire burst stability control';

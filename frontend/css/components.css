@@ -372,11 +372,11 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
   width:9px;
   height:9px;
   border-radius:50%;
-  background:#818cf8;
+  background:var(--primary);
   animation:pulse-dot 1.2s ease-in-out infinite;
 }
 .status-dot.done{
-  background:#4ade80;
+  background:var(--ok-solid);
   animation:none;
 }
 @keyframes pulse-dot{
@@ -433,12 +433,12 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
   transition:all 0.25s;
 }
 .gen-progress-step.running .gen-step-icon{
-  border-color:#6366f1;
-  color:#a5b4fc;
+  border-color:var(--primary);
+  color:var(--primary);
 }
 .gen-progress-step.done .gen-step-icon{
   border-color:var(--line);
-  color:#4ade80;
+  color:var(--ok-solid);
 }
 .gen-progress-step.running .gen-step-icon svg{
   animation:spin 1.1s linear infinite;
@@ -488,8 +488,12 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 }
 .gen-progress-status-detail{
   font-size:12px;
-  color:#818cf8;
+  color:var(--primary);
   font-weight:500;
+}
+/* 浅色主题下子步骤图标块别太深，贴近卡片底色 */
+html[data-theme="light"] .gen-step-icon{
+  background:var(--surface);
 }
 .gen-step{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--outline)}
 .gen-step.done{color:var(--on-variant)}
@@ -607,7 +611,17 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .material-meta{font-size:12px;color:var(--on-variant);margin-top:3px}
 .material-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
 .player-split{flex:1;display:flex;min-height:0}
-.transcript-pane{flex:1;overflow-y:auto;padding:18px 22px 32px;min-width:0}
+.transcript-pane{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+/* header is a fixed (non-scrolling) block; the transcript scrolls in its own
+   container below, so the two never overlap (no text leaking through gaps) */
+.transcript-head{flex-shrink:0;display:flex;flex-direction:column;gap:10px;background:var(--bg);padding:18px 22px 10px;border-bottom:1px solid var(--line)}
+.transcript-head:not(:has(> .gen-phases:not(.hidden))):not(:has(> .transcript-head-tools:not(.hidden) > :not(.hidden))){padding:0;border-bottom:none}
+.transcript-head-tools{display:flex;flex-direction:column;gap:10px}
+.transcript-head-tools.hidden{display:none}
+.transcript-head .gen-phases{margin-bottom:0}
+.transcript-head .synth-banner{margin-bottom:0}
+.transcript-head .overview-card{margin:0}
+.transcript-scroll{flex:1;overflow-y:auto;padding:0 22px 32px;min-height:0}
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:72px 24px;text-align:center}
 .empty-state .es-ic{width:46px;height:46px;border-radius:12px;background:var(--surface-low);display:flex;align-items:center;justify-content:center;color:var(--outline);margin-bottom:4px}
 .empty-state .es-ic .icon{width:22px;height:22px}
