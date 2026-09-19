@@ -317,6 +317,13 @@ function runGenerate(params, replaceId) {
   state.genNavGuard = { navigated: false };              /* set when the user opens another material mid-generation — completion must not hijack their focus */
   const steps = document.querySelectorAll('#gen-progress-steps .gen-progress-step');
   const sleep = ms => new Promise(r => setTimeout(r, ms));
+  /* 实时计时 */
+  state.genStartTime = Date.now();
+  state.genTimer = setInterval(() => {
+    const elapsed = ((Date.now() - state.genStartTime) / 1000).toFixed(1);
+    const timeEl = document.getElementById('gen-progress-time');
+    if (timeEl) timeEl.textContent = elapsed + 's';
+  }, 100);
   (async () => {
     const llmDbg = llmMockOn() && !ttsMockOn();
     const ttsTake = ttsMockOn();
@@ -380,6 +387,8 @@ function runGenerate(params, replaceId) {
       if (idx >= 0) state.library[idx] = art; else state.library.unshift(art);
       $('gen-progress-box').classList.add('hidden');
       $('transcript-body').classList.remove('hidden');
+      /* 清除计时器 */
+      if (state.genTimer) { clearInterval(state.genTimer); state.genTimer = null; }
       const switchedAway = !!(state.genNavGuard && state.genNavGuard.navigated && state.current && state.current.id !== art.id);
       state.genNavGuard = null;
       if (switchedAway) {
