@@ -773,53 +773,52 @@ function synthesizeAudio() {
   const wn = $('gen-waiting-note'); if (wn) wn.textContent = I18N[state.lang]['gen.waiting'] || '';
   const steps = document.querySelectorAll('#gen-progress-steps .gen-progress-step');
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  /* 实时计时 */
-  state.genStartTime = Date.now();
-  state.genTimer = setInterval(() => {
-    const elapsed = ((Date.now() - state.genStartTime) / 1000).toFixed(1);
-    const timeEl = document.getElementById('gen-progress-elapsed');
-    if (timeEl) timeEl.textContent = elapsed + 's';
-  }, 100);
-  (async () => {
-    try {
-      let ttsCfg = {};
-      try {
-        const t = JSON.parse(localStorage.getItem('telg-settings') || '{}');
-        let storedVoices = art.meta.voice || (t.tts && t.tts.voice) || (t.tts && t.tts.voices) || '';
-        if (Array.isArray(storedVoices)) storedVoices = storedVoices.map(x => (x && x.voice) || x).filter(Boolean).join(' + ');
-        ttsCfg = { voices: storedVoices, rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1,
-                   provider: normalizeTTSProvider(art.meta.tts_provider || (t.tts && t.tts.provider) || 'edge-tts'),
-                   narrator: state.narrVoice || (t.narrVoice) || 'en-US-JennyNeural' };
-      } catch (e) {}
-      
-      /* 使用 SSE 流式接收进度 */
-      let r = null;
-      await API.synthesizeStream(
-        art.id,
-        ttsCfg,
-        /* onProgress */
-        (data) => {
-          if (typeof data.step === 'number') {
-            genPaint(steps, data.step);
-            const statusText = document.getElementById('gen-progress-status-text');
-            if (statusText && data.message) statusText.textContent = data.message;
-          }
-        },
-        /* onComplete */
-        (result) => {
-          r = result;
-          steps.forEach(s => { s.classList.remove('running'); s.classList.add('done'); });
-        },
-        /* onError */
-        (err) => {
-          throw new Error(err);
-        }
-      );
-      
-      /* 清除计时器 */
-      if (state.genTimer) { clearInterval(state.genTimer); state.genTimer = null; }
-      if (r.audio_url) art.meta.audio_url = r.audio_url;
-      if (r.total_duration_ms) art.meta.total_duration_ms = r.total_duration_ms;
+      /* 实时计时 */
+      state.genStartTime = Date.now();
+      state.genTimer = setInterval(() => {
+        const elapsed = ((Date.now() - state.genStartTime) / 1000).toFixed(1);
+        const timeEl = document.getElementById('gen-progress-elapsed');
+        if (timeEl) timeEl.textContent = elapsed + 's';
+      }, 100);
+      (async () => {
+        try {
+          let ttsCfg = {};
+          try {
+            const t = JSON.parse(localStorage.getItem('telg-settings') || '{}');
+            let storedVoices = art.meta.voice || (t.tts && t.tts.voice) || (t.tts && t.tts.voices) || '';
+            if (Array.isArray(storedVoices)) storedVoices = storedVoices.map(x => (x && x.voice) || x).filter(Boolean).join(' + ');
+            ttsCfg = { voices: storedVoices, rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1,
+                       provider: normalizeTTSProvider(art.meta.tts_provider || (t.tts && t.tts.provider) || 'edge-tts'),
+                       narrator: state.narrVoice || (t.narrVoice) || 'en-US-JennyNeural' };
+          } catch (e) {}
+          
+          /* 使用 SSE 流式接收进度 */
+          let r = null;
+          await API.synthesizeStream(
+            art.id,
+            ttsCfg,
+            /* onProgress */
+            (data) => {
+              if (typeof data.step === 'number') {
+                genPaint(steps, data.step);
+                const statusText = document.getElementById('gen-progress-status-text');
+                if (statusText && data.message) statusText.textContent = data.message;
+              }
+            },
+            /* onComplete */
+            (result) => {
+              r = result;
+              steps.forEach(s => { s.classList.remove('running'); s.classList.add('done'); });
+            },
+            /* onError */
+            (err) => {
+              throw new Error(err);
+            }
+          );
+          /* 清除计时器 */
+          if (state.genTimer) { clearInterval(state.genTimer); state.genTimer = null; }
+          if (r.audio_url) art.meta.audio_url = r.audio_url;
+          if (r.total_duration_ms) art.meta.total_duration_ms = r.total_duration_ms;
       /* Pull the authoritative timeline the backend wrote to the DB (real TTS
          durations + 300ms gaps). Generation-time timestamps are only word-count
          estimates; keeping them here is what made highlight/seek drift. */
