@@ -198,7 +198,7 @@ label.flabel{display:block;font-size:12px;font-weight:600;letter-spacing:.01em;c
 .pb-loop-btn.on{border-color:var(--primary);color:var(--primary)}
 .trow-actions .rate-btn{width:auto;padding:0 5px;font-family:var(--font-mono);font-size:10px}
 .trow-en{font-size:13.5px;line-height:20px;margin-top:2px}
-.trow-zh{font-size:12px;line-height:17px;color:var(--on-variant);margin-top:3px;max-height:50px;overflow:hidden;transition:opacity var(--dur-base) var(--ease),max-height var(--dur-base) var(--ease),margin-top var(--dur-base) var(--ease)}
+.trow-zh{font-size:12px;line-height:17px;color:var(--on-variant);margin-top:3px;transition:opacity var(--dur-base) var(--ease),margin-top var(--dur-base) var(--ease)}
 .zh-toggle{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono);letter-spacing:.04em;color:var(--outline);cursor:pointer;padding:2px 6px;border-radius:var(--r-sm);border:1px solid transparent;transition:all var(--dur-fast) var(--ease)}
 .zh-toggle:hover{color:var(--on-surface)}
 .zh-toggle.on{color:var(--primary);background:var(--surface-low);border-color:var(--line)}

@@ -106,12 +106,20 @@ function renderEngineTip(c) {
   const tip = $('eng-tip'); if (!tip) return;
   if (!c || !c.llm || !c.tts) { tip.textContent = state.lang === 'zh' ? '自检中…' : 'Self-check…'; return; }
   const lang = state.lang;
-  const L = (state.lang==='zh' ? 'LLM 状态：' : 'LLM status: ') + c.llm.name + ' — ' + (c.llm.ok ? (state.lang==='zh' ? '可用' : 'OK') : (state.lang==='zh' ? '不可用' : 'Offline'));
-  const T = (state.lang==='zh' ? 'TTS 状态：' : 'TTS status: ') + c.tts.name + ' — ' + (c.tts.ok ? (state.lang==='zh' ? '可用' : 'OK') : (state.lang==='zh' ? '不可用' : 'Offline'));
+  const fmtTime = ts => {
+    const d = new Date(ts);
+    return d.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+  const llmStatus = c.llm.ok ? (lang==='zh' ? '可用' : 'OK') : (lang==='zh' ? '不可用' : 'Offline');
+  const ttsStatus = c.tts.ok ? (lang==='zh' ? '可用' : 'OK') : (lang==='zh' ? '不可用' : 'Offline');
+  const L = (lang==='zh' ? 'LLM 状态：' : 'LLM: ') + c.llm.name + ' — ' + llmStatus;
+  const T = (lang==='zh' ? 'TTS 状态：' : 'TTS: ') + c.tts.name + ' — ' + ttsStatus;
   const lx = c.llm.detail ? friendlyErr(c.llm.detail, lang) : (c.llm.ok && c.llm.ms ? c.llm.ms + 'ms' : '');
   const tx = c.tts.detail ? friendlyErr(c.tts.detail, lang) : (c.tts.ok && c.tts.ms ? c.tts.ms + 'ms' : '');
-  const cut = v => (v && v.length > 56) ? v.slice(0, 56) + '…' : v;
-  tip.textContent = L + (lx ? '\n' + (state.lang==='zh' ? '详情：' : 'Detail: ') + cut(lx) : '') + (tx ? '\n' + (state.lang==='zh' ? '详情：' : 'Detail: ') + cut(tx) : '');
+  const refresh = (lang==='zh' ? '刷新时间：' : 'Refreshed: ') + fmtTime(c.ts);
+  tip.textContent = L + (lx ? '\n' + (lang==='zh' ? '详情：' : 'Detail: ') + lx : '')
+    + '\n' + T + (tx ? '\n' + (lang==='zh' ? '详情：' : 'Detail: ') + tx : '')
+    + '\n' + refresh;
 }
 function updateEngineBadge() {
   const dot = $('eng-dot'), label = $('eng-label'), mode = $('eng-mode');

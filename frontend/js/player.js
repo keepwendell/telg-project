@@ -640,11 +640,18 @@ function applyTTS() {
   art.meta.voiceRoles = roles;
   art.meta.ttsStyle = $('adj-tts-style').value;
   art.meta.tts_provider = prov;
+  /* 切换 TTS 引擎时，旁白音色也要跟着切换到对应引擎的默认女声 */
+  const defaultNarr = prov === 'kokoro' ? 'af_heart' : 'en-US-JennyNeural';
+  /* 如果当前旁白音色不在新引擎的音色列表里，就用新引擎的默认女声 */
+  const pool = ttsVoicePool(prov);
+  const narrInPool = pool.some(o => (typeof o === 'string' ? o : o.id) === (state.narrVoice || defaultNarr));
+  art.meta.narrVoice = narrInPool ? (state.narrVoice || defaultNarr) : defaultNarr;
   try {
     const s = JSON.parse(localStorage.getItem('telg-settings') || 'null') || {};
     s.tts = s.tts || {};
     s.tts.voice = art.meta.voice; s.tts.speechRate = $('adj-tts-rate').value; s.tts.style = art.meta.ttsStyle;
     s.tts.provider = prov;
+    s.narrVoice = art.meta.narrVoice;
     localStorage.setItem('telg-settings', JSON.stringify(s));
   } catch (e) {}
   art.meta.audioReady = false;          /* force (re-)conversion */
@@ -671,7 +678,8 @@ function synthesizeAudio() {
       let ttsCfg = {};
       try {
         const t = JSON.parse(localStorage.getItem('telg-settings') || '{}');
-        let storedVoices = (t.tts && t.tts.voice) || (t.tts && t.tts.voices) || '';
+        /* 优先使用当前素材的音色（Adjust 面板设置），fallback 到全局设置 */
+        let storedVoices = art.meta.voice || (t.tts && t.tts.voice) || (t.tts && t.tts.voices) || '';
         if (Array.isArray(storedVoices)) storedVoices = storedVoices.map(x => (x && x.voice) || x).filter(Boolean).join(' + ');
         ttsCfg = { voices: storedVoices, rate: parseFloat((t.tts && t.tts.speechRate) || 1) || 1,
                    provider: normalizeTTSProvider(art.meta.tts_provider || (t.tts && t.tts.provider) || 'edge-tts'),

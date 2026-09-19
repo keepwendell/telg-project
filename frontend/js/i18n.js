@@ -1733,6 +1733,7 @@ function renderMaterial() {
       '<button class="btn btn-primary" id="btn-empty-gen" style="margin-top:10px"><svg class="icon icon-sm"><use href="#i-bolt"/></svg><span>' + (I18N[state.lang]['nav.generate'] || 'Generate') + '</span></button>' +
       '</div>';
     $('synth-banner').classList.add('hidden');
+    renderOverviewCard(null);  /* 空态时隐藏 overview 卡片 */
     ['tab-vocab-count', 'tab-quiz-count'].forEach(id => { const el = $(id); if (el) el.textContent = ''; });
     const pg = $('panel-grounding'); if (pg) pg.innerHTML = '';
     if (tabbar) tabbar.style.display = 'none';
@@ -1754,7 +1755,8 @@ function renderMaterial() {
   $('tab-vocab-count').textContent = '(' + art.vocabulary.length + ')';
   $('tab-quiz-count').textContent = '(' + art.listening_questions.length + ')';
   $('transcript-list').innerHTML = transcriptHTML(art);
-  if (window.Ui && Ui.staggerIn) Ui.staggerIn($('transcript-list').querySelectorAll('.trow'), { stagger: 15, duration: Ui.getDur('fast') });
+  /* staggerIn 动画在某些情况下不触发完成，导致 opacity 停留在 0，先禁用 */
+  /* if (window.Ui && Ui.staggerIn) Ui.staggerIn($('transcript-list').querySelectorAll('.trow'), { stagger: 15, duration: Ui.getDur('fast') }); */
   renderOverviewCard(art);
   setSynthBanner();
   $('panel-grounding').innerHTML = groundingHTML(art);
@@ -1777,18 +1779,21 @@ function applyListenMode() {
 function renderOverviewCard(art) {
   const el = $('overview-card');
   if (!el) return;
+  if (!art) { el.classList.add('hidden'); el.innerHTML = ''; return; }
   const ov = (art && (art.overview || (art.meta && art.meta.overview))) || null;
   if (!ov || !ov.text_en) { el.classList.add('hidden'); el.innerHTML = ''; return; }
   const en = String(ov.text_en || '').trim();
   const zh = String(ov.text_zh || '').trim();
   const narr = (art && art.meta && art.meta.narration) || null;
+  /* 只有合成了 TTS（audioReady=true）才显示播放按钮 */
   const hasNarr = true;  /* always show overview card */
+  const canPlay = art && art.meta && art.meta.audioReady === true;
   const L = I18N[state.lang] || {};
   const badge = hasNarr ? '<span class="narr-badge">' + (L['narr.badge'] || 'Scene Overview') + '</span>' : '';
-  const btn = hasNarr
-    ? '<button class="narr-btn" id="btn-narr-play" title="Play narration">' +
+  const btn = canPlay
+    ? '<button class="narr-btn" id="btn-narr-play" title="Play narration" style="border:none;background:none;padding:2px;cursor:pointer">' +
       '<svg class="icon" style="width:18px;height:18px"><use href="#i-volume"/></svg>' +
-      '<span class="narr-waves"><i></i><i></i><i></i></span></button>'
+      '</button>'
     : '';
   el.classList.toggle('narr-card', hasNarr);
   el.innerHTML = '<div class="narr-head">' + badge + btn + '</div>' +

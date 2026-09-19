@@ -2013,7 +2013,9 @@ async def synthesize(mid: str, body: SynthIn | None = None):
         narr = (meta.get("overview") or {})
         narr_text = (narr.get("text_en") or "").strip()
         default_narr = "en-US-JennyNeural" if engine.name == "edge-tts" else (vs[0] if vs else "af_bella")
-        narr_voice = (body.narrator or "").strip() or (meta.get("narration") or {}).get("voice") or default_narr
+        narr_voice_raw = (body.narrator or "").strip() or (meta.get("narration") or {}).get("voice") or default_narr
+        # 旁白音色也要经过 normalize_voice，避免未知音色直接传给 edge-tts 报错
+        narr_voice = normalize_voice(narr_voice_raw) if engine.name == "edge-tts" else narr_voice_raw
         start = 0
         n_files = len(segs)
         if narr_text:
@@ -2169,11 +2171,11 @@ PROFILE_SYSTEM_PROMPT = """你是 Scenear 学习档案生成器，根据用户�
 - 只输出合法 JSON 对象：
   {"role_portrait": "…", "domain_profile": "…", "focus_tone": "…"}
 - role_portrait：基于用户职位/角色，扩写为 2-3 句专业画像
-  （该角色的工作语境、常用沟通对象、典型英文表达需求），英文。
+  （该角色的工作语境、常用沟通对象、典型英文表达需求），全部用中文。
 - domain_profile：基于用户练习领域，扩写为 3-4 句领域档案
-  （该领域术语惯例、典型工作场景、角色画像；术语准确、宁浅勿错），英文。
+  （该领域术语惯例、典型工作场景、角色画像；术语准确、宁浅勿错），全部用中文。
 - focus_tone：基于用户的专注方向与练习场景，给出 1-2 句训练建议与语气偏好，
-  英文。
+  全部用中文。
 - 未提供的字段保持简洁，不编造。
 请直接输出 JSON。"""
 
@@ -2563,12 +2565,12 @@ ONBOARD_SYSTEM_PROMPT = """你是 Scenear 听力素材生成器的一次性初�
    "domains": [{"id": "…", "name": "…", "desc": "…"}],
    "roles": ["…"], "scenarios": ["…"]}
 - role_portrait / domain_profile / focus_tone：规则同学习档案生成
-  （工作语境、沟通对象、典型表达需求；领域术语惯例与典型场景；训练建议与语气偏好），英文。
+  （工作语境、沟通对象、典型表达需求；领域术语惯例与典型场景；训练建议与语气偏好），全部用中文。
 - domains：4-6 个与该用户紧密相关的领域，第一个必须是主练习领域；
   id 用 kebab-case 小写英文标识（若与内置领域 automotive/semiconductor/energy/ai-software/medical/fintech/aerospace/general 匹配则沿用），
-  name 为英文领域名，desc 为不超过 20 字的中文描述。
-- roles：3-6 个该领域一线真实岗位（英文岗位名），要求真实、专业、可对话。
-- scenarios：3-6 个贴合该用户工作场景的英文练习场景短语，真实可演。
+  name 为中文领域名，desc 为不超过 20 字的中文描述。
+- roles：3-6 个该领域一线真实岗位（中文岗位名），要求真实、专业、可对话。
+- scenarios：3-6 个贴合该用户工作场景的中文练习场景短语，真实可演。
 - 严格贴合问卷中的角色、领域、语言方向与专注方向，禁止输出无关通用内容。
 
 请直接输出 JSON。"""
@@ -2672,12 +2674,12 @@ RECOMMEND_SYSTEM_PROMPT = """你是 Scenear 听力素材生成器的推荐配置
 - 只输出合法 JSON 对象：
   {"domains": [...], "roles": [...], "scenarios": [...]}
 - domains：4-6 个与该用户紧密相关的领域，第一个必须是用户的主练习领域；
-  每项 {"id": "kebab-case小写英文标识", "name": "英文领域名（如 Semiconductor）", "desc": "一句中文描述"}；
+  每项 {"id": "kebab-case小写英文标识", "name": "中文领域名（如 半导体）", "desc": "一句中文描述"}；
   id 若与已知内置领域（automotive/semiconductor/energy/ai-software/medical/fintech/aerospace/general）匹配则沿用内置 id，
   否则用 kebab-case 新 id；desc 不超过 20 字。
-- roles：3-6 个该领域一线常见真实岗位（英文岗位名，如 Process Engineer、Yield Engineer），
+- roles：3-6 个该领域一线常见真实岗位（中文岗位名，如 工艺工程师、良率工程师），
   要求真实、专业、可对话。
-- scenarios：3-6 个贴合该用户工作场景的英文练习场景短语（如 Process Review Meeting、Yield Failure RCA），真实可演。
+- scenarios：3-6 个贴合该用户工作场景的中文练习场景短语（如 工艺评审会、良率失效根因分析），真实可演。
 - 严格贴合用户档案中的角色、领域、专注方向与画像，禁止输出无关通用内容。
 
 请直接输出 JSON。"""
