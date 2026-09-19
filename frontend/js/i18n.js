@@ -1158,10 +1158,10 @@ function toggleBookmark(idx) {
     if (btn) { btn.classList.remove('active'); const u = btn.querySelector('use'); if (u) u.setAttribute('href', '#i-bookmark'); }
     showToast(I18N[state.lang]['bm.removed']);
   } else {
-    state.bookmarks.unshift({ mid: art.id, title: art.meta.title, idx: idx, speaker: s.speakerId || s.speaker, text: s.text_en, text_zh: s.text_zh || '', time: s.start_ms, ts: Date.now() });
+    state.bookmarks.unshift({ mid: art.id, title: art.meta.title, idx: idx, speaker: s.role || s.speakerId || s.speaker, text: s.text_en, text_zh: s.text_zh || '', time: s.start_ms, ts: Date.now() });
     persistBookmarks();
     if (btn) { btn.classList.add('active'); const u = btn.querySelector('use'); if (u) u.setAttribute('href', '#i-bookmark-fill'); }
-    showToast(I18N[state.lang]['bm.added'] + (s.speakerId || s.speaker || ''));
+    showToast(I18N[state.lang]['bm.added'] + (s.role || s.speakerId || s.speaker || ''));
   }
 }
 function removeBookmark(ts) {
